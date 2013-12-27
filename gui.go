@@ -2,6 +2,7 @@ package gocui
 
 import (
 	"errors"
+
 	"github.com/jroimartin/termbox-go"
 )
 
@@ -52,7 +53,8 @@ func (g *Gui) AddView(x0, y0, x1, y1 int) (v *View, err error) {
 	maxX, maxY := termbox.Size()
 
 	if x0 < 0 || y0 < 0 || x1 < 0 || y1 < 0 ||
-		x0 > maxX || y0 > maxY || x1 > maxX || y1 > maxY {
+		x0 > maxX || y0 > maxY || x1 > maxX || y1 > maxY ||
+		x0 > x1 || y0 > y1 {
 		return nil, errors.New("Invalid coordinates")
 	}
 	v = NewView(x0, y0, x1, y1)
