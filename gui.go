@@ -49,15 +49,22 @@ func (g *Gui) Size() (x, y int) {
 	return termbox.Size()
 }
 
-func (g *Gui) AddView(x0, y0, x1, y1 int) (v *View, err error) {
+func (g *Gui) AddView(name string, x0, y0, x1, y1 int) (v *View, err error) {
 	maxX, maxY := termbox.Size()
 
-	if x0 < 0 || y0 < 0 || x1 < 0 || y1 < 0 ||
+	if x0 < -1 || y0 < -1 || x1 < -1 || y1 < -1 ||
 		x0 > maxX || y0 > maxY || x1 > maxX || y1 > maxY ||
-		x0 > x1 || y0 > y1 {
-		return nil, errors.New("Invalid coordinates")
+		x0 >= x1 || y0 >= y1 {
+		return nil, errors.New("Invalid position")
 	}
-	v = NewView(x0, y0, x1, y1)
+
+	for _, vi := range g.views {
+		if name == vi.name {
+			return nil, errors.New("Invalid name")
+		}
+	}
+
+	v = NewView(name, x0, y0, x1, y1)
 	g.views = append(g.views, v)
 	return v, nil
 }
@@ -151,5 +158,4 @@ func (g *Gui) onKey(ev *termbox.Event) (err error) {
 	default:
 		return nil
 	}
-
 }
