@@ -40,6 +40,9 @@ func main() {
 	if _, err := g.AddView("v8", maxX/2-5, maxY-10, maxX/2+5, maxY); err != nil {
 		log.Panicln(err)
 	}
+	if _, err := g.AddView("v9", maxX/2-5, maxY/2-5, maxX/2+5, maxY/2+5); err != nil {
+		log.Panicln(err)
+	}
 
 	err = g.MainLoop()
 	if err != nil && err != gocui.ErrorQuit {

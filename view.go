@@ -26,16 +26,3 @@ func NewView(name string, x0, y0, x1, y1 int) (v *View) {
 	}
 	return v
 }
-
-func (v *View) SetCell(x, y int, ch rune) {
-	var bgColor, fgColor termbox.Attribute
-
-	if y == v.cy {
-		bgColor = v.SelBgColor
-		fgColor = v.SelFgColor
-	} else {
-		bgColor = v.BgColor
-		fgColor = v.FgColor
-	}
-	termbox.SetCell(x, y, ch, fgColor, bgColor)
-}

@@ -107,8 +107,13 @@ func (g *Gui) MainLoop() (err error) {
 	return nil
 }
 
-func (g *Gui) SetCell(x, y int, ch rune) {
+func (g *Gui) SetCell(x, y int, ch rune) (err error) {
+	maxX, maxY := termbox.Size()
+	if x < 0 || y < 0 || x >= maxX || y >= maxY {
+		return errors.New("invalid point")
+	}
 	termbox.SetCell(x, y, ch, g.FgColor, g.BgColor)
+	return nil
 }
 
 func (g *Gui) GetCell(x, y int) (ch rune, err error) {
@@ -161,13 +166,13 @@ func (g *Gui) drawView(v *View) (err error) {
 
 func (g *Gui) resize() (err error) {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-	if err := g.resizeView(); err != nil {
+	if err := g.resizeViews(); err != nil {
 		return err
 	}
 	if err := g.drawFrames(); err != nil {
 		return err
 	}
-	if err := g.drawFrameIntersections(); err != nil {
+	if err := g.drawIntersections(); err != nil {
 		return err
 	}
 	return nil
@@ -177,22 +182,6 @@ func (g *Gui) resize() (err error) {
 func (g *Gui) drawFrames() (err error) {
 	maxX, maxY := termbox.Size()
 	for _, v := range g.views {
-		if v.Y0 != -1 {
-			if v.X0 != -1 {
-				g.SetCell(v.X0, v.Y0, RuneCornerTopLeft)
-			}
-			if v.X1 != maxX {
-				g.SetCell(v.X1, v.Y0, RuneCornerTopRight)
-			}
-		}
-		if v.Y1 != maxY {
-			if v.X0 != -1 {
-				g.SetCell(v.X0, v.Y1, RuneCornerBottomLeft)
-			}
-			if v.X1 != maxX {
-				g.SetCell(v.X1, v.Y1, RuneCornerBottomRight)
-			}
-		}
 		for x := v.X0 + 1; x < v.X1; x++ {
 			if v.Y0 != -1 {
 				g.SetCell(x, v.Y0, RuneSideHorizontal)
@@ -213,124 +202,70 @@ func (g *Gui) drawFrames() (err error) {
 	return nil
 }
 
-func (g *Gui) drawFrameIntersections() (err error) {
+func (g *Gui) drawIntersections() (err error) {
 	for _, v := range g.views {
-		// ┌
-		if ch, err := g.GetCell(v.X0, v.Y0); err == nil {
-			switch ch {
-			case RuneCornerTopLeft: // '┌'
-				// Nothing
-			case RuneCornerTopRight: // '┐'
-				g.SetCell(v.X0, v.Y0, RuneIntersectionTop)
-			case RuneCornerBottomLeft: // '└'
-				g.SetCell(v.X0, v.Y0, RuneIntersectionLeft)
-			case RuneCornerBottomRight: // '┘'
-				g.SetCell(v.X0, v.Y0, RuneIntersection)
-			case RuneSideVertical: // '│'
-				g.SetCell(v.X0, v.Y0, RuneIntersectionLeft)
-			case RuneSideHorizontal: // '─'
-				g.SetCell(v.X0, v.Y0, RuneIntersectionTop)
-			case RuneIntersection: // '┼'
-				// Nothing
-			case RuneIntersectionLeft: // '├'
-				// Nothing
-			case RuneIntersectionRight: // '┤'
-				g.SetCell(v.X0, v.Y0, RuneIntersection)
-			case RuneIntersectionTop: // '┬'
-				// Nothing
-			case RuneIntersectionBottom: // '┴'
-				g.SetCell(v.X0, v.Y0, RuneIntersection)
-			}
+		if ch, ok := g.getIntersectionRune(v.X0, v.Y0); ok {
+			g.SetCell(v.X0, v.Y0, ch)
 		}
-
-		// ┐
-		if ch, err := g.GetCell(v.X1, v.Y0); err == nil {
-			switch ch {
-			case RuneCornerTopLeft: // '┌'
-				g.SetCell(v.X1, v.Y0, RuneIntersectionTop)
-			case RuneCornerTopRight: // '┐'
-				// Nothing
-			case RuneCornerBottomLeft: // '└'
-				g.SetCell(v.X1, v.Y0, RuneIntersection)
-			case RuneCornerBottomRight: // '┘'
-				g.SetCell(v.X1, v.Y0, RuneIntersectionRight)
-			case RuneSideVertical: // '│'
-				g.SetCell(v.X1, v.Y0, RuneIntersectionRight)
-			case RuneSideHorizontal: // '─'
-				g.SetCell(v.X1, v.Y0, RuneIntersectionTop)
-			case RuneIntersection: // '┼'
-				// Nothing
-			case RuneIntersectionLeft: // '├'
-				g.SetCell(v.X1, v.Y0, RuneIntersection)
-			case RuneIntersectionRight: // '┤'
-				// Nothing
-			case RuneIntersectionTop: // '┬'
-				// Nothing
-			case RuneIntersectionBottom: // '┴'
-				g.SetCell(v.X1, v.Y0, RuneIntersection)
-			}
+		if ch, ok := g.getIntersectionRune(v.X0, v.Y1); ok {
+			g.SetCell(v.X0, v.Y1, ch)
 		}
-
-		// └
-		if ch, err := g.GetCell(v.X0, v.Y1); err == nil {
-			switch ch {
-			case RuneCornerTopLeft: // '┌'
-				g.SetCell(v.X0, v.Y1, RuneIntersectionLeft)
-			case RuneCornerTopRight: // '┐'
-				g.SetCell(v.X0, v.Y1, RuneIntersection)
-			case RuneCornerBottomLeft: // '└'
-				// Nothing
-			case RuneCornerBottomRight: // '┘'
-				g.SetCell(v.X0, v.Y1, RuneIntersectionBottom)
-			case RuneSideVertical: // '│'
-				g.SetCell(v.X0, v.Y1, RuneIntersectionLeft)
-			case RuneSideHorizontal: // '─'
-				g.SetCell(v.X0, v.Y1, RuneIntersectionBottom)
-			case RuneIntersection: // '┼'
-				// Nothing
-			case RuneIntersectionLeft: // '├'
-				// Nothing
-			case RuneIntersectionRight: // '┤'
-				g.SetCell(v.X0, v.Y1, RuneIntersection)
-			case RuneIntersectionTop: // '┬'
-				g.SetCell(v.X0, v.Y1, RuneIntersection)
-			case RuneIntersectionBottom: // '┴'
-				// Nothing
-			}
+		if ch, ok := g.getIntersectionRune(v.X1, v.Y0); ok {
+			g.SetCell(v.X1, v.Y0, ch)
 		}
-
-		// ┘
-		if ch, err := g.GetCell(v.X1, v.Y1); err == nil {
-			switch ch {
-			case RuneCornerTopLeft: // '┌'
-				g.SetCell(v.X1, v.Y1, RuneIntersection)
-			case RuneCornerTopRight: // '┐'
-				g.SetCell(v.X1, v.Y1, RuneIntersectionRight)
-			case RuneCornerBottomLeft: // '└'
-				g.SetCell(v.X1, v.Y1, RuneIntersectionBottom)
-			case RuneCornerBottomRight: // '┘'
-				// Nothing
-			case RuneSideVertical: // '│'
-				g.SetCell(v.X1, v.Y1, RuneIntersectionRight)
-			case RuneSideHorizontal: // '─'
-				g.SetCell(v.X1, v.Y1, RuneIntersectionBottom)
-			case RuneIntersection: // '┼'
-				// Nothing
-			case RuneIntersectionLeft: // '├'
-				g.SetCell(v.X1, v.Y1, RuneIntersection)
-			case RuneIntersectionRight: // '┤'
-				// Nothing
-			case RuneIntersectionTop: // '┬'
-				g.SetCell(v.X1, v.Y1, RuneIntersection)
-			case RuneIntersectionBottom: // '┴'
-				// Nothing
-			}
+		if ch, ok := g.getIntersectionRune(v.X1, v.Y1); ok {
+			g.SetCell(v.X1, v.Y1, ch)
 		}
 	}
 	return nil
 }
 
-func (g *Gui) resizeView() (err error) {
+func (g *Gui) getIntersectionRune(x, y int) (ch rune, ok bool) {
+	maxX, maxY := termbox.Size()
+	if x < 0 || y < 0 || x >= maxX || y >= maxY {
+		return 0, false
+	}
+
+	chTop, _ := g.GetCell(x, y-1)
+	chBottom, _ := g.GetCell(x, y+1)
+	chLeft, _ := g.GetCell(x-1, y)
+	chRight, _ := g.GetCell(x+1, y)
+
+	switch {
+	case chTop != RuneSideVertical && chBottom == RuneSideVertical &&
+		chLeft != RuneSideHorizontal && chRight == RuneSideHorizontal:
+		ch = RuneCornerTopLeft // '┌'
+	case chTop != RuneSideVertical && chBottom == RuneSideVertical &&
+		chLeft == RuneSideHorizontal && chRight != RuneSideHorizontal:
+		ch = RuneCornerTopRight // '┐'
+	case chTop == RuneSideVertical && chBottom != RuneSideVertical &&
+		chLeft != RuneSideHorizontal && chRight == RuneSideHorizontal:
+		ch = RuneCornerBottomLeft // '└'
+	case chTop == RuneSideVertical && chBottom != RuneSideVertical &&
+		chLeft == RuneSideHorizontal && chRight != RuneSideHorizontal:
+		ch = RuneCornerBottomRight // '┘'
+	case chTop == RuneSideVertical && chBottom == RuneSideVertical &&
+		chLeft == RuneSideHorizontal && chRight == RuneSideHorizontal:
+		ch = RuneIntersection // '┼'
+	case chTop == RuneSideVertical && chBottom == RuneSideVertical &&
+		chLeft != RuneSideHorizontal && chRight == RuneSideHorizontal:
+		ch = RuneIntersectionLeft // '├'
+	case chTop == RuneSideVertical && chBottom == RuneSideVertical &&
+		chLeft == RuneSideHorizontal && chRight != RuneSideHorizontal:
+		ch = RuneIntersectionRight // '┤'
+	case chTop != RuneSideVertical && chBottom == RuneSideVertical &&
+		chLeft == RuneSideHorizontal && chRight == RuneSideHorizontal:
+		ch = RuneIntersectionTop // '┬'
+	case chTop == RuneSideVertical && chBottom != RuneSideVertical &&
+		chLeft == RuneSideHorizontal && chRight == RuneSideHorizontal:
+		ch = RuneIntersectionBottom // '┴'
+	default:
+		return 0, false
+	}
+	return ch, true
+}
+
+func (g *Gui) resizeViews() (err error) {
 	return nil
 }
 
