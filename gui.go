@@ -8,24 +8,6 @@ import (
 
 var ErrorQuit = errors.New("quit")
 
-const (
-	RuneCornerTopLeft      = '┌'
-	RuneCornerTopRight     = '┐'
-	RuneCornerBottomLeft   = '└'
-	RuneCornerBottomRight  = '┘'
-	RuneSideVertical       = '│'
-	RuneSideHorizontal     = '─'
-	RuneIntersection       = '┼'
-	RuneIntersectionLeft   = '├'
-	RuneIntersectionRight  = '┤'
-	RuneIntersectionTop    = '┬'
-	RuneIntersectionBottom = '┴'
-	RuneTriangleLeft       = '◄'
-	RuneTriangleRight      = '►'
-	RuneArrowLeft          = '←'
-	RuneArrowRight         = '→'
-)
-
 type Gui struct {
 	events           chan termbox.Event
 	views            []*View
@@ -184,18 +166,18 @@ func (g *Gui) drawFrames() (err error) {
 	for _, v := range g.views {
 		for x := v.X0 + 1; x < v.X1; x++ {
 			if v.Y0 != -1 {
-				g.SetCell(x, v.Y0, RuneSideHorizontal)
+				g.SetCell(x, v.Y0, '─')
 			}
 			if v.Y1 != maxY {
-				g.SetCell(x, v.Y1, RuneSideHorizontal)
+				g.SetCell(x, v.Y1, '─')
 			}
 		}
 		for y := v.Y0 + 1; y < v.Y1; y++ {
 			if v.X0 != -1 {
-				g.SetCell(v.X0, y, RuneSideVertical)
+				g.SetCell(v.X0, y, '│')
 			}
 			if v.X1 != maxX {
-				g.SetCell(v.X1, y, RuneSideVertical)
+				g.SetCell(v.X1, y, '│')
 			}
 		}
 	}
@@ -237,23 +219,23 @@ func (g *Gui) getIntersectionRune(x, y int) (ch rune, ok bool) {
 
 	switch {
 	case !chTop && chBottom && !chLeft && chRight:
-		ch = RuneCornerTopLeft // '┌'
+		ch = '┌'
 	case !chTop && chBottom && chLeft && !chRight:
-		ch = RuneCornerTopRight // '┐'
+		ch = '┐'
 	case chTop && !chBottom && !chLeft && chRight:
-		ch = RuneCornerBottomLeft // '└'
+		ch = '└'
 	case chTop && !chBottom && chLeft && !chRight:
-		ch = RuneCornerBottomRight // '┘'
+		ch = '┘'
 	case chTop && chBottom && chLeft && chRight:
-		ch = RuneIntersection // '┼'
+		ch = '┼'
 	case chTop && chBottom && !chLeft && chRight:
-		ch = RuneIntersectionLeft // '├'
+		ch = '├'
 	case chTop && chBottom && chLeft && !chRight:
-		ch = RuneIntersectionRight // '┤'
+		ch = '┤'
 	case !chTop && chBottom && chLeft && chRight:
-		ch = RuneIntersectionTop // '┬'
+		ch = '┬'
 	case chTop && !chBottom && chLeft && chRight:
-		ch = RuneIntersectionBottom // '┴'
+		ch = '┴'
 	default:
 		return 0, false
 	}
@@ -261,16 +243,14 @@ func (g *Gui) getIntersectionRune(x, y int) (ch rune, ok bool) {
 }
 
 func verticalRune(ch rune) bool {
-	if ch == RuneSideVertical || ch == RuneIntersection ||
-		ch == RuneIntersectionLeft || ch == RuneIntersectionRight {
+	if ch == '│' || ch == '┼' || ch == '├' || ch == '┤' {
 		return true
 	}
 	return false
 }
 
 func horizontalRune(ch rune) bool {
-	if ch == RuneSideHorizontal || ch == RuneIntersection ||
-		ch == RuneIntersectionTop || ch == RuneIntersectionBottom {
+	if ch == '─' || ch == '┼' || ch == '┬' || ch == '┴' {
 		return true
 	}
 	return false
