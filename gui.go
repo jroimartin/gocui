@@ -208,33 +208,33 @@ func (g *Gui) getIntersectionRune(x, y int) (ch rune, ok bool) {
 		return 0, false
 	}
 
-	_chTop, _ := g.GetCell(x, y-1)
-	chTop := verticalRune(_chTop)
-	_chBottom, _ := g.GetCell(x, y+1)
-	chBottom := verticalRune(_chBottom)
-	_chLeft, _ := g.GetCell(x-1, y)
-	chLeft := horizontalRune(_chLeft)
-	_chRight, _ := g.GetCell(x+1, y)
-	chRight := horizontalRune(_chRight)
+	chTop, _ := g.GetCell(x, y-1)
+	top := verticalRune(chTop)
+	chBottom, _ := g.GetCell(x, y+1)
+	bottom := verticalRune(chBottom)
+	chLeft, _ := g.GetCell(x-1, y)
+	left := horizontalRune(chLeft)
+	chRight, _ := g.GetCell(x+1, y)
+	right := horizontalRune(chRight)
 
 	switch {
-	case !chTop && chBottom && !chLeft && chRight:
+	case !top && bottom && !left && right:
 		ch = '┌'
-	case !chTop && chBottom && chLeft && !chRight:
+	case !top && bottom && left && !right:
 		ch = '┐'
-	case chTop && !chBottom && !chLeft && chRight:
+	case top && !bottom && !left && right:
 		ch = '└'
-	case chTop && !chBottom && chLeft && !chRight:
+	case top && !bottom && left && !right:
 		ch = '┘'
-	case chTop && chBottom && chLeft && chRight:
+	case top && bottom && left && right:
 		ch = '┼'
-	case chTop && chBottom && !chLeft && chRight:
+	case top && bottom && !left && right:
 		ch = '├'
-	case chTop && chBottom && chLeft && !chRight:
+	case top && bottom && left && !right:
 		ch = '┤'
-	case !chTop && chBottom && chLeft && chRight:
+	case !top && bottom && left && right:
 		ch = '┬'
-	case chTop && !chBottom && chLeft && chRight:
+	case top && !bottom && left && right:
 		ch = '┴'
 	default:
 		return 0, false
