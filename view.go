@@ -1,7 +1,7 @@
 package gocui
 
 import (
-	"github.com/jroimartin/termbox-go"
+	"github.com/nsf/termbox-go"
 )
 
 type View struct {

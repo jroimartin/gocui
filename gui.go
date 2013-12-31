@@ -3,7 +3,7 @@ package gocui
 import (
 	"errors"
 
-	"github.com/jroimartin/termbox-go"
+	"github.com/nsf/termbox-go"
 )
 
 var ErrorQuit = errors.New("quit")
@@ -12,6 +12,7 @@ type Gui struct {
 	events           chan termbox.Event
 	views            []*View
 	currentView      *View
+	maxX, maxY       int
 	BgColor, FgColor termbox.Attribute
 }
 
@@ -20,10 +21,14 @@ func NewGui() (g *Gui) {
 }
 
 func (g *Gui) Init() (err error) {
+	if err = termbox.Init(); err != nil {
+		return err
+	}
 	g.events = make(chan termbox.Event, 20)
+	g.maxX, g.maxY = termbox.Size()
 	g.BgColor = termbox.ColorWhite
 	g.FgColor = termbox.ColorBlack
-	return termbox.Init()
+	return nil
 }
 
 func (g *Gui) Close() {
@@ -31,21 +36,19 @@ func (g *Gui) Close() {
 }
 
 func (g *Gui) Size() (x, y int) {
-	return termbox.Size()
+	return g.maxX, g.maxY
 }
 
 func (g *Gui) AddView(name string, x0, y0, x1, y1 int) (v *View, err error) {
-	maxX, maxY := termbox.Size()
-
 	if x0 < -1 || y0 < -1 || x1 < -1 || y1 < -1 ||
-		x0 > maxX || y0 > maxY || x1 > maxX || y1 > maxY ||
+		x0 > g.maxX || y0 > g.maxY || x1 > g.maxX || y1 > g.maxY ||
 		x0 >= x1 || y0 >= y1 {
-		return nil, errors.New("invalid points")
+		return nil, errors.New("AddView: invalid points")
 	}
 
 	for _, v := range g.views {
 		if name == v.Name {
-			return nil, errors.New("invalid name")
+			return nil, errors.New("AddView: invalid name")
 		}
 	}
 
@@ -90,20 +93,18 @@ func (g *Gui) MainLoop() (err error) {
 }
 
 func (g *Gui) SetCell(x, y int, ch rune) (err error) {
-	maxX, maxY := termbox.Size()
-	if x < 0 || y < 0 || x >= maxX || y >= maxY {
-		return errors.New("invalid point")
+	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
+		return errors.New("SetCell: invalid point")
 	}
 	termbox.SetCell(x, y, ch, g.FgColor, g.BgColor)
 	return nil
 }
 
 func (g *Gui) GetCell(x, y int) (ch rune, err error) {
-	maxX, maxY := termbox.Size()
-	if x < 0 || y < 0 || x >= maxX || y >= maxY {
-		return 0, errors.New("invalid point")
+	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
+		return 0, errors.New("GetCell: invalid point")
 	}
-	c := termbox.CellBuffer()[y*maxX+x]
+	c := termbox.CellBuffer()[y*g.maxX+x]
 	return c.Ch, nil
 }
 
@@ -162,13 +163,12 @@ func (g *Gui) resize() (err error) {
 }
 
 func (g *Gui) drawFrames() (err error) {
-	maxX, maxY := termbox.Size()
 	for _, v := range g.views {
 		for x := v.X0 + 1; x < v.X1; x++ {
 			if v.Y0 != -1 {
 				g.SetCell(x, v.Y0, '─')
 			}
-			if v.Y1 != maxY {
+			if v.Y1 != g.maxY {
 				g.SetCell(x, v.Y1, '─')
 			}
 		}
@@ -176,7 +176,7 @@ func (g *Gui) drawFrames() (err error) {
 			if v.X0 != -1 {
 				g.SetCell(v.X0, y, '│')
 			}
-			if v.X1 != maxX {
+			if v.X1 != g.maxX {
 				g.SetCell(v.X1, y, '│')
 			}
 		}
@@ -203,8 +203,7 @@ func (g *Gui) drawIntersections() (err error) {
 }
 
 func (g *Gui) getIntersectionRune(x, y int) (ch rune, ok bool) {
-	maxX, maxY := termbox.Size()
-	if x < 0 || y < 0 || x >= maxX || y >= maxY {
+	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return 0, false
 	}
 
@@ -257,6 +256,26 @@ func horizontalRune(ch rune) bool {
 }
 
 func (g *Gui) resizeViews() (err error) {
+	newMaxX, newMaxY := termbox.Size()
+
+	scaleX := float32(newMaxX) / float32(g.maxX)
+	scaleY := float32(newMaxY) / float32(g.maxY)
+	for _, v := range g.views {
+		if v.X0 > -1 && v.X0 < g.maxX {
+			v.X0 = int(float32(v.X0)*scaleX + 0.5)
+		}
+		if v.X1 > -1 && v.X1 < g.maxX {
+			v.X1 = int(float32(v.X1)*scaleX + 0.5)
+		}
+		if v.Y0 > -1 && v.Y0 < g.maxY {
+			v.Y0 = int(float32(v.Y0)*scaleY + 0.5)
+		}
+		if v.Y1 > -1 && v.Y1 < g.maxY {
+			v.Y1 = int(float32(v.Y1)*scaleY + 0.5)
+		}
+	}
+
+	g.maxX, g.maxY = newMaxX, newMaxY
 	return nil
 }
 
