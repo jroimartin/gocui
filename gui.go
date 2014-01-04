@@ -75,12 +75,22 @@ func (g *Gui) AddView(name string, x0, y0, x1, y1 int) (v *View, err error) {
 }
 
 func (g *Gui) GetView(name string) (v *View) {
-	for _, v = range g.views {
+	for _, v := range g.views {
 		if v.Name == name {
 			return v
 		}
 	}
 	return nil
+}
+
+func (g *Gui) DeleteView(name string) (err error) {
+	for i, v := range g.views {
+		if v.Name == name {
+			g.views = append(g.views[:i], g.views[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("not found")
 }
 
 func (g *Gui) MainLoop() (err error) {
