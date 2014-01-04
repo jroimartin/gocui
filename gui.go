@@ -106,7 +106,7 @@ func (g *Gui) MainLoop() (err error) {
 	if err := g.draw(); err != nil {
 		return err
 	}
-	// TODO: Set initial cursor position
+	// XXX Set initial cursor position
 	//termbox.SetCursor(10, 10)
 	termbox.Flush()
 
