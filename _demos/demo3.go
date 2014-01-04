@@ -6,6 +6,20 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
+func layout(g *gocui.Gui) error {
+	maxX, maxY := g.Size()
+	if _, err := g.AddView("side", -1, -1, int(0.2*float32(maxX)), maxY-5); err != nil {
+		return err
+	}
+	if _, err := g.AddView("main", int(0.2*float32(maxX)), -1, maxX, maxY-5); err != nil {
+		return err
+	}
+	if _, err := g.AddView("cmdline", -1, maxY-5, maxX, maxY); err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	var err error
 
@@ -15,15 +29,7 @@ func main() {
 	}
 	defer g.Close()
 
-	if _, err := g.AddView("side", 0, 0, 0.3, 0.9); err != nil {
-		log.Panicln(err)
-	}
-	if _, err := g.AddView("main", 0.3, 0, 0.7, 0.9); err != nil {
-		log.Panicln(err)
-	}
-	if _, err := g.AddView("cmdline", 0, 0.9, 0.5, 0.1); err != nil {
-		log.Panicln(err)
-	}
+	g.Layout = layout
 
 	err = g.MainLoop()
 	if err != nil && err != gocui.ErrorQuit {

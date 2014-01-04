@@ -1,8 +1,4 @@
 GOCUI - Go Console User Interface
 =================================
 
-WIP
-
-TODO
-----
-- Keybindings
+Minimalist Go library aimed at creating Console User Interfaces.

@@ -6,12 +6,13 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
-var ErrorQuit = errors.New("quit")
+var ErrorQuit error = errors.New("quit")
 
 type Gui struct {
 	events           chan termbox.Event
 	views            []*View
 	currentView      *View
+	Layout           func(*Gui) error
 	maxX, maxY       int
 	BgColor, FgColor termbox.Attribute
 }
@@ -41,7 +42,7 @@ func (g *Gui) Size() (x, y int) {
 
 func (g *Gui) SetRune(x, y int, ch rune) (err error) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
-		return errors.New("SetRune: invalid point")
+		return errors.New("invalid point")
 	}
 	termbox.SetCell(x, y, ch, g.FgColor, g.BgColor)
 	return nil
@@ -49,26 +50,37 @@ func (g *Gui) SetRune(x, y int, ch rune) (err error) {
 
 func (g *Gui) GetRune(x, y int) (ch rune, err error) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
-		return 0, errors.New("GetRune: invalid point")
+		return 0, errors.New("invalid point")
 	}
 	c := termbox.CellBuffer()[y*g.maxX+x]
 	return c.Ch, nil
 }
 
-func (g *Gui) AddView(name string, x, y, w, h float32) (v *View, err error) {
-	if w < -1 || h < -1 {
-		return nil, errors.New("AddView: invalid dimensions")
+func (g *Gui) AddView(name string, x0, y0, x1, y1 int) (v *View, err error) {
+	if x0 >= x1 || y0 >= y1 {
+		return nil, errors.New("invalid dimensions")
 	}
 
-	for _, v := range g.views {
-		if name == v.Name {
-			return nil, errors.New("AddView: invalid name")
-		}
+	if v := g.GetView(name); v != nil {
+		v.X0 = x0
+		v.Y0 = y0
+		v.X1 = x1
+		v.Y1 = y1
+		return v, nil
 	}
 
-	v = NewView(name, x, y, w, h, g.maxX, g.maxY)
+	v = NewView(name, x0, y0, x1, y1)
 	g.views = append(g.views, v)
 	return v, nil
+}
+
+func (g *Gui) GetView(name string) (v *View) {
+	for _, v = range g.views {
+		if v.Name == name {
+			return v
+		}
+	}
+	return nil
 }
 
 func (g *Gui) MainLoop() (err error) {
@@ -146,8 +158,13 @@ func (g *Gui) drawView(v *View) (err error) {
 }
 
 func (g *Gui) resize() (err error) {
+	if g.Layout == nil {
+		return errors.New("Null layout")
+	}
+
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-	if err := g.resizeViews(); err != nil {
+	g.maxX, g.maxY = termbox.Size()
+	if err := g.Layout(g); err != nil {
 		return err
 	}
 	if err := g.drawFrames(); err != nil {
@@ -273,15 +290,6 @@ func horizontalRune(ch rune) bool {
 		return true
 	}
 	return false
-}
-
-func (g *Gui) resizeViews() (err error) {
-	g.maxX, g.maxY = termbox.Size()
-
-	for _, v := range g.views {
-		v.Resize(g.maxX, g.maxY)
-	}
-	return nil
 }
 
 func (g *Gui) onKey(ev *termbox.Event) (err error) {
