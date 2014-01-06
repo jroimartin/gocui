@@ -40,6 +40,34 @@ func showHideCursor(g *gocui.Gui, v *gocui.View) error {
 
 }
 
+func cursorDown(g *gocui.Gui, v *gocui.View) error {
+	if v != nil {
+		v.SetCursor(v.CX, v.CY+1)
+	}
+	return nil
+}
+
+func cursorUp(g *gocui.Gui, v *gocui.View) error {
+	if v != nil {
+		v.SetCursor(v.CX, v.CY-1)
+	}
+	return nil
+}
+
+func cursorLeft(g *gocui.Gui, v *gocui.View) error {
+	if v != nil {
+		v.SetCursor(v.CX-1, v.CY)
+	}
+	return nil
+}
+
+func cursorRight(g *gocui.Gui, v *gocui.View) error {
+	if v != nil {
+		v.SetCursor(v.CX+1, v.CY)
+	}
+	return nil
+}
+
 func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyCtrlM, 0, focusMain); err != nil {
 		return err
@@ -50,15 +78,28 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyCtrlL, 0, focusCmdLine); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
+	if err := g.SetKeybinding("", 'c', gocui.ModAlt, showHideCursor); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("", 'c', gocui.ModAlt, showHideCursor); err != nil {
+	if err := g.SetKeybinding("", 'j', 0, cursorDown); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", 'k', 0, cursorUp); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", 'h', 0, cursorLeft); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", 'l', 0, cursorRight); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("main", gocui.KeyCtrlC, 0, quit); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("main", 'q', 0, quit); err != nil {
 		return err
 	}
+
 	return nil
 }
 
