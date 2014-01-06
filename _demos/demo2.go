@@ -20,6 +20,39 @@ func layout(g *gocui.Gui) error {
 	return nil
 }
 
+func focusMain(g *gocui.Gui, v *gocui.View) error {
+	return g.SetCurrentView("main")
+}
+
+func focusSide(g *gocui.Gui, v *gocui.View) error {
+	return g.SetCurrentView("side")
+
+}
+
+func focusCmdLine(g *gocui.Gui, v *gocui.View) error {
+	return g.SetCurrentView("cmdline")
+
+}
+
+func keybindings(g *gocui.Gui) error {
+	if err := g.SetKeybinding("", gocui.KeyCtrlM, 0, focusMain); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", gocui.KeyCtrlS, 0, focusSide); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", gocui.KeyCtrlL, 0, focusCmdLine); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("main", 'q', 0, quit); err != nil {
+		return err
+	}
+	return nil
+}
+
 func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrorQuit
 }
@@ -35,13 +68,7 @@ func main() {
 
 	g.Layout = layout
 
-	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
-		log.Panicln(err)
-	}
-	if err := g.SetKeybinding("", 'q', 0, quit); err != nil {
-		log.Panicln(err)
-	}
-	if err := g.SetKeybinding("main", 'x', 0, quit); err != nil {
+	if err := keybindings(g); err != nil {
 		log.Panicln(err)
 	}
 

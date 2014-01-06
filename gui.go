@@ -10,10 +10,9 @@ var ErrorQuit error = errors.New("quit")
 
 type Gui struct {
 	events           chan termbox.Event
-	curview          *View
+	CurrentView      *View
 	views            []*View
 	keybindings      []*Keybinding
-	currentView      *View
 	Layout           func(*Gui) error
 	maxX, maxY       int
 	BgColor, FgColor termbox.Attribute
@@ -89,6 +88,16 @@ func (g *Gui) DeleteView(name string) (err error) {
 	for i, v := range g.views {
 		if v.Name == name {
 			g.views = append(g.views[:i], g.views[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("unknown view")
+}
+
+func (g *Gui) SetCurrentView(name string) (err error) {
+	for _, v := range g.views {
+		if v.Name == name {
+			g.CurrentView = v
 			return nil
 		}
 	}
@@ -325,7 +334,7 @@ func horizontalRune(ch rune) bool {
 func (g *Gui) onKey(ev *termbox.Event) (err error) {
 	for _, kb := range g.keybindings {
 		if ev.Ch == kb.Ch && Key(ev.Key) == kb.Key && Modifier(ev.Mod) == kb.Mod &&
-			(kb.ViewName == "" || (g.curview != nil && kb.ViewName == g.curview.Name)) {
+			(kb.ViewName == "" || (g.CurrentView != nil && kb.ViewName == g.CurrentView.Name)) {
 			if err := kb.CB(g, nil); err != nil {
 				return err
 			}
