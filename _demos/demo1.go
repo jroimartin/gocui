@@ -38,6 +38,10 @@ func layout(g *gocui.Gui) error {
 	return nil
 }
 
+func quit(g *gocui.Gui, v *gocui.View) error {
+	return gocui.ErrorQuit
+}
+
 func main() {
 	var err error
 
@@ -48,6 +52,10 @@ func main() {
 	defer g.Close()
 
 	g.Layout = layout
+
+	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
+		log.Panicln(err)
+	}
 
 	err = g.MainLoop()
 	if err != nil && err != gocui.ErrorQuit {
