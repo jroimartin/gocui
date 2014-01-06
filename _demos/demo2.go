@@ -53,6 +53,13 @@ func keybindings(g *gocui.Gui) error {
 	return nil
 }
 
+func start(g *gocui.Gui) error {
+	if err := g.SetCurrentView("main"); err != nil {
+		return err
+	}
+	return nil
+}
+
 func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrorQuit
 }
@@ -67,6 +74,8 @@ func main() {
 	defer g.Close()
 
 	g.Layout = layout
+	g.Start = start
+	g.ShowCursor = true
 
 	if err := keybindings(g); err != nil {
 		log.Panicln(err)

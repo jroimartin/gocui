@@ -7,7 +7,7 @@ import (
 type View struct {
 	Name                   string
 	X0, Y0, X1, Y1         int
-	cx, cy                 int
+	CX, CY                 int
 	BgColor, FgColor       termbox.Attribute
 	SelBgColor, SelFgColor termbox.Attribute
 }

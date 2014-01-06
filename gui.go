@@ -14,8 +14,10 @@ type Gui struct {
 	views            []*View
 	keybindings      []*Keybinding
 	Layout           func(*Gui) error
+	Start            func(*Gui) error
 	maxX, maxY       int
 	BgColor, FgColor termbox.Attribute
+	ShowCursor       bool
 }
 
 func NewGui() (g *Gui) {
@@ -131,12 +133,15 @@ func (g *Gui) MainLoop() (err error) {
 	if err := g.resize(); err != nil {
 		return err
 	}
+	if g.Start != nil {
+		if err := g.Start(g); err != nil {
+			return err
+		}
+	}
 	if err := g.draw(); err != nil {
 		return err
 	}
 
-	// XXX Set initial cursor position
-	//termbox.SetCursor(10, 10)
 	termbox.Flush()
 
 	for {
@@ -193,6 +198,10 @@ func (g *Gui) draw() (err error) {
 }
 
 func (g *Gui) drawView(v *View) (err error) {
+	if g.ShowCursor && v == g.CurrentView {
+		termbox.SetCursor(v.X0+v.CX+1, v.Y0+v.CY+1)
+	}
+
 	return nil
 }
 
