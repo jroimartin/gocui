@@ -57,6 +57,7 @@ func start(g *gocui.Gui) error {
 	if err := g.SetCurrentView("main"); err != nil {
 		return err
 	}
+	g.ShowCursor = true
 	return nil
 }
 
@@ -75,7 +76,6 @@ func main() {
 
 	g.Layout = layout
 	g.Start = start
-	g.ShowCursor = true
 
 	if err := keybindings(g); err != nil {
 		log.Panicln(err)
