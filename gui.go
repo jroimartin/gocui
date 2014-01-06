@@ -10,7 +10,9 @@ var ErrorQuit error = errors.New("quit")
 
 type Gui struct {
 	events           chan termbox.Event
+	curview          *View
 	views            []*View
+	keybindings      []*Keybinding
 	currentView      *View
 	Layout           func(*Gui) error
 	maxX, maxY       int
@@ -56,7 +58,7 @@ func (g *Gui) GetRune(x, y int) (ch rune, err error) {
 	return c.Ch, nil
 }
 
-func (g *Gui) AddView(name string, x0, y0, x1, y1 int) (v *View, err error) {
+func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (v *View, err error) {
 	if x0 >= x1 || y0 >= y1 {
 		return nil, errors.New("invalid dimensions")
 	}
@@ -90,7 +92,22 @@ func (g *Gui) DeleteView(name string) (err error) {
 			return nil
 		}
 	}
-	return errors.New("not found")
+	return errors.New("unknown view")
+}
+
+func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, cb KeybindingCB) (err error) {
+	var kb *Keybinding
+
+	switch k := key.(type) {
+	case Key:
+		kb = NewKeybinding(viewname, k, 0, mod, cb)
+	case rune:
+		kb = NewKeybinding(viewname, 0, k, mod, cb)
+	default:
+		return errors.New("unknown type")
+	}
+	g.keybindings = append(g.keybindings, kb)
+	return nil
 }
 
 func (g *Gui) MainLoop() (err error) {
@@ -100,12 +117,15 @@ func (g *Gui) MainLoop() (err error) {
 		}
 	}()
 
+	termbox.SetInputMode(termbox.InputAlt)
+
 	if err := g.resize(); err != nil {
 		return err
 	}
 	if err := g.draw(); err != nil {
 		return err
 	}
+
 	// XXX Set initial cursor position
 	//termbox.SetCursor(10, 10)
 	termbox.Flush()
@@ -303,10 +323,13 @@ func horizontalRune(ch rune) bool {
 }
 
 func (g *Gui) onKey(ev *termbox.Event) (err error) {
-	switch ev.Key {
-	case termbox.KeyCtrlC:
-		return ErrorQuit
-	default:
-		return nil
+	for _, kb := range g.keybindings {
+		if ev.Ch == kb.Ch && Key(ev.Key) == kb.Key && Modifier(ev.Mod) == kb.Mod &&
+			(kb.ViewName == "" || (g.curview != nil && kb.ViewName == g.curview.Name)) {
+			if err := kb.CB(g, nil); err != nil {
+				return err
+			}
+		}
 	}
+	return nil
 }
