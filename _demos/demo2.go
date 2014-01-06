@@ -34,6 +34,12 @@ func focusCmdLine(g *gocui.Gui, v *gocui.View) error {
 
 }
 
+func showHideCursor(g *gocui.Gui, v *gocui.View) error {
+	g.ShowCursor = !g.ShowCursor
+	return nil
+
+}
+
 func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyCtrlM, 0, focusMain); err != nil {
 		return err
@@ -45,6 +51,9 @@ func keybindings(g *gocui.Gui) error {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", 'c', gocui.ModAlt, showHideCursor); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("main", 'q', 0, quit); err != nil {

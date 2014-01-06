@@ -9,15 +9,15 @@ import (
 var ErrorQuit error = errors.New("quit")
 
 type Gui struct {
-	events           chan termbox.Event
 	CurrentView      *View
-	views            []*View
-	keybindings      []*Keybinding
 	Layout           func(*Gui) error
 	Start            func(*Gui) error
-	maxX, maxY       int
 	BgColor, FgColor termbox.Attribute
 	ShowCursor       bool
+	events           chan termbox.Event
+	views            []*View
+	keybindings      []*Keybinding
+	maxX, maxY       int
 }
 
 func NewGui() (g *Gui) {
@@ -189,6 +189,14 @@ func (g *Gui) handleEvent(ev *termbox.Event) (err error) {
 }
 
 func (g *Gui) draw() (err error) {
+	if g.ShowCursor {
+		if v := g.CurrentView; v != nil {
+			termbox.SetCursor(v.X0+v.CX+1, v.Y0+v.CY+1)
+		}
+	} else {
+		termbox.HideCursor()
+	}
+
 	for _, v := range g.views {
 		if err := g.drawView(v); err != nil {
 			return err
@@ -198,10 +206,6 @@ func (g *Gui) draw() (err error) {
 }
 
 func (g *Gui) drawView(v *View) (err error) {
-	if g.ShowCursor && v == g.CurrentView {
-		termbox.SetCursor(v.X0+v.CX+1, v.Y0+v.CY+1)
-	}
-
 	return nil
 }
 
