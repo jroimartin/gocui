@@ -1,8 +1,6 @@
 package gocui
 
-import (
-	"github.com/nsf/termbox-go"
-)
+import "github.com/nsf/termbox-go"
 
 type Attribute termbox.Attribute
 
