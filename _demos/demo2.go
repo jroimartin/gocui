@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/jroimartin/gocui"
@@ -17,6 +18,29 @@ func layout(g *gocui.Gui) error {
 	if _, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY); err != nil {
 		return err
 	}
+	return nil
+}
+
+func start(g *gocui.Gui) error {
+	if err := keybindings(g); err != nil {
+		return err
+	}
+	if err := g.SetCurrentView("main"); err != nil {
+		return err
+	}
+	if v := g.GetView("main"); v != nil {
+		fmt.Fprintln(v, "This is a test")
+	}
+	if v := g.GetView("side"); v != nil {
+		fmt.Fprintln(v, "Item 1")
+		fmt.Fprintln(v, "Item 2")
+		fmt.Fprintln(v, "Item 3")
+		fmt.Fprintln(v, "Item 4")
+	}
+	if v := g.GetView("cmdline"); v != nil {
+		fmt.Fprintln(v, "Buffer test")
+	}
+	g.ShowCursor = true
 	return nil
 }
 
@@ -100,17 +124,6 @@ func keybindings(g *gocui.Gui) error {
 		return err
 	}
 
-	return nil
-}
-
-func start(g *gocui.Gui) error {
-	if err := keybindings(g); err != nil {
-		return err
-	}
-	if err := g.SetCurrentView("main"); err != nil {
-		return err
-	}
-	g.ShowCursor = true
 	return nil
 }
 

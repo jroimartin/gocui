@@ -198,14 +198,10 @@ func (g *Gui) draw() (err error) {
 	}
 
 	for _, v := range g.views {
-		if err := g.drawView(v); err != nil {
+		if err := v.Draw(); err != nil {
 			return err
 		}
 	}
-	return nil
-}
-
-func (g *Gui) drawView(v *View) (err error) {
 	return nil
 }
 
