@@ -14,8 +14,8 @@ type View struct {
 	buffer                 []rune
 	X0, Y0, X1, Y1         int
 	CX, CY                 int
-	BgColor, FgColor       termbox.Attribute
-	SelBgColor, SelFgColor termbox.Attribute
+	BgColor, FgColor       Attribute
+	SelBgColor, SelFgColor Attribute
 }
 
 func NewView(name string, x0, y0, x1, y1 int) (v *View) {
@@ -25,10 +25,10 @@ func NewView(name string, x0, y0, x1, y1 int) (v *View) {
 		Y0:         y0,
 		X1:         x1,
 		Y1:         y1,
-		BgColor:    termbox.ColorBlack,
-		FgColor:    termbox.ColorWhite,
-		SelBgColor: termbox.ColorBlack,
-		SelFgColor: termbox.ColorWhite,
+		BgColor:    ColorBlack,
+		FgColor:    ColorWhite,
+		SelBgColor: ColorBlack,
+		SelFgColor: ColorWhite,
 	}
 	return v
 }
@@ -42,7 +42,17 @@ func (v *View) SetRune(x, y int, ch rune) (err error) {
 	if x < 0 || x >= maxX || y < 0 || y >= maxY {
 		return errors.New("invalid point")
 	}
-	termbox.SetCell(v.X0+x+1, v.Y0+y+1, ch, v.FgColor, v.BgColor)
+
+	var fgColor, bgColor Attribute
+	if y == v.CY {
+		fgColor = v.SelFgColor
+		bgColor = v.SelBgColor
+	} else {
+		fgColor = v.FgColor
+		bgColor = v.BgColor
+	}
+	termbox.SetCell(v.X0+x+1, v.Y0+y+1, ch,
+		termbox.Attribute(fgColor), termbox.Attribute(bgColor))
 	return nil
 }
 

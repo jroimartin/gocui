@@ -32,6 +32,8 @@ func start(g *gocui.Gui) error {
 		fmt.Fprintln(v, "This is a test")
 	}
 	if v := g.GetView("side"); v != nil {
+		v.SelBgColor = gocui.ColorGreen
+		v.SelFgColor = gocui.ColorBlack
 		fmt.Fprintln(v, "Item 1")
 		fmt.Fprintln(v, "Item 2")
 		fmt.Fprintln(v, "Item 3")
@@ -117,7 +119,7 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", 'l', 0, cursorRight); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("main", gocui.KeyCtrlC, 0, quit); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("main", 'q', 0, quit); err != nil {

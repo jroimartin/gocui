@@ -12,7 +12,7 @@ type Gui struct {
 	CurrentView      *View
 	Layout           func(*Gui) error
 	Start            func(*Gui) error
-	BgColor, FgColor termbox.Attribute
+	BgColor, FgColor Attribute
 	ShowCursor       bool
 	events           chan termbox.Event
 	views            []*View
@@ -30,8 +30,8 @@ func (g *Gui) Init() (err error) {
 	}
 	g.events = make(chan termbox.Event, 20)
 	g.maxX, g.maxY = termbox.Size()
-	g.BgColor = termbox.ColorWhite
-	g.FgColor = termbox.ColorBlack
+	g.BgColor = ColorWhite
+	g.FgColor = ColorBlack
 	return nil
 }
 
@@ -47,7 +47,7 @@ func (g *Gui) SetRune(x, y int, ch rune) (err error) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return errors.New("invalid point")
 	}
-	termbox.SetCell(x, y, ch, g.FgColor, g.BgColor)
+	termbox.SetCell(x, y, ch, termbox.Attribute(g.FgColor), termbox.Attribute(g.BgColor))
 	return nil
 }
 
