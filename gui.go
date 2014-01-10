@@ -12,12 +12,12 @@ var (
 )
 
 type Gui struct {
-	CurrentView            *View
 	BgColor, FgColor       Attribute
 	SelBgColor, SelFgColor Attribute
 	ShowCursor             bool
 	events                 chan termbox.Event
 	views                  []*View
+	currentView            *View
 	layout                 func(*Gui) error
 	keybindings            []*Keybinding
 	maxX, maxY             int
@@ -104,7 +104,7 @@ func (g *Gui) DeleteView(name string) (err error) {
 func (g *Gui) SetCurrentView(name string) (err error) {
 	for _, v := range g.views {
 		if v.Name == name {
-			g.CurrentView = v
+			g.currentView = v
 			return nil
 		}
 	}
@@ -128,6 +128,8 @@ func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, cb K
 
 func (g *Gui) SetLayout(layout func(*Gui) error) {
 	g.layout = layout
+	g.currentView = nil
+	g.views = nil
 	go func() { g.events <- termbox.Event{Type: termbox.EventResize} }()
 }
 
@@ -193,7 +195,7 @@ func (g *Gui) handleEvent(ev *termbox.Event) (err error) {
 
 func (g *Gui) draw() (err error) {
 	if g.ShowCursor {
-		if v := g.CurrentView; v != nil {
+		if v := g.currentView; v != nil {
 			termbox.SetCursor(v.X0+v.CX+1, v.Y0+v.CY+1)
 		}
 	} else {
@@ -346,8 +348,8 @@ func horizontalRune(ch rune) bool {
 func (g *Gui) onKey(ev *termbox.Event) (err error) {
 	for _, kb := range g.keybindings {
 		if ev.Ch == kb.Ch && Key(ev.Key) == kb.Key && Modifier(ev.Mod) == kb.Mod &&
-			(kb.ViewName == "" || (g.CurrentView != nil && kb.ViewName == g.CurrentView.Name)) {
-			if err := kb.CB(g, g.CurrentView); err != nil {
+			(kb.ViewName == "" || (g.currentView != nil && kb.ViewName == g.currentView.Name)) {
+			if err := kb.CB(g, g.currentView); err != nil {
 				return err
 			}
 		}

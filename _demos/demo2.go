@@ -165,6 +165,9 @@ func layout2(g *gocui.Gui) error {
 			return err
 		}
 		fmt.Fprintln(v, "Center view test")
+		if err := g.SetCurrentView("center"); err != nil {
+			return err
+		}
 	}
 	return nil
 }
