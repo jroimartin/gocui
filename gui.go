@@ -9,15 +9,16 @@ import (
 var ErrorQuit error = errors.New("quit")
 
 type Gui struct {
-	CurrentView      *View
-	Layout           func(*Gui) error
-	Start            func(*Gui) error
-	BgColor, FgColor Attribute
-	ShowCursor       bool
-	events           chan termbox.Event
-	views            []*View
-	keybindings      []*Keybinding
-	maxX, maxY       int
+	CurrentView            *View
+	Layout                 func(*Gui) error
+	Start                  func(*Gui) error
+	BgColor, FgColor       Attribute
+	SelBgColor, SelFgColor Attribute
+	ShowCursor             bool
+	events                 chan termbox.Event
+	views                  []*View
+	keybindings            []*Keybinding
+	maxX, maxY             int
 }
 
 func NewGui() (g *Gui) {
@@ -30,8 +31,8 @@ func (g *Gui) Init() (err error) {
 	}
 	g.events = make(chan termbox.Event, 20)
 	g.maxX, g.maxY = termbox.Size()
-	g.BgColor = ColorWhite
-	g.FgColor = ColorBlack
+	g.BgColor = ColorBlack
+	g.FgColor = ColorWhite
 	return nil
 }
 
@@ -73,6 +74,8 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (v *View, err error) {
 	}
 
 	v = NewView(name, x0, y0, x1, y1)
+	v.bgColor, v.fgColor = g.BgColor, g.FgColor
+	v.selBgColor, v.selFgColor = g.SelBgColor, g.SelFgColor
 	g.views = append(g.views, v)
 	return v, nil
 }
@@ -145,19 +148,17 @@ func (g *Gui) MainLoop() (err error) {
 	termbox.Flush()
 
 	for {
-		select {
-		case ev := <-g.events:
-			if err := g.handleEvent(&ev); err != nil {
-				return err
-			}
-			if err := g.consumeevents(); err != nil {
-				return err
-			}
-			if err := g.draw(); err != nil {
-				return err
-			}
-			termbox.Flush()
+		ev := <-g.events
+		if err := g.handleEvent(&ev); err != nil {
+			return err
 		}
+		if err := g.consumeevents(); err != nil {
+			return err
+		}
+		if err := g.draw(); err != nil {
+			return err
+		}
+		termbox.Flush()
 	}
 	return nil
 }
@@ -210,7 +211,7 @@ func (g *Gui) resize() (err error) {
 		return errors.New("Null layout")
 	}
 
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	termbox.Clear(termbox.Attribute(g.FgColor), termbox.Attribute(g.BgColor))
 	g.maxX, g.maxY = termbox.Size()
 	if err := g.Layout(g); err != nil {
 		return err

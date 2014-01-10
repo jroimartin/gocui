@@ -11,24 +11,21 @@ import (
 
 type View struct {
 	Name                   string
-	buffer                 []rune
 	X0, Y0, X1, Y1         int
 	CX, CY                 int
-	BgColor, FgColor       Attribute
-	SelBgColor, SelFgColor Attribute
+	Highlight              bool
+	buffer                 []rune
+	bgColor, fgColor       Attribute
+	selBgColor, selFgColor Attribute
 }
 
 func NewView(name string, x0, y0, x1, y1 int) (v *View) {
 	v = &View{
-		Name:       name,
-		X0:         x0,
-		Y0:         y0,
-		X1:         x1,
-		Y1:         y1,
-		BgColor:    ColorBlack,
-		FgColor:    ColorWhite,
-		SelBgColor: ColorBlack,
-		SelFgColor: ColorWhite,
+		Name: name,
+		X0:   x0,
+		Y0:   y0,
+		X1:   x1,
+		Y1:   y1,
 	}
 	return v
 }
@@ -44,12 +41,12 @@ func (v *View) SetRune(x, y int, ch rune) (err error) {
 	}
 
 	var fgColor, bgColor Attribute
-	if y == v.CY {
-		fgColor = v.SelFgColor
-		bgColor = v.SelBgColor
+	if v.Highlight && y == v.CY {
+		fgColor = v.selFgColor
+		bgColor = v.selBgColor
 	} else {
-		fgColor = v.FgColor
-		bgColor = v.BgColor
+		fgColor = v.fgColor
+		bgColor = v.bgColor
 	}
 	termbox.SetCell(v.X0+x+1, v.Y0+y+1, ch,
 		termbox.Attribute(fgColor), termbox.Attribute(bgColor))
@@ -86,6 +83,7 @@ func (v *View) Draw() (err error) {
 	maxX, maxY := v.Size()
 	buf := bytes.NewBufferString(string(v.buffer))
 	br := bufio.NewReader(buf)
+
 	for nl := 0; ; nl++ {
 		line, _, err := br.ReadLine()
 		if err == io.EOF {
@@ -102,4 +100,15 @@ func (v *View) Draw() (err error) {
 		}
 	}
 	return nil
+}
+
+func (v *View) Clear() {
+	v.buffer = nil
+	maxX, maxY := v.Size()
+	for x := 0; x < maxX; x++ {
+		for y := 0; y < maxY; y++ {
+			termbox.SetCell(v.X0+x+1, v.Y0+y+1, 0,
+				termbox.Attribute(v.fgColor), termbox.Attribute(v.bgColor))
+		}
+	}
 }
