@@ -15,9 +15,3 @@ const (
 	ColorCyan              = Attribute(termbox.ColorCyan)
 	ColorWhite             = Attribute(termbox.ColorWhite)
 )
-
-const (
-	AttrBold      Attribute = Attribute(termbox.AttrBold)
-	AttrUnderline           = Attribute(termbox.AttrUnderline)
-	AttrReverse             = Attribute(termbox.AttrReverse)
-)
