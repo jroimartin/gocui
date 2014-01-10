@@ -8,7 +8,7 @@ import (
 
 var (
 	ErrorQuit    error = errors.New("quit")
-	ErrorUnkView error = errors.New("view exists")
+	ErrorUnkView error = errors.New("unknown view")
 )
 
 type Gui struct {
@@ -98,7 +98,7 @@ func (g *Gui) DeleteView(name string) (err error) {
 			return nil
 		}
 	}
-	return errors.New("unknown view")
+	return ErrorUnkView
 }
 
 func (g *Gui) SetCurrentView(name string) (err error) {
@@ -108,7 +108,7 @@ func (g *Gui) SetCurrentView(name string) (err error) {
 			return nil
 		}
 	}
-	return errors.New("unknown view")
+	return ErrorUnkView
 }
 
 func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, cb KeybindingCB) (err error) {
