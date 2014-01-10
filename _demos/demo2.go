@@ -68,6 +68,14 @@ func writeTest(g *gocui.Gui, v *gocui.View) error {
 	}
 	return nil
 }
+func setLayout1(g *gocui.Gui, v *gocui.View) error {
+	g.SetLayout(layout)
+	return nil
+}
+func setLayout2(g *gocui.Gui, v *gocui.View) error {
+	g.SetLayout(layout2)
+	return nil
+}
 
 func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyCtrlM, 0, focusMain); err != nil {
@@ -106,6 +114,12 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", 't', 0, writeTest); err != nil {
 		return err
 	}
+	if err := g.SetKeybinding("", '1', 0, setLayout1); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", '2', 0, setLayout2); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -116,39 +130,42 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if _, err := g.SetView("side", -1, -1, 30, maxY-5); err != nil {
-		return err
-	}
-	if _, err := g.SetView("main", 30, -1, maxX, maxY-5); err != nil {
-		return err
-	}
-	if _, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY); err != nil {
-		return err
-	}
-	return nil
-}
-
-func start(g *gocui.Gui) error {
-	if err := keybindings(g); err != nil {
-		return err
-	}
-	if v := g.GetView("main"); v != nil {
-		fmt.Fprintln(v, "This is a test")
-	}
-	if v := g.GetView("side"); v != nil {
+	if v, err := g.SetView("side", -1, -1, 30, maxY-5); err != nil {
+		if err != gocui.ErrorUnkView {
+			return err
+		}
 		v.Highlight = true
 		fmt.Fprintln(v, "Item 1")
 		fmt.Fprintln(v, "Item 2")
 		fmt.Fprintln(v, "Item 3")
 		fmt.Fprintln(v, "Item 4")
 	}
-	if v := g.GetView("cmdline"); v != nil {
-		fmt.Fprintln(v, "Buffer test")
+	if v, err := g.SetView("main", 30, -1, maxX, maxY-5); err != nil {
+		if err != gocui.ErrorUnkView {
+			return err
+		}
+		fmt.Fprintln(v, "This is a test")
+		if err := g.SetCurrentView("main"); err != nil {
+			return err
+		}
 	}
-	if err := g.SetCurrentView("main"); err != nil {
-		return err
+	if v, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY); err != nil {
+		if err != gocui.ErrorUnkView {
+			return err
+		}
+		fmt.Fprintln(v, "Command line test")
 	}
-	g.ShowCursor = true
+	return nil
+}
+
+func layout2(g *gocui.Gui) error {
+	maxX, maxY := g.Size()
+	if v, err := g.SetView("center", maxX/2-10, maxY/2-10, maxX/2+10, maxY/2+10); err != nil {
+		if err != gocui.ErrorUnkView {
+			return err
+		}
+		fmt.Fprintln(v, "Center view test")
+	}
 	return nil
 }
 
@@ -161,10 +178,13 @@ func main() {
 	}
 	defer g.Close()
 
-	g.Layout = layout
-	g.Start = start
+	g.SetLayout(layout)
+	if err := keybindings(g); err != nil {
+		log.Panicln(err)
+	}
 	g.SelBgColor = gocui.ColorGreen
 	g.SelFgColor = gocui.ColorBlack
+	g.ShowCursor = true
 
 	err = g.MainLoop()
 	if err != nil && err != gocui.ErrorQuit {

@@ -8,31 +8,40 @@ import (
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if _, err := g.SetView("v1", -1, -1, 10, 10); err != nil {
+	if _, err := g.SetView("v1", -1, -1, 10, 10); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
-	if _, err := g.SetView("v2", maxX-10, -1, maxX, 10); err != nil {
+	if _, err := g.SetView("v2", maxX-10, -1, maxX, 10); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
-	if _, err := g.SetView("v3", maxX/2-5, -1, maxX/2+5, 10); err != nil {
+	if _, err := g.SetView("v3", maxX/2-5, -1, maxX/2+5, 10); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
-	if _, err := g.SetView("v4", -1, maxY/2-5, 10, maxY/2+5); err != nil {
+	if _, err := g.SetView("v4", -1, maxY/2-5, 10, maxY/2+5); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
-	if _, err := g.SetView("v5", maxX-10, maxY/2-5, maxX, maxY/2+5); err != nil {
+	if _, err := g.SetView("v5", maxX-10, maxY/2-5, maxX, maxY/2+5); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
-	if _, err := g.SetView("v6", -1, maxY-10, 10, maxY); err != nil {
+	if _, err := g.SetView("v6", -1, maxY-10, 10, maxY); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
-	if _, err := g.SetView("v7", maxX-10, maxY-10, maxX, maxY); err != nil {
+	if _, err := g.SetView("v7", maxX-10, maxY-10, maxX, maxY); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
-	if _, err := g.SetView("v8", maxX/2-5, maxY-10, maxX/2+5, maxY); err != nil {
+	if _, err := g.SetView("v8", maxX/2-5, maxY-10, maxX/2+5, maxY); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
-	if _, err := g.SetView("v9", maxX/2-5, maxY/2-5, maxX/2+5, maxY/2+5); err != nil {
+	if _, err := g.SetView("v9", maxX/2-5, maxY/2-5, maxX/2+5, maxY/2+5); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
 	return nil
@@ -51,8 +60,7 @@ func main() {
 	}
 	defer g.Close()
 
-	g.Layout = layout
-
+	g.SetLayout(layout)
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
 		log.Panicln(err)
 	}

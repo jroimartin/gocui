@@ -6,17 +6,19 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
-var ErrorQuit error = errors.New("quit")
+var (
+	ErrorQuit    error = errors.New("quit")
+	ErrorUnkView error = errors.New("view exists")
+)
 
 type Gui struct {
 	CurrentView            *View
-	Layout                 func(*Gui) error
-	Start                  func(*Gui) error
 	BgColor, FgColor       Attribute
 	SelBgColor, SelFgColor Attribute
 	ShowCursor             bool
 	events                 chan termbox.Event
 	views                  []*View
+	layout                 func(*Gui) error
 	keybindings            []*Keybinding
 	maxX, maxY             int
 }
@@ -77,7 +79,7 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (v *View, err error) {
 	v.bgColor, v.fgColor = g.BgColor, g.FgColor
 	v.selBgColor, v.selFgColor = g.SelBgColor, g.SelFgColor
 	g.views = append(g.views, v)
-	return v, nil
+	return v, ErrorUnkView
 }
 
 func (g *Gui) GetView(name string) (v *View) {
@@ -124,6 +126,11 @@ func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, cb K
 	return nil
 }
 
+func (g *Gui) SetLayout(layout func(*Gui) error) {
+	g.layout = layout
+	go func() { g.events <- termbox.Event{Type: termbox.EventResize} }()
+}
+
 func (g *Gui) MainLoop() (err error) {
 	go func() {
 		for {
@@ -135,11 +142,6 @@ func (g *Gui) MainLoop() (err error) {
 
 	if err := g.resize(); err != nil {
 		return err
-	}
-	if g.Start != nil {
-		if err := g.Start(g); err != nil {
-			return err
-		}
 	}
 	if err := g.draw(); err != nil {
 		return err
@@ -207,13 +209,13 @@ func (g *Gui) draw() (err error) {
 }
 
 func (g *Gui) resize() (err error) {
-	if g.Layout == nil {
+	if g.layout == nil {
 		return errors.New("Null layout")
 	}
 
 	termbox.Clear(termbox.Attribute(g.FgColor), termbox.Attribute(g.BgColor))
 	g.maxX, g.maxY = termbox.Size()
-	if err := g.Layout(g); err != nil {
+	if err := g.layout(g); err != nil {
 		return err
 	}
 	if err := g.drawFrames(); err != nil {

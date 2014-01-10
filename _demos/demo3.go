@@ -8,13 +8,16 @@ import (
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if _, err := g.SetView("side", -1, -1, int(0.2*float32(maxX)), maxY-5); err != nil {
+	if _, err := g.SetView("side", -1, -1, int(0.2*float32(maxX)), maxY-5); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
-	if _, err := g.SetView("main", int(0.2*float32(maxX)), -1, maxX, maxY-5); err != nil {
+	if _, err := g.SetView("main", int(0.2*float32(maxX)), -1, maxX, maxY-5); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
-	if _, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY); err != nil {
+	if _, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY); err != nil &&
+		err != gocui.ErrorUnkView {
 		return err
 	}
 	return nil
@@ -33,7 +36,7 @@ func main() {
 	}
 	defer g.Close()
 
-	g.Layout = layout
+	g.SetLayout(layout)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
 		log.Panicln(err)
