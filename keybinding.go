@@ -86,7 +86,7 @@ const (
 	ModAlt Modifier = Modifier(termbox.ModAlt)
 )
 
-type Keybinding struct {
+type keybinding struct {
 	ViewName string
 	Key      Key
 	Ch       rune
@@ -94,8 +94,8 @@ type Keybinding struct {
 	CB       KeybindingCB
 }
 
-func NewKeybinding(viewname string, key Key, ch rune, mod Modifier, cb KeybindingCB) (kb *Keybinding) {
-	kb = &Keybinding{
+func newKeybinding(viewname string, key Key, ch rune, mod Modifier, cb KeybindingCB) (kb *keybinding) {
+	kb = &keybinding{
 		ViewName: viewname,
 		Key:      key,
 		Ch:       ch,

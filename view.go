@@ -19,7 +19,7 @@ type View struct {
 	selBgColor, selFgColor Attribute
 }
 
-func NewView(name string, x0, y0, x1, y1 int) (v *View) {
+func newView(name string, x0, y0, x1, y1 int) (v *View) {
 	v = &View{
 		Name: name,
 		X0:   x0,
@@ -79,7 +79,7 @@ func (v *View) Write(p []byte) (n int, err error) {
 	return len(pr), nil
 }
 
-func (v *View) Draw() (err error) {
+func (v *View) draw() (err error) {
 	maxX, maxY := v.Size()
 	buf := bytes.NewBufferString(string(v.buffer))
 	br := bufio.NewReader(buf)

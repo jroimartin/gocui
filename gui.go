@@ -19,7 +19,7 @@ type Gui struct {
 	views                  []*View
 	currentView            *View
 	layout                 func(*Gui) error
-	keybindings            []*Keybinding
+	keybindings            []*keybinding
 	maxX, maxY             int
 }
 
@@ -75,7 +75,7 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (v *View, err error) {
 		return v, nil
 	}
 
-	v = NewView(name, x0, y0, x1, y1)
+	v = newView(name, x0, y0, x1, y1)
 	v.bgColor, v.fgColor = g.BgColor, g.FgColor
 	v.selBgColor, v.selFgColor = g.SelBgColor, g.SelFgColor
 	g.views = append(g.views, v)
@@ -112,13 +112,13 @@ func (g *Gui) SetCurrentView(name string) (err error) {
 }
 
 func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, cb KeybindingCB) (err error) {
-	var kb *Keybinding
+	var kb *keybinding
 
 	switch k := key.(type) {
 	case Key:
-		kb = NewKeybinding(viewname, k, 0, mod, cb)
+		kb = newKeybinding(viewname, k, 0, mod, cb)
 	case rune:
-		kb = NewKeybinding(viewname, 0, k, mod, cb)
+		kb = newKeybinding(viewname, 0, k, mod, cb)
 	default:
 		return errors.New("unknown type")
 	}
@@ -203,7 +203,7 @@ func (g *Gui) draw() (err error) {
 	}
 
 	for _, v := range g.views {
-		if err := v.Draw(); err != nil {
+		if err := v.draw(); err != nil {
 			return err
 		}
 	}
