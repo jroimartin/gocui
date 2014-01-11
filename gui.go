@@ -349,6 +349,9 @@ func (g *Gui) onKey(ev *termbox.Event) (err error) {
 	for _, kb := range g.keybindings {
 		if ev.Ch == kb.Ch && Key(ev.Key) == kb.Key && Modifier(ev.Mod) == kb.Mod &&
 			(kb.ViewName == "" || (g.currentView != nil && kb.ViewName == g.currentView.Name)) {
+			if kb.CB == nil {
+				return nil
+			}
 			if err := kb.CB(g, g.currentView); err != nil {
 				return err
 			}
