@@ -90,29 +90,30 @@ func (v *View) draw() (err error) {
 	buf := bytes.NewBufferString(string(v.buffer))
 	br := bufio.NewReader(buf)
 
-	for y, nl := 0, 0; ; y++ {
+	y := 0
+	for i := 0; ; i++ {
 		line, _, err := br.ReadLine()
 		if err == io.EOF {
 			break
 		} else if err != nil {
 			return err
 		}
-		if y < v.OY {
+		if i < v.OY {
 			continue
 		}
 		x := 0
-		for i, ch := range bytes.Runes(line) {
-			if i < v.OX {
+		for j, ch := range bytes.Runes(line) {
+			if j < v.OX {
 				continue
 			}
-			if x >= 0 && x < maxX && nl >= 0 && nl < maxY {
-				if err := v.SetRune(x, nl, ch); err != nil {
+			if x >= 0 && x < maxX && y >= 0 && y < maxY {
+				if err := v.SetRune(x, y, ch); err != nil {
 					return err
 				}
 			}
 			x++
 		}
-		nl++
+		y++
 	}
 	return nil
 }
