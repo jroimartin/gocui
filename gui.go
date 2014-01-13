@@ -203,6 +203,7 @@ func (g *Gui) draw() (err error) {
 	}
 
 	for _, v := range g.views {
+		v.clearRunes()
 		if err := v.draw(); err != nil {
 			return err
 		}

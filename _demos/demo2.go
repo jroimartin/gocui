@@ -29,28 +29,36 @@ func showHideCursor(g *gocui.Gui, v *gocui.View) error {
 
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		v.SetCursor(v.CX, v.CY+1)
+		if err := v.SetCursor(v.CX, v.CY+1); err != nil {
+			v.SetOrigin(v.OX, v.OY+1)
+		}
 	}
 	return nil
 }
 
 func cursorUp(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		v.SetCursor(v.CX, v.CY-1)
+		if err := v.SetCursor(v.CX, v.CY-1); err != nil && v.OY > 0 {
+			v.SetOrigin(v.OX, v.OY-1)
+		}
 	}
 	return nil
 }
 
 func cursorLeft(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		v.SetCursor(v.CX-1, v.CY)
+		if err := v.SetCursor(v.CX-1, v.CY); err != nil && v.OX > 0 {
+			v.SetOrigin(v.OX-1, v.OY)
+		}
 	}
 	return nil
 }
 
 func cursorRight(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		v.SetCursor(v.CX+1, v.CY)
+		if err := v.SetCursor(v.CX+1, v.CY); err != nil {
+			v.SetOrigin(v.OX+1, v.OY)
+		}
 	}
 	return nil
 }

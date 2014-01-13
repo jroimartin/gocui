@@ -13,6 +13,7 @@ type View struct {
 	Name                   string
 	X0, Y0, X1, Y1         int
 	CX, CY                 int
+	OX, OY                 int
 	Highlight              bool
 	buffer                 []rune
 	bgColor, fgColor       Attribute
@@ -73,6 +74,11 @@ func (v *View) SetCursor(x, y int) (err error) {
 	return nil
 }
 
+func (v *View) SetOrigin(x, y int) {
+	v.OX = x
+	v.OY = y
+}
+
 func (v *View) Write(p []byte) (n int, err error) {
 	pr := bytes.Runes(p)
 	v.buffer = append(v.buffer, pr...)
@@ -84,26 +90,39 @@ func (v *View) draw() (err error) {
 	buf := bytes.NewBufferString(string(v.buffer))
 	br := bufio.NewReader(buf)
 
-	for nl := 0; ; nl++ {
+	for y, nl := 0, 0; ; y++ {
 		line, _, err := br.ReadLine()
 		if err == io.EOF {
 			break
 		} else if err != nil {
 			return err
 		}
+		if y < v.OY {
+			continue
+		}
+		x := 0
 		for i, ch := range bytes.Runes(line) {
-			if i >= 0 && i < maxX && nl >= 0 && nl < maxY {
-				if err := v.SetRune(i, nl, ch); err != nil {
+			if i < v.OX {
+				continue
+			}
+			if x >= 0 && x < maxX && nl >= 0 && nl < maxY {
+				if err := v.SetRune(x, nl, ch); err != nil {
 					return err
 				}
 			}
+			x++
 		}
+		nl++
 	}
 	return nil
 }
 
 func (v *View) Clear() {
 	v.buffer = nil
+	v.clearRunes()
+}
+
+func (v *View) clearRunes() {
 	maxX, maxY := v.Size()
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < maxY; y++ {
