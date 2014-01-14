@@ -1,3 +1,7 @@
+// Copyright 2014 The gocui Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package gocui
 
 import "github.com/nsf/termbox-go"
