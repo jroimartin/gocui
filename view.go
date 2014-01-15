@@ -24,8 +24,8 @@ type View struct {
 	selBgColor, selFgColor Attribute
 }
 
-func newView(name string, x0, y0, x1, y1 int) (v *View) {
-	v = &View{
+func newView(name string, x0, y0, x1, y1 int) *View {
+	v := &View{
 		Name: name,
 		X0:   x0,
 		Y0:   y0,
@@ -39,7 +39,7 @@ func (v *View) Size() (x, y int) {
 	return v.X1 - v.X0 - 1, v.Y1 - v.Y0 - 1
 }
 
-func (v *View) SetRune(x, y int, ch rune) (err error) {
+func (v *View) setRune(x, y int, ch rune) error {
 	maxX, maxY := v.Size()
 	if x < 0 || x >= maxX || y < 0 || y >= maxY {
 		return errors.New("invalid point")
@@ -58,17 +58,7 @@ func (v *View) SetRune(x, y int, ch rune) (err error) {
 	return nil
 }
 
-func (v *View) GetRune(x, y int) (ch rune, err error) {
-	maxX, maxY := v.Size()
-	if x < 0 || x >= maxX || y < 0 || y >= maxY {
-		return 0, errors.New("invalid point")
-	}
-	h := v.Y1 - v.Y0 - 1
-	c := v.buffer[y*h+x]
-	return c, nil
-}
-
-func (v *View) SetCursor(x, y int) (err error) {
+func (v *View) SetCursor(x, y int) error {
 	maxX, maxY := v.Size()
 	if x < 0 || x >= maxX || y < 0 || y >= maxY {
 		return errors.New("invalid point")
@@ -89,7 +79,7 @@ func (v *View) Write(p []byte) (n int, err error) {
 	return len(pr), nil
 }
 
-func (v *View) draw() (err error) {
+func (v *View) draw() error {
 	maxX, maxY := v.Size()
 	buf := bytes.NewBufferString(string(v.buffer))
 	br := bufio.NewReader(buf)
@@ -111,7 +101,7 @@ func (v *View) draw() (err error) {
 				continue
 			}
 			if x >= 0 && x < maxX && y >= 0 && y < maxY {
-				if err := v.SetRune(x, y, ch); err != nil {
+				if err := v.setRune(x, y, ch); err != nil {
 					return err
 				}
 			}

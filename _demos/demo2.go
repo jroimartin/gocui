@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 
 	"github.com/jroimartin/gocui"
@@ -156,7 +157,11 @@ func layout(g *gocui.Gui) error {
 		if err != gocui.ErrorUnkView {
 			return err
 		}
-		fmt.Fprintln(v, "This is a test")
+		b, err := ioutil.ReadFile("Mark.Twain-Tom.Sawyer.txt")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Fprintf(v, "%s", b)
 		if err := g.SetCurrentView("main"); err != nil {
 			return err
 		}
