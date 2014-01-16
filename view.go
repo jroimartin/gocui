@@ -14,29 +14,34 @@ import (
 )
 
 type View struct {
-	Name                   string
-	X0, Y0, X1, Y1         int
-	CX, CY                 int
-	OX, OY                 int
-	Highlight              bool
+	name                   string
+	x0, y0, x1, y1         int
+	ox, oy                 int
+	cx, cy                 int
 	buffer                 []rune
 	bgColor, fgColor       Attribute
 	selBgColor, selFgColor Attribute
+
+	Highlight bool
 }
 
 func newView(name string, x0, y0, x1, y1 int) *View {
 	v := &View{
-		Name: name,
-		X0:   x0,
-		Y0:   y0,
-		X1:   x1,
-		Y1:   y1,
+		name: name,
+		x0:   x0,
+		y0:   y0,
+		x1:   x1,
+		y1:   y1,
 	}
 	return v
 }
 
 func (v *View) Size() (x, y int) {
-	return v.X1 - v.X0 - 1, v.Y1 - v.Y0 - 1
+	return v.x1 - v.x0 - 1, v.y1 - v.y0 - 1
+}
+
+func (v *View) Name() string {
+	return v.name
 }
 
 func (v *View) setRune(x, y int, ch rune) error {
@@ -46,14 +51,14 @@ func (v *View) setRune(x, y int, ch rune) error {
 	}
 
 	var fgColor, bgColor Attribute
-	if v.Highlight && y == v.CY {
+	if v.Highlight && y == v.cy {
 		fgColor = v.selFgColor
 		bgColor = v.selBgColor
 	} else {
 		fgColor = v.fgColor
 		bgColor = v.bgColor
 	}
-	termbox.SetCell(v.X0+x+1, v.Y0+y+1, ch,
+	termbox.SetCell(v.x0+x+1, v.y0+y+1, ch,
 		termbox.Attribute(fgColor), termbox.Attribute(bgColor))
 	return nil
 }
@@ -63,14 +68,22 @@ func (v *View) SetCursor(x, y int) error {
 	if x < 0 || x >= maxX || y < 0 || y >= maxY {
 		return errors.New("invalid point")
 	}
-	v.CX = x
-	v.CY = y
+	v.cx = x
+	v.cy = y
 	return nil
 }
 
+func (v *View) Cursor() (x, y int) {
+	return v.cx, v.cy
+}
+
 func (v *View) SetOrigin(x, y int) {
-	v.OX = x
-	v.OY = y
+	v.ox = x
+	v.oy = y
+}
+
+func (v *View) Origin() (x, y int) {
+	return v.ox, v.oy
 }
 
 func (v *View) Write(p []byte) (n int, err error) {
@@ -92,12 +105,12 @@ func (v *View) draw() error {
 		} else if err != nil {
 			return err
 		}
-		if i < v.OY {
+		if i < v.oy {
 			continue
 		}
 		x := 0
 		for j, ch := range bytes.Runes(line) {
-			if j < v.OX {
+			if j < v.ox {
 				continue
 			}
 			if x >= 0 && x < maxX && y >= 0 && y < maxY {
@@ -121,7 +134,7 @@ func (v *View) clearRunes() {
 	maxX, maxY := v.Size()
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < maxY; y++ {
-			termbox.SetCell(v.X0+x+1, v.Y0+y+1, 0,
+			termbox.SetCell(v.x0+x+1, v.y0+y+1, 0,
 				termbox.Attribute(v.fgColor), termbox.Attribute(v.bgColor))
 		}
 	}

@@ -16,15 +16,16 @@ var (
 )
 
 type Gui struct {
+	events      chan termbox.Event
+	views       []*View
+	currentView *View
+	layout      func(*Gui) error
+	keybindings []*keybinding
+	maxX, maxY  int
+
 	BgColor, FgColor       Attribute
 	SelBgColor, SelFgColor Attribute
 	ShowCursor             bool
-	events                 chan termbox.Event
-	views                  []*View
-	currentView            *View
-	layout                 func(*Gui) error
-	keybindings            []*keybinding
-	maxX, maxY             int
 }
 
 func NewGui() *Gui {
@@ -58,7 +59,7 @@ func (g *Gui) SetRune(x, y int, ch rune) error {
 	return nil
 }
 
-func (g *Gui) GetRune(x, y int) (rune, error) {
+func (g *Gui) Rune(x, y int) (rune, error) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return 0, errors.New("invalid point")
 	}
@@ -71,11 +72,11 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 		return nil, errors.New("invalid dimensions")
 	}
 
-	if v := g.GetView(name); v != nil {
-		v.X0 = x0
-		v.Y0 = y0
-		v.X1 = x1
-		v.Y1 = y1
+	if v := g.View(name); v != nil {
+		v.x0 = x0
+		v.y0 = y0
+		v.x1 = x1
+		v.y1 = y1
 		return v, nil
 	}
 
@@ -86,9 +87,9 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	return v, ErrorUnkView
 }
 
-func (g *Gui) GetView(name string) *View {
+func (g *Gui) View(name string) *View {
 	for _, v := range g.views {
-		if v.Name == name {
+		if v.name == name {
 			return v
 		}
 	}
@@ -97,7 +98,7 @@ func (g *Gui) GetView(name string) *View {
 
 func (g *Gui) DeleteView(name string) error {
 	for i, v := range g.views {
-		if v.Name == name {
+		if v.name == name {
 			g.views = append(g.views[:i], g.views[i+1:]...)
 			return nil
 		}
@@ -107,7 +108,7 @@ func (g *Gui) DeleteView(name string) error {
 
 func (g *Gui) SetCurrentView(name string) error {
 	for _, v := range g.views {
-		if v.Name == name {
+		if v.name == name {
 			g.currentView = v
 			return nil
 		}
@@ -201,17 +202,17 @@ func (g *Gui) draw() error {
 	if g.ShowCursor {
 		if v := g.currentView; v != nil {
 			maxX, maxY := v.Size()
-			cx, cy := v.CX, v.CY
-			if v.CX >= maxX {
+			cx, cy := v.Cursor()
+			if v.cx >= maxX {
 				cx = maxX - 1
 			}
-			if v.CY >= maxY {
+			if v.cy >= maxY {
 				cy = maxY - 1
 			}
 			if err := v.SetCursor(cx, cy); err != nil {
 				return nil
 			}
-			termbox.SetCursor(v.X0+v.CX+1, v.Y0+v.CY+1)
+			termbox.SetCursor(v.x0+v.cx+1, v.y0+v.cy+1)
 		}
 	} else {
 		termbox.HideCursor()
@@ -248,32 +249,32 @@ func (g *Gui) resize() error {
 
 func (g *Gui) drawFrames() error {
 	for _, v := range g.views {
-		for x := v.X0 + 1; x < v.X1 && x < g.maxX; x++ {
+		for x := v.x0 + 1; x < v.x1 && x < g.maxX; x++ {
 			if x < 0 {
 				continue
 			}
-			if v.Y0 > -1 && v.Y0 < g.maxY {
-				if err := g.SetRune(x, v.Y0, '─'); err != nil {
+			if v.y0 > -1 && v.y0 < g.maxY {
+				if err := g.SetRune(x, v.y0, '─'); err != nil {
 					return err
 				}
 			}
-			if v.Y1 > -1 && v.Y1 < g.maxY {
-				if err := g.SetRune(x, v.Y1, '─'); err != nil {
+			if v.y1 > -1 && v.y1 < g.maxY {
+				if err := g.SetRune(x, v.y1, '─'); err != nil {
 					return err
 				}
 			}
 		}
-		for y := v.Y0 + 1; y < v.Y1 && y < g.maxY; y++ {
+		for y := v.y0 + 1; y < v.y1 && y < g.maxY; y++ {
 			if y < 0 {
 				continue
 			}
-			if v.X0 > -1 && v.X0 < g.maxX {
-				if err := g.SetRune(v.X0, y, '│'); err != nil {
+			if v.x0 > -1 && v.x0 < g.maxX {
+				if err := g.SetRune(v.x0, y, '│'); err != nil {
 					return err
 				}
 			}
-			if v.X1 > -1 && v.X1 < g.maxX {
-				if err := g.SetRune(v.X1, y, '│'); err != nil {
+			if v.x1 > -1 && v.x1 < g.maxX {
+				if err := g.SetRune(v.x1, y, '│'); err != nil {
 					return err
 				}
 			}
@@ -284,23 +285,23 @@ func (g *Gui) drawFrames() error {
 
 func (g *Gui) drawIntersections() error {
 	for _, v := range g.views {
-		if ch, ok := g.getIntersectionRune(v.X0, v.Y0); ok {
-			if err := g.SetRune(v.X0, v.Y0, ch); err != nil {
+		if ch, ok := g.intersectionRune(v.x0, v.y0); ok {
+			if err := g.SetRune(v.x0, v.y0, ch); err != nil {
 				return err
 			}
 		}
-		if ch, ok := g.getIntersectionRune(v.X0, v.Y1); ok {
-			if err := g.SetRune(v.X0, v.Y1, ch); err != nil {
+		if ch, ok := g.intersectionRune(v.x0, v.y1); ok {
+			if err := g.SetRune(v.x0, v.y1, ch); err != nil {
 				return err
 			}
 		}
-		if ch, ok := g.getIntersectionRune(v.X1, v.Y0); ok {
-			if err := g.SetRune(v.X1, v.Y0, ch); err != nil {
+		if ch, ok := g.intersectionRune(v.x1, v.y0); ok {
+			if err := g.SetRune(v.x1, v.y0, ch); err != nil {
 				return err
 			}
 		}
-		if ch, ok := g.getIntersectionRune(v.X1, v.Y1); ok {
-			if err := g.SetRune(v.X1, v.Y1, ch); err != nil {
+		if ch, ok := g.intersectionRune(v.x1, v.y1); ok {
+			if err := g.SetRune(v.x1, v.y1, ch); err != nil {
 				return err
 			}
 		}
@@ -308,18 +309,18 @@ func (g *Gui) drawIntersections() error {
 	return nil
 }
 
-func (g *Gui) getIntersectionRune(x, y int) (rune, bool) {
+func (g *Gui) intersectionRune(x, y int) (rune, bool) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return 0, false
 	}
 
-	chTop, _ := g.GetRune(x, y-1)
+	chTop, _ := g.Rune(x, y-1)
 	top := verticalRune(chTop)
-	chBottom, _ := g.GetRune(x, y+1)
+	chBottom, _ := g.Rune(x, y+1)
 	bottom := verticalRune(chBottom)
-	chLeft, _ := g.GetRune(x-1, y)
+	chLeft, _ := g.Rune(x-1, y)
 	left := horizontalRune(chLeft)
-	chRight, _ := g.GetRune(x+1, y)
+	chRight, _ := g.Rune(x+1, y)
 	right := horizontalRune(chRight)
 
 	var ch rune
@@ -365,7 +366,7 @@ func horizontalRune(ch rune) bool {
 func (g *Gui) onKey(ev *termbox.Event) error {
 	for _, kb := range g.keybindings {
 		if ev.Ch == kb.Ch && Key(ev.Key) == kb.Key && Modifier(ev.Mod) == kb.Mod &&
-			(kb.ViewName == "" || (g.currentView != nil && kb.ViewName == g.currentView.Name)) {
+			(kb.ViewName == "" || (g.currentView != nil && kb.ViewName == g.currentView.name)) {
 			if kb.CB == nil {
 				return nil
 			}

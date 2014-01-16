@@ -34,8 +34,10 @@ func showHideCursor(g *gocui.Gui, v *gocui.View) error {
 
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		if err := v.SetCursor(v.CX, v.CY+1); err != nil {
-			v.SetOrigin(v.OX, v.OY+1)
+		cx, cy := v.Cursor()
+		if err := v.SetCursor(cx, cy+1); err != nil {
+			ox, oy := v.Origin()
+			v.SetOrigin(ox, oy+1)
 		}
 	}
 	return nil
@@ -43,8 +45,10 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 
 func cursorUp(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		if err := v.SetCursor(v.CX, v.CY-1); err != nil && v.OY > 0 {
-			v.SetOrigin(v.OX, v.OY-1)
+		ox, oy := v.Origin()
+		cx, cy := v.Cursor()
+		if err := v.SetCursor(cx, cy-1); err != nil && oy > 0 {
+			v.SetOrigin(ox, oy-1)
 		}
 	}
 	return nil
@@ -52,8 +56,10 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 
 func cursorLeft(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		if err := v.SetCursor(v.CX-1, v.CY); err != nil && v.OX > 0 {
-			v.SetOrigin(v.OX-1, v.OY)
+		ox, oy := v.Origin()
+		cx, cy := v.Cursor()
+		if err := v.SetCursor(cx-1, cy); err != nil && ox > 0 {
+			v.SetOrigin(ox-1, oy)
 		}
 	}
 	return nil
@@ -61,8 +67,10 @@ func cursorLeft(g *gocui.Gui, v *gocui.View) error {
 
 func cursorRight(g *gocui.Gui, v *gocui.View) error {
 	if v != nil {
-		if err := v.SetCursor(v.CX+1, v.CY); err != nil {
-			v.SetOrigin(v.OX+1, v.OY)
+		cx, cy := v.Cursor()
+		if err := v.SetCursor(cx+1, cy); err != nil {
+			ox, oy := v.Origin()
+			v.SetOrigin(ox+1, oy)
 		}
 	}
 	return nil
