@@ -37,7 +37,9 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 		cx, cy := v.Cursor()
 		if err := v.SetCursor(cx, cy+1); err != nil {
 			ox, oy := v.Origin()
-			v.SetOrigin(ox, oy+1)
+			if err := v.SetOrigin(ox, oy+1); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -48,7 +50,9 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 		ox, oy := v.Origin()
 		cx, cy := v.Cursor()
 		if err := v.SetCursor(cx, cy-1); err != nil && oy > 0 {
-			v.SetOrigin(ox, oy-1)
+			if err := v.SetOrigin(ox, oy-1); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -59,7 +63,9 @@ func cursorLeft(g *gocui.Gui, v *gocui.View) error {
 		ox, oy := v.Origin()
 		cx, cy := v.Cursor()
 		if err := v.SetCursor(cx-1, cy); err != nil && ox > 0 {
-			v.SetOrigin(ox-1, oy)
+			if err := v.SetOrigin(ox-1, oy); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -70,7 +76,9 @@ func cursorRight(g *gocui.Gui, v *gocui.View) error {
 		cx, cy := v.Cursor()
 		if err := v.SetCursor(cx+1, cy); err != nil {
 			ox, oy := v.Origin()
-			v.SetOrigin(ox+1, oy)
+			if err := v.SetOrigin(ox+1, oy); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -99,7 +107,7 @@ func setLayout2(g *gocui.Gui, v *gocui.View) error {
 }
 
 func keybindings(g *gocui.Gui) error {
-	if err := g.SetKeybinding("", gocui.KeyCtrlM, 0, focusMain); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyCtrlSpace, 0, focusMain); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyCtrlS, 0, focusSide); err != nil {

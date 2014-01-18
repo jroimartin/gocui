@@ -370,9 +370,7 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 			if kb.CB == nil {
 				return nil
 			}
-			if err := kb.CB(g, g.currentView); err != nil {
-				return err
-			}
+			return kb.CB(g, g.currentView)
 		}
 	}
 	return nil

@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"io"
 
 	"github.com/nsf/termbox-go"
 )
@@ -18,7 +17,7 @@ type View struct {
 	x0, y0, x1, y1         int
 	ox, oy                 int
 	cx, cy                 int
-	buffer                 []rune
+	lines                  [][]rune
 	bgColor, fgColor       Attribute
 	selBgColor, selFgColor Attribute
 
@@ -77,9 +76,13 @@ func (v *View) Cursor() (x, y int) {
 	return v.cx, v.cy
 }
 
-func (v *View) SetOrigin(x, y int) {
+func (v *View) SetOrigin(x, y int) error {
+	if x < 0 || y < 0 {
+		return errors.New("invalid point")
+	}
 	v.ox = x
 	v.oy = y
+	return nil
 }
 
 func (v *View) Origin() (x, y int) {
@@ -87,29 +90,27 @@ func (v *View) Origin() (x, y int) {
 }
 
 func (v *View) Write(p []byte) (n int, err error) {
-	pr := bytes.Runes(p)
-	v.buffer = append(v.buffer, pr...)
-	return len(pr), nil
+	r := bytes.NewReader(p)
+	s := bufio.NewScanner(r)
+	for s.Scan() {
+		line := bytes.Runes(s.Bytes())
+		v.lines = append(v.lines, line)
+	}
+	if err := s.Err(); err != nil {
+		return 0, err
+	}
+	return len(p), nil
 }
 
 func (v *View) draw() error {
 	maxX, maxY := v.Size()
-	buf := bytes.NewBufferString(string(v.buffer))
-	br := bufio.NewReader(buf)
-
 	y := 0
-	for i := 0; ; i++ {
-		line, _, err := br.ReadLine()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return err
-		}
+	for i, line := range v.lines {
 		if i < v.oy {
 			continue
 		}
 		x := 0
-		for j, ch := range bytes.Runes(line) {
+		for j, ch := range line {
 			if j < v.ox {
 				continue
 			}
@@ -126,7 +127,7 @@ func (v *View) draw() error {
 }
 
 func (v *View) Clear() {
-	v.buffer = nil
+	v.lines = nil
 	v.clearRunes()
 }
 
