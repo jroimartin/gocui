@@ -97,10 +97,31 @@ func writeTest(g *gocui.Gui, v *gocui.View) error {
 	}
 	return nil
 }
+
+func showMsg(g *gocui.Gui, v *gocui.View) error {
+	maxX, maxY := g.Size()
+	if v, err := g.SetView("msg", maxX/2-10, maxY/2-10, maxX/2+10, maxY/2+10); err != nil {
+		if err != gocui.ErrorUnkView {
+			return err
+		}
+		fmt.Fprintln(v, "This is a message")
+	}
+	if err := g.SetCurrentView("msg"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func delMsg(g *gocui.Gui, v *gocui.View) error {
+	g.DeleteView("msg")
+	return nil
+}
+
 func setLayout1(g *gocui.Gui, v *gocui.View) error {
 	g.SetLayout(layout)
 	return nil
 }
+
 func setLayout2(g *gocui.Gui, v *gocui.View) error {
 	g.SetLayout(layout2)
 	return nil
@@ -147,6 +168,12 @@ func keybindings(g *gocui.Gui) error {
 		return err
 	}
 	if err := g.SetKeybinding("", '2', 0, setLayout2); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", '3', 0, showMsg); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", '4', 0, delMsg); err != nil {
 		return err
 	}
 

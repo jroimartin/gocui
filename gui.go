@@ -147,15 +147,9 @@ func (g *Gui) MainLoop() error {
 
 	termbox.SetInputMode(termbox.InputAlt)
 
-	if err := g.resize(); err != nil {
+	if err := g.Flush(); err != nil {
 		return err
 	}
-	if err := g.draw(); err != nil {
-		return err
-	}
-
-	termbox.Flush()
-
 	for {
 		ev := <-g.events
 		if err := g.handleEvent(&ev); err != nil {
@@ -164,10 +158,9 @@ func (g *Gui) MainLoop() error {
 		if err := g.consumeevents(); err != nil {
 			return err
 		}
-		if err := g.draw(); err != nil {
+		if err := g.Flush(); err != nil {
 			return err
 		}
-		termbox.Flush()
 	}
 	return nil
 }
@@ -189,8 +182,6 @@ func (g *Gui) handleEvent(ev *termbox.Event) error {
 	switch ev.Type {
 	case termbox.EventKey:
 		return g.onKey(ev)
-	case termbox.EventResize:
-		return g.resize()
 	case termbox.EventError:
 		return ev.Err
 	default:
@@ -198,7 +189,7 @@ func (g *Gui) handleEvent(ev *termbox.Event) error {
 	}
 }
 
-func (g *Gui) draw() error {
+func (g *Gui) draw(v *View) error {
 	if g.ShowCursor {
 		if v := g.currentView; v != nil {
 			maxX, maxY := v.Size()
@@ -218,16 +209,14 @@ func (g *Gui) draw() error {
 		termbox.HideCursor()
 	}
 
-	for _, v := range g.views {
-		v.clearRunes()
-		if err := v.draw(); err != nil {
-			return err
-		}
+	v.clearRunes()
+	if err := v.draw(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (g *Gui) resize() error {
+func (g *Gui) Flush() error {
 	if g.layout == nil {
 		return errors.New("Null layout")
 	}
@@ -237,46 +226,50 @@ func (g *Gui) resize() error {
 	if err := g.layout(g); err != nil {
 		return err
 	}
-	if err := g.drawFrames(); err != nil {
-		return err
+	for _, v := range g.views {
+		if err := g.drawFrame(v); err != nil {
+			return err
+		}
+		if err := g.draw(v); err != nil {
+			return err
+		}
 	}
 	if err := g.drawIntersections(); err != nil {
 		return err
 	}
+	termbox.Flush()
 	return nil
 
 }
 
-func (g *Gui) drawFrames() error {
-	for _, v := range g.views {
-		for x := v.x0 + 1; x < v.x1 && x < g.maxX; x++ {
-			if x < 0 {
-				continue
-			}
-			if v.y0 > -1 && v.y0 < g.maxY {
-				if err := g.SetRune(x, v.y0, '─'); err != nil {
-					return err
-				}
-			}
-			if v.y1 > -1 && v.y1 < g.maxY {
-				if err := g.SetRune(x, v.y1, '─'); err != nil {
-					return err
-				}
+func (g *Gui) drawFrame(v *View) error {
+	for x := v.x0 + 1; x < v.x1 && x < g.maxX; x++ {
+		if x < 0 {
+			continue
+		}
+		if v.y0 > -1 && v.y0 < g.maxY {
+			if err := g.SetRune(x, v.y0, '─'); err != nil {
+				return err
 			}
 		}
-		for y := v.y0 + 1; y < v.y1 && y < g.maxY; y++ {
-			if y < 0 {
-				continue
+		if v.y1 > -1 && v.y1 < g.maxY {
+			if err := g.SetRune(x, v.y1, '─'); err != nil {
+				return err
 			}
-			if v.x0 > -1 && v.x0 < g.maxX {
-				if err := g.SetRune(v.x0, y, '│'); err != nil {
-					return err
-				}
+		}
+	}
+	for y := v.y0 + 1; y < v.y1 && y < g.maxY; y++ {
+		if y < 0 {
+			continue
+		}
+		if v.x0 > -1 && v.x0 < g.maxX {
+			if err := g.SetRune(v.x0, y, '│'); err != nil {
+				return err
 			}
-			if v.x1 > -1 && v.x1 < g.maxX {
-				if err := g.SetRune(v.x1, y, '│'); err != nil {
-					return err
-				}
+		}
+		if v.x1 > -1 && v.x1 < g.maxX {
+			if err := g.SetRune(v.x1, y, '│'); err != nil {
+				return err
 			}
 		}
 	}
