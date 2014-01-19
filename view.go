@@ -12,6 +12,8 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+// A View is a window. It maintains its own internal buffer and cursor
+// position.
 type View struct {
 	name                   string
 	x0, y0, x1, y1         int
@@ -21,9 +23,12 @@ type View struct {
 	bgColor, fgColor       Attribute
 	selBgColor, selFgColor Attribute
 
+	// If Highlight is true, Sel{Bg,Fg}Colors will be used
+	// for the line under the cursor position.
 	Highlight bool
 }
 
+// newView returns a new View object.
 func newView(name string, x0, y0, x1, y1 int) *View {
 	v := &View{
 		name: name,
@@ -35,14 +40,19 @@ func newView(name string, x0, y0, x1, y1 int) *View {
 	return v
 }
 
+// Size returns the number of visible columns and rows in the View.
 func (v *View) Size() (x, y int) {
 	return v.x1 - v.x0 - 1, v.y1 - v.y0 - 1
 }
 
+// Name returns the name of the view.
 func (v *View) Name() string {
 	return v.name
 }
 
+// setRune writes a rune at the given point, relative to the view. It
+// checks if the position is valid and applies the view's colors, taking
+// into account if the cell must be highlighted.
 func (v *View) setRune(x, y int, ch rune) error {
 	maxX, maxY := v.Size()
 	if x < 0 || x >= maxX || y < 0 || y >= maxY {
@@ -62,6 +72,8 @@ func (v *View) setRune(x, y int, ch rune) error {
 	return nil
 }
 
+// SetCursor sets the cursor position of the view at the given point,
+// relative to the view. It checks if the position is valid.
 func (v *View) SetCursor(x, y int) error {
 	maxX, maxY := v.Size()
 	if x < 0 || x >= maxX || y < 0 || y >= maxY {
@@ -72,10 +84,16 @@ func (v *View) SetCursor(x, y int) error {
 	return nil
 }
 
+// Cursor returns the cursor position of the view.
 func (v *View) Cursor() (x, y int) {
 	return v.cx, v.cy
 }
 
+// SetOrigin sets the origin position of the view's internal buffer,
+// so the buffer starts to be printed from this point, which means that
+// it is linked with the origin point of view. It can be used to
+// implement Horizontal and Vertical scrolling with just incrementing
+// or decrementing ox and oy.
 func (v *View) SetOrigin(x, y int) error {
 	if x < 0 || y < 0 {
 		return errors.New("invalid point")
@@ -85,10 +103,15 @@ func (v *View) SetOrigin(x, y int) error {
 	return nil
 }
 
+// Origin returns the origin position of the view.
 func (v *View) Origin() (x, y int) {
 	return v.ox, v.oy
 }
 
+// Write appends a byte slice into the view's internal buffer. Because
+// View implements the io.Writer interface, it can be passed as parameter
+// of functions like fmt.FPrintf, fmt.FPrintln, io.Copy, etc. Clear must
+// be called to clear the view's buffer.
 func (v *View) Write(p []byte) (n int, err error) {
 	r := bytes.NewReader(p)
 	s := bufio.NewScanner(r)
@@ -102,6 +125,7 @@ func (v *View) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+// draw re-draws the view's contents.
 func (v *View) draw() error {
 	maxX, maxY := v.Size()
 	y := 0
@@ -126,11 +150,13 @@ func (v *View) draw() error {
 	return nil
 }
 
+// Clear empties the view's internal buffer.
 func (v *View) Clear() {
 	v.lines = nil
 	v.clearRunes()
 }
 
+// clearRunes erases all the cells in the view.
 func (v *View) clearRunes() {
 	maxX, maxY := v.Size()
 	for x := 0; x < maxX; x++ {

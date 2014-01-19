@@ -11,10 +11,15 @@ import (
 )
 
 var (
-	ErrorQuit    error = errors.New("quit")
+	// ErrorQuit is used to decide if the MainLoop finished succesfully.
+	ErrorQuit error = errors.New("quit")
+
+	// ErrorUnkView allows to assert if a View must be initialized.
 	ErrorUnkView error = errors.New("unknown view")
 )
 
+// Gui represents the whole User Interface, including the views, layouts
+// and keybindings.
 type Gui struct {
 	events      chan termbox.Event
 	views       []*View
@@ -28,10 +33,13 @@ type Gui struct {
 	ShowCursor             bool
 }
 
+// NewGui returns a new Gui object.
 func NewGui() *Gui {
 	return &Gui{}
 }
 
+// Init initializes the library. This function must be called before
+// any other functions.
 func (g *Gui) Init() error {
 	if err := termbox.Init(); err != nil {
 		return err
@@ -43,14 +51,20 @@ func (g *Gui) Init() error {
 	return nil
 }
 
+// Close finalizes the library. It should be called after a successful
+// initialization and when gocui is not needed anymore.
 func (g *Gui) Close() {
 	termbox.Close()
 }
 
+// Size returns the terminal's size.
 func (g *Gui) Size() (x, y int) {
 	return g.maxX, g.maxY
 }
 
+// SetRune writes a rune at the given point, relative to the top-left
+// corner of the terminal. It checks if the position is valid and applies
+// the gui's colors.
 func (g *Gui) SetRune(x, y int, ch rune) error {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return errors.New("invalid point")
@@ -59,6 +73,8 @@ func (g *Gui) SetRune(x, y int, ch rune) error {
 	return nil
 }
 
+// Rune returns the rune contained in the cell at the given position.
+// It checks if the position is valid.
 func (g *Gui) Rune(x, y int) (rune, error) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return 0, errors.New("invalid point")
@@ -67,6 +83,11 @@ func (g *Gui) Rune(x, y int) (rune, error) {
 	return c.Ch, nil
 }
 
+// SetView creates a new view with its top-left corner at (x0, y0)
+// and the bottom-right one at (x1, y1). If a view with the same name
+// already exists, its dimensions are updated; otherwise, the error
+// ErrorUnkView is returned, which allows to assert if the View must
+// be initialized. It checks if the position is valid.
 func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	if x0 >= x1 || y0 >= y1 {
 		return nil, errors.New("invalid dimensions")
@@ -87,6 +108,8 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	return v, ErrorUnkView
 }
 
+// View returns a pointer to the view with the given name, or nil if
+// a view with that name does not exist.
 func (g *Gui) View(name string) *View {
 	for _, v := range g.views {
 		if v.name == name {
@@ -96,6 +119,7 @@ func (g *Gui) View(name string) *View {
 	return nil
 }
 
+// DeleteView deletes a view by name.
 func (g *Gui) DeleteView(name string) error {
 	for i, v := range g.views {
 		if v.name == name {
@@ -106,6 +130,7 @@ func (g *Gui) DeleteView(name string) error {
 	return ErrorUnkView
 }
 
+// SetCurrentView gives the focus to a given view.
 func (g *Gui) SetCurrentView(name string) error {
 	for _, v := range g.views {
 		if v.name == name {
@@ -116,14 +141,17 @@ func (g *Gui) SetCurrentView(name string) error {
 	return ErrorUnkView
 }
 
-func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, cb KeybindingCB) error {
+// SetKeybinding creates a new keybinding. If viewname equals to ""
+// (empty string) then the keybinding will apply to all views. key must
+// be a rune or a Key.
+func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, h KeybindingHandler) error {
 	var kb *keybinding
 
 	switch k := key.(type) {
 	case Key:
-		kb = newKeybinding(viewname, k, 0, mod, cb)
+		kb = newKeybinding(viewname, k, 0, mod, h)
 	case rune:
-		kb = newKeybinding(viewname, 0, k, mod, cb)
+		kb = newKeybinding(viewname, 0, k, mod, h)
 	default:
 		return errors.New("unknown type")
 	}
@@ -131,6 +159,9 @@ func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, cb K
 	return nil
 }
 
+// SetLayout sets the current layout. A layout is a function that
+// will be called everytime the gui is re-drawed, it must contain
+// the base views and its initializations.
 func (g *Gui) SetLayout(layout func(*Gui) error) {
 	g.layout = layout
 	g.currentView = nil
@@ -138,6 +169,8 @@ func (g *Gui) SetLayout(layout func(*Gui) error) {
 	go func() { g.events <- termbox.Event{Type: termbox.EventResize} }()
 }
 
+// MainLoop runs the main loop until an error is returned. A successful
+// finish should return ErrorQuit.
 func (g *Gui) MainLoop() error {
 	go func() {
 		for {
@@ -165,6 +198,7 @@ func (g *Gui) MainLoop() error {
 	return nil
 }
 
+// consumeevents handles the remaining events in the events pool.
 func (g *Gui) consumeevents() error {
 	for {
 		select {
@@ -178,6 +212,8 @@ func (g *Gui) consumeevents() error {
 	}
 }
 
+// handleEvent handles an event, based on its type (key-press, error,
+// etc.)
 func (g *Gui) handleEvent(ev *termbox.Event) error {
 	switch ev.Type {
 	case termbox.EventKey:
@@ -189,33 +225,7 @@ func (g *Gui) handleEvent(ev *termbox.Event) error {
 	}
 }
 
-func (g *Gui) draw(v *View) error {
-	if g.ShowCursor {
-		if v := g.currentView; v != nil {
-			maxX, maxY := v.Size()
-			cx, cy := v.Cursor()
-			if v.cx >= maxX {
-				cx = maxX - 1
-			}
-			if v.cy >= maxY {
-				cy = maxY - 1
-			}
-			if err := v.SetCursor(cx, cy); err != nil {
-				return nil
-			}
-			termbox.SetCursor(v.x0+v.cx+1, v.y0+v.cy+1)
-		}
-	} else {
-		termbox.HideCursor()
-	}
-
-	v.clearRunes()
-	if err := v.draw(); err != nil {
-		return err
-	}
-	return nil
-}
-
+// Flush updates the gui, re-drawing frames and buffers.
 func (g *Gui) Flush() error {
 	if g.layout == nil {
 		return errors.New("Null layout")
@@ -242,6 +252,7 @@ func (g *Gui) Flush() error {
 
 }
 
+// drawFrame draws the horizontal and vertical edges of a view.
 func (g *Gui) drawFrame(v *View) error {
 	for x := v.x0 + 1; x < v.x1 && x < g.maxX; x++ {
 		if x < 0 {
@@ -276,6 +287,36 @@ func (g *Gui) drawFrame(v *View) error {
 	return nil
 }
 
+// draw manages the cursor and calls the draw function of a view.
+func (g *Gui) draw(v *View) error {
+	if g.ShowCursor {
+		if v := g.currentView; v != nil {
+			maxX, maxY := v.Size()
+			cx, cy := v.Cursor()
+			if v.cx >= maxX {
+				cx = maxX - 1
+			}
+			if v.cy >= maxY {
+				cy = maxY - 1
+			}
+			if err := v.SetCursor(cx, cy); err != nil {
+				return nil
+			}
+			termbox.SetCursor(v.x0+v.cx+1, v.y0+v.cy+1)
+		}
+	} else {
+		termbox.HideCursor()
+	}
+
+	v.clearRunes()
+	if err := v.draw(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// drawIntersections draws the corners of each view, based on the type
+// of the edges that converge at these points.
 func (g *Gui) drawIntersections() error {
 	for _, v := range g.views {
 		if ch, ok := g.intersectionRune(v.x0, v.y0); ok {
@@ -302,6 +343,8 @@ func (g *Gui) drawIntersections() error {
 	return nil
 }
 
+// intersectionRune returns the correct intersection rune at a given
+// point.
 func (g *Gui) intersectionRune(x, y int) (rune, bool) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return 0, false
@@ -342,6 +385,7 @@ func (g *Gui) intersectionRune(x, y int) (rune, bool) {
 	return ch, true
 }
 
+// verticalRune returns if the given character is a vertical rune.
 func verticalRune(ch rune) bool {
 	if ch == '│' || ch == '┼' || ch == '├' || ch == '┤' {
 		return true
@@ -349,6 +393,7 @@ func verticalRune(ch rune) bool {
 	return false
 }
 
+// verticalRune returns if the given character is a horizontal rune.
 func horizontalRune(ch rune) bool {
 	if ch == '─' || ch == '┼' || ch == '┬' || ch == '┴' {
 		return true
@@ -356,14 +401,16 @@ func horizontalRune(ch rune) bool {
 	return false
 }
 
+// onKey manages key-press events. A keybinding handler is called when
+// a key-press event satisfies a configured keybinding.
 func (g *Gui) onKey(ev *termbox.Event) error {
 	for _, kb := range g.keybindings {
-		if ev.Ch == kb.Ch && Key(ev.Key) == kb.Key && Modifier(ev.Mod) == kb.Mod &&
-			(kb.ViewName == "" || (g.currentView != nil && kb.ViewName == g.currentView.name)) {
-			if kb.CB == nil {
+		if ev.Ch == kb.ch && Key(ev.Key) == kb.key && Modifier(ev.Mod) == kb.mod &&
+			(kb.viewName == "" || (g.currentView != nil && kb.viewName == g.currentView.name)) {
+			if kb.h == nil {
 				return nil
 			}
-			return kb.CB(g, g.currentView)
+			return kb.h(g, g.currentView)
 		}
 	}
 	return nil

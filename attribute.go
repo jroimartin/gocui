@@ -6,8 +6,11 @@ package gocui
 
 import "github.com/nsf/termbox-go"
 
+// Attributes can be combined using bitwise OR (|). Note that it is not
+// possible to combine multiple color attributes.
 type Attribute termbox.Attribute
 
+// Color attributes.
 const (
 	ColorDefault Attribute = Attribute(termbox.ColorDefault)
 	ColorBlack             = Attribute(termbox.ColorBlack)
@@ -18,4 +21,11 @@ const (
 	ColorMagenta           = Attribute(termbox.ColorMagenta)
 	ColorCyan              = Attribute(termbox.ColorCyan)
 	ColorWhite             = Attribute(termbox.ColorWhite)
+)
+
+// Text style attributes.
+const (
+	AttrBold      Attribute = Attribute(termbox.AttrBold)
+	AttrUnderline           = Attribute(termbox.AttrUnderline)
+	AttrReverse             = Attribute(termbox.AttrReverse)
 )

@@ -7,11 +7,18 @@ package gocui
 import "github.com/nsf/termbox-go"
 
 type (
-	Key          termbox.Key
-	Modifier     termbox.Modifier
-	KeybindingCB func(*Gui, *View) error
+	// Keys represent special keys or keys combinations.
+	Key termbox.Key
+	// Modifiers allow to define special keys combinations. They can be used
+	// in combination with Keys or Runes when a new keybinding is defined.
+	Modifier termbox.Modifier
+	// KeybindingHandlers represent the actions linked to keybindings. The
+	// handler is called when a key-press event satisfies a configured
+	// keybinding.
+	KeybindingHandler func(*Gui, *View) error
 )
 
+// Special keys.
 const (
 	KeyF1         Key = Key(termbox.KeyF1)
 	KeyF2             = Key(termbox.KeyF2)
@@ -37,6 +44,7 @@ const (
 	KeyArrowRight     = Key(termbox.KeyArrowRight)
 )
 
+// Keys combinations.
 const (
 	KeyCtrlTilde      Key = Key(termbox.KeyCtrlTilde)
 	KeyCtrl2              = Key(termbox.KeyCtrl2)
@@ -86,25 +94,28 @@ const (
 	KeyCtrl8              = Key(termbox.KeyCtrl8)
 )
 
+// Modifiers.
 const (
 	ModAlt Modifier = Modifier(termbox.ModAlt)
 )
 
+// Keybidings are used to link a given key-press event with an action.
 type keybinding struct {
-	ViewName string
-	Key      Key
-	Ch       rune
-	Mod      Modifier
-	CB       KeybindingCB
+	viewName string
+	key      Key
+	ch       rune
+	mod      Modifier
+	h        KeybindingHandler
 }
 
-func newKeybinding(viewname string, key Key, ch rune, mod Modifier, cb KeybindingCB) (kb *keybinding) {
+// newKeybinding returns a new Keybinding object.
+func newKeybinding(viewname string, key Key, ch rune, mod Modifier, h KeybindingHandler) (kb *keybinding) {
 	kb = &keybinding{
-		ViewName: viewname,
-		Key:      key,
-		Ch:       ch,
-		Mod:      mod,
-		CB:       cb,
+		viewName: viewname,
+		key:      key,
+		ch:       ch,
+		mod:      mod,
+		h:        h,
 	}
 	return kb
 }
