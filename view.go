@@ -110,7 +110,7 @@ func (v *View) Origin() (x, y int) {
 
 // Write appends a byte slice into the view's internal buffer. Because
 // View implements the io.Writer interface, it can be passed as parameter
-// of functions like fmt.FPrintf, fmt.FPrintln, io.Copy, etc. Clear must
+// of functions like fmt.Fprintf, fmt.Fprintln, io.Copy, etc. Clear must
 // be called to clear the view's buffer.
 func (v *View) Write(p []byte) (n int, err error) {
 	r := bytes.NewReader(p)
