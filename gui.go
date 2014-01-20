@@ -292,7 +292,7 @@ func (g *Gui) draw(v *View) error {
 	if g.ShowCursor {
 		if v := g.currentView; v != nil {
 			maxX, maxY := v.Size()
-			cx, cy := v.Cursor()
+			cx, cy := v.cx, v.cy
 			if v.cx >= maxX {
 				cx = maxX - 1
 			}
@@ -300,7 +300,7 @@ func (g *Gui) draw(v *View) error {
 				cy = maxY - 1
 			}
 			if err := v.SetCursor(cx, cy); err != nil {
-				return nil
+				return err
 			}
 			termbox.SetCursor(v.x0+v.cx+1, v.y0+v.cy+1)
 		}
@@ -402,8 +402,14 @@ func horizontalRune(ch rune) bool {
 }
 
 // onKey manages key-press events. A keybinding handler is called when
-// a key-press event satisfies a configured keybinding.
+// a key-press event satisfies a configured keybinding. Also,
+// currentView's internal buffer is modified is currentView.Editable is true.
 func (g *Gui) onKey(ev *termbox.Event) error {
+	if g.currentView != nil && g.currentView.Editable {
+		if err := g.handleEdit(g.currentView, ev); err != nil {
+			return err
+		}
+	}
 	for _, kb := range g.keybindings {
 		if ev.Ch == kb.ch && Key(ev.Key) == kb.key && Modifier(ev.Mod) == kb.mod &&
 			(kb.viewName == "" || (g.currentView != nil && kb.viewName == g.currentView.name)) {
@@ -411,6 +417,50 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 				return nil
 			}
 			return kb.h(g, g.currentView)
+		}
+	}
+	return nil
+}
+
+// handleEdit manages the edition mode
+func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
+	maxX, maxY := v.Size()
+	ptr := v.bufferPtr(v.ox+v.cx, v.oy+v.cy)
+
+	if ev.Ch != 0 && ev.Mod == 0 {
+		*ptr = ev.Ch
+		if v.cx == maxX-1 {
+			if err := v.SetOrigin(v.ox+1, v.oy); err != nil {
+				return err
+			}
+		} else {
+			if err := v.SetCursor(v.cx+1, v.cy); err != nil {
+				return err
+			}
+		}
+	} else if ev.Key == termbox.KeySpace {
+		*ptr = 0
+		if v.cx == maxX-1 {
+			if err := v.SetOrigin(v.ox+1, v.oy); err != nil {
+				return err
+			}
+		} else {
+			if err := v.SetCursor(v.cx+1, v.cy); err != nil {
+				return err
+			}
+		}
+	} else if ev.Key == termbox.KeyEnter {
+		if v.cy == maxY-1 {
+			if err := v.SetOrigin(0, v.oy+1); err != nil {
+				return err
+			}
+			if err := v.SetCursor(0, v.cy); err != nil {
+				return err
+			}
+		} else {
+			if err := v.SetCursor(0, v.cy+1); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

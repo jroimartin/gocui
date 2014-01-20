@@ -23,6 +23,10 @@ type View struct {
 	bgColor, fgColor       Attribute
 	selBgColor, selFgColor Attribute
 
+	// If Editable is true, keystrokes will be added to the view's internal
+	// buffer at the cursor position.
+	Editable bool
+
 	// If Highlight is true, Sel{Bg,Fg}Colors will be used
 	// for the line under the cursor position.
 	Highlight bool
@@ -165,4 +169,24 @@ func (v *View) clearRunes() {
 				termbox.Attribute(v.fgColor), termbox.Attribute(v.bgColor))
 		}
 	}
+}
+
+// bufferPtr returns a pointer to the view's internal buffer, pointing
+// to the rune corresponding to the position (x, y) of the view.
+// The length of the internal buffer is increased if the point is out
+// of bounds.
+func (v *View) bufferPtr(x, y int) *rune {
+	if y >= len(v.lines) {
+		s := make([][]rune, y+1)
+		copy(s, v.lines)
+		v.lines = s
+	}
+	if v.lines[y] == nil {
+		v.lines[y] = make([]rune, x+1)
+	} else if x >= len(v.lines[y]) {
+		s := make([]rune, x+1)
+		copy(s, v.lines[y])
+		v.lines[y] = s
+	}
+	return &v.lines[y][x]
 }

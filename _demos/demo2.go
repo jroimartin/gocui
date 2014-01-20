@@ -140,16 +140,16 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", 'c', gocui.ModAlt, showHideCursor); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("", 'j', 0, cursorDown); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyArrowDown, 0, cursorDown); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("", 'k', 0, cursorUp); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyArrowUp, 0, cursorUp); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("", 'h', 0, cursorLeft); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyArrowLeft, 0, cursorLeft); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("", 'l', 0, cursorRight); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyArrowRight, 0, cursorRight); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
@@ -213,6 +213,7 @@ func layout(g *gocui.Gui) error {
 		if err != gocui.ErrorUnkView {
 			return err
 		}
+		v.Editable = true
 		fmt.Fprintln(v, "Command line test")
 	}
 	return nil
