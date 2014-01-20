@@ -402,8 +402,8 @@ func horizontalRune(ch rune) bool {
 }
 
 // onKey manages key-press events. A keybinding handler is called when
-// a key-press event satisfies a configured keybinding. Also,
-// currentView's internal buffer is modified is currentView.Editable is true.
+// a key-press event satisfies a configured keybinding. Furthermore,
+// currentView's internal buffer is modified if currentView.Editable is true.
 func (g *Gui) onKey(ev *termbox.Event) error {
 	if g.currentView != nil && g.currentView.Editable {
 		if err := g.handleEdit(g.currentView, ev); err != nil {
