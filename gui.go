@@ -77,7 +77,7 @@ func (g *Gui) SetRune(x, y int, ch rune) error {
 // It checks if the position is valid.
 func (g *Gui) Rune(x, y int) (rune, error) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
-		return 0, errors.New("invalid point")
+		return ' ', errors.New("invalid point")
 	}
 	c := termbox.CellBuffer()[y*g.maxX+x]
 	return c.Ch, nil
@@ -347,7 +347,7 @@ func (g *Gui) drawIntersections() error {
 // point.
 func (g *Gui) intersectionRune(x, y int) (rune, bool) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
-		return 0, false
+		return ' ', false
 	}
 
 	chTop, _ := g.Rune(x, y-1)
@@ -380,7 +380,7 @@ func (g *Gui) intersectionRune(x, y int) (rune, bool) {
 	case top && !bottom && left && right:
 		ch = '┴'
 	default:
-		return 0, false
+		return ' ', false
 	}
 	return ch, true
 }
@@ -425,9 +425,9 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 // handleEdit manages the edition mode
 func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 	maxX, maxY := v.Size()
-	ptr := v.bufferPtr(v.ox+v.cx, v.oy+v.cy)
 
 	if ev.Ch != 0 && ev.Mod == 0 {
+		ptr := v.bufferPtr(v.ox+v.cx, v.oy+v.cy)
 		*ptr = ev.Ch
 		if v.cx == maxX-1 {
 			if err := v.SetOrigin(v.ox+1, v.oy); err != nil {
@@ -439,7 +439,8 @@ func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 			}
 		}
 	} else if ev.Key == termbox.KeySpace {
-		*ptr = 0
+		ptr := v.bufferPtr(v.ox+v.cx, v.oy+v.cy)
+		*ptr = ' '
 		if v.cx == maxX-1 {
 			if err := v.SetOrigin(v.ox+1, v.oy); err != nil {
 				return err

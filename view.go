@@ -165,7 +165,7 @@ func (v *View) clearRunes() {
 	maxX, maxY := v.Size()
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < maxY; y++ {
-			termbox.SetCell(v.x0+x+1, v.y0+y+1, 0,
+			termbox.SetCell(v.x0+x+1, v.y0+y+1, ' ',
 				termbox.Attribute(v.fgColor), termbox.Attribute(v.bgColor))
 		}
 	}
