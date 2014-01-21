@@ -28,9 +28,16 @@ type Gui struct {
 	keybindings []*keybinding
 	maxX, maxY  int
 
-	BgColor, FgColor       Attribute
+	// BgColor and FgColor allow to configure the background and foreground
+	// colors of the GUI.
+	BgColor, FgColor Attribute
+
+	// SelBgColor and SelFgColor are used to configure the background and
+	// foreground colors of the selected line, when it is highlighted.
 	SelBgColor, SelFgColor Attribute
-	ShowCursor             bool
+
+	// If ShowCursor is true then the cursor is enabled.
+	ShowCursor bool
 }
 
 // NewGui returns a new Gui object.
@@ -91,6 +98,9 @@ func (g *Gui) Rune(x, y int) (rune, error) {
 func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	if x0 >= x1 || y0 >= y1 {
 		return nil, errors.New("invalid dimensions")
+	}
+	if name == "" {
+		return nil, errors.New("invalid name")
 	}
 
 	if v := g.View(name); v != nil {
@@ -426,7 +436,8 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 	maxX, maxY := v.Size()
 
-	if ev.Ch != 0 && ev.Mod == 0 {
+	switch {
+	case ev.Ch != 0 && ev.Mod == 0:
 		ptr := v.bufferPtr(v.ox+v.cx, v.oy+v.cy)
 		*ptr = ev.Ch
 		if v.cx == maxX-1 {
@@ -438,7 +449,7 @@ func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 				return err
 			}
 		}
-	} else if ev.Key == termbox.KeySpace {
+	case ev.Key == termbox.KeySpace:
 		ptr := v.bufferPtr(v.ox+v.cx, v.oy+v.cy)
 		*ptr = ' '
 		if v.cx == maxX-1 {
@@ -450,7 +461,7 @@ func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 				return err
 			}
 		}
-	} else if ev.Key == termbox.KeyEnter {
+	case ev.Key == termbox.KeyEnter:
 		if v.cy == maxY-1 {
 			if err := v.SetOrigin(0, v.oy+1); err != nil {
 				return err
