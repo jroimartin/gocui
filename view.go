@@ -22,6 +22,7 @@ type View struct {
 	lines                  [][]rune
 	bgColor, fgColor       Attribute
 	selBgColor, selFgColor Attribute
+	overwrite              bool // overwrite in edit mode
 
 	// If Editable is true, keystrokes will be added to the view's internal
 	// buffer at the cursor position.
@@ -171,11 +172,18 @@ func (v *View) clearRunes() {
 	}
 }
 
-// bufferPtr returns a pointer to the view's internal buffer, pointing
-// to the rune corresponding to the position (x, y) of the view.
-// The length of the internal buffer is increased if the point is out
-// of bounds.
-func (v *View) bufferPtr(x, y int) *rune {
+// writeRune writes a rune into the view's internal buffer, at the
+// position corresponding to the point (x, y). The length of the internal
+// buffer is increased if the point is out of bounds. Overwrite mode is
+// governed by the value of View.overwrite.
+func (v *View) writeRune(x, y int, ch rune) {
+	x = v.ox + x
+	y = v.oy + y
+
+	if x < 0 || y < 0 {
+		return
+	}
+
 	if y >= len(v.lines) {
 		if y >= cap(v.lines) {
 			s := make([][]rune, y+1, (y+1)*2)
@@ -196,5 +204,35 @@ func (v *View) bufferPtr(x, y int) *rune {
 			v.lines[y] = v.lines[y][:x+1]
 		}
 	}
-	return &v.lines[y][x]
+	if !v.overwrite {
+		v.lines[y] = append(v.lines[y], ' ')
+		copy(v.lines[y][x+1:], v.lines[y][x:])
+	}
+	v.lines[y][x] = ch
+}
+
+// deleteRune removes a rune from the view's internal buffer, at the
+// position corresponding to the point (x, y).
+func (v *View) deleteRune(x, y int) {
+	x = v.ox + x
+	y = v.oy + y
+
+	if x < 0 || y < 0 || y >= len(v.lines) || v.lines[y] == nil || x >= len(v.lines[y]) {
+		return
+	}
+	v.lines[y][x] = ' '
+	v.lines[y] = append(v.lines[y][:x], v.lines[y][x+1:]...)
+}
+
+// addLine adds a line into the view's internal buffer at the position
+// corresponding to the point (x, y).
+func (v *View) addLine(y int) {
+	y = v.oy + y
+
+	if y < 0 || y >= len(v.lines) {
+		return
+	}
+	v.lines = append(v.lines, nil)
+	copy(v.lines[y+1:], v.lines[y:])
+	v.lines[y] = nil
 }

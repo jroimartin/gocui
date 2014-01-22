@@ -438,8 +438,7 @@ func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 
 	switch {
 	case ev.Ch != 0 && ev.Mod == 0:
-		ptr := v.bufferPtr(v.ox+v.cx, v.oy+v.cy)
-		*ptr = ev.Ch
+		v.writeRune(v.cx, v.cy, ev.Ch)
 		if v.cx == maxX-1 {
 			if err := v.SetOrigin(v.ox+1, v.oy); err != nil {
 				return err
@@ -450,8 +449,7 @@ func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 			}
 		}
 	case ev.Key == termbox.KeySpace:
-		ptr := v.bufferPtr(v.ox+v.cx, v.oy+v.cy)
-		*ptr = ' '
+		v.writeRune(v.cx, v.cy, ' ')
 		if v.cx == maxX-1 {
 			if err := v.SetOrigin(v.ox+1, v.oy); err != nil {
 				return err
@@ -461,7 +459,25 @@ func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 				return err
 			}
 		}
+	case ev.Key == termbox.KeyBackspace || ev.Key == termbox.KeyBackspace2:
+		v.deleteRune(v.cx-1, v.cy)
+		if v.cx == 0 {
+			if v.ox > 0 {
+				if err := v.SetOrigin(v.ox-1, v.oy); err != nil {
+					return err
+				}
+			}
+		} else {
+			if err := v.SetCursor(v.cx-1, v.cy); err != nil {
+				return err
+			}
+		}
+	case ev.Key == termbox.KeyDelete:
+		v.deleteRune(v.cx, v.cy)
+	case ev.Key == termbox.KeyInsert:
+		v.overwrite = !v.overwrite
 	case ev.Key == termbox.KeyEnter:
+		v.addLine(v.cy + 1)
 		if v.cy == maxY-1 {
 			if err := v.SetOrigin(0, v.oy+1); err != nil {
 				return err
