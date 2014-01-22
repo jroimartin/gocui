@@ -177,16 +177,24 @@ func (v *View) clearRunes() {
 // of bounds.
 func (v *View) bufferPtr(x, y int) *rune {
 	if y >= len(v.lines) {
-		s := make([][]rune, y+1)
-		copy(s, v.lines)
-		v.lines = s
+		if y >= cap(v.lines) {
+			s := make([][]rune, y+1, (y+1)*2)
+			copy(s, v.lines)
+			v.lines = s
+		} else {
+			v.lines = v.lines[:y+1]
+		}
 	}
 	if v.lines[y] == nil {
-		v.lines[y] = make([]rune, x+1)
+		v.lines[y] = make([]rune, x+1, (x+1)*2)
 	} else if x >= len(v.lines[y]) {
-		s := make([]rune, x+1)
-		copy(s, v.lines[y])
-		v.lines[y] = s
+		if x >= cap(v.lines[y]) {
+			s := make([]rune, x+1, (x+1)*2)
+			copy(s, v.lines[y])
+			v.lines[y] = s
+		} else {
+			v.lines[y] = v.lines[y][:x+1]
+		}
 	}
 	return &v.lines[y][x]
 }
