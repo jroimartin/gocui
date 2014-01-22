@@ -221,8 +221,8 @@ func (v *View) deleteRune(x, y int) error {
 	if x < 0 || y < 0 || y >= len(v.lines) || v.lines[y] == nil || x >= len(v.lines[y]) {
 		return errors.New("invalid point")
 	}
-	v.lines[y][x] = ' '
-	v.lines[y] = append(v.lines[y][:x], v.lines[y][x+1:]...)
+	copy(v.lines[y][x:], v.lines[y][x+1:])
+	v.lines[y][len(v.lines[y])-1] = ' '
 	return nil
 }
 
