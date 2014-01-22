@@ -176,12 +176,12 @@ func (v *View) clearRunes() {
 // position corresponding to the point (x, y). The length of the internal
 // buffer is increased if the point is out of bounds. Overwrite mode is
 // governed by the value of View.overwrite.
-func (v *View) writeRune(x, y int, ch rune) {
+func (v *View) writeRune(x, y int, ch rune) error {
 	x = v.ox + x
 	y = v.oy + y
 
 	if x < 0 || y < 0 {
-		return
+		return errors.New("invalid point")
 	}
 
 	if y >= len(v.lines) {
@@ -209,30 +209,33 @@ func (v *View) writeRune(x, y int, ch rune) {
 		copy(v.lines[y][x+1:], v.lines[y][x:])
 	}
 	v.lines[y][x] = ch
+	return nil
 }
 
 // deleteRune removes a rune from the view's internal buffer, at the
 // position corresponding to the point (x, y).
-func (v *View) deleteRune(x, y int) {
+func (v *View) deleteRune(x, y int) error {
 	x = v.ox + x
 	y = v.oy + y
 
 	if x < 0 || y < 0 || y >= len(v.lines) || v.lines[y] == nil || x >= len(v.lines[y]) {
-		return
+		return errors.New("invalid point")
 	}
 	v.lines[y][x] = ' '
 	v.lines[y] = append(v.lines[y][:x], v.lines[y][x+1:]...)
+	return nil
 }
 
 // addLine adds a line into the view's internal buffer at the position
 // corresponding to the point (x, y).
-func (v *View) addLine(y int) {
+func (v *View) addLine(y int) error {
 	y = v.oy + y
 
 	if y < 0 || y >= len(v.lines) {
-		return
+		return errors.New("invalid point")
 	}
 	v.lines = append(v.lines, nil)
 	copy(v.lines[y+1:], v.lines[y:])
 	v.lines[y] = nil
+	return nil
 }
