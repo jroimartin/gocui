@@ -4,7 +4,7 @@
 
 package gocui
 
-// editWrite writes a rune in edit mode.
+// editWrite writes a rune at the cursor position.
 func (v *View) editWrite(ch rune) error {
 	maxX, _ := v.Size()
 	v.writeRune(v.cx, v.cy, ch)
@@ -20,7 +20,8 @@ func (v *View) editWrite(ch rune) error {
 	return nil
 }
 
-// editDelete deletes a rune in edit mode. back determines the direction.
+// editDelete deletes a rune at the cursor position. back determines
+// the direction.
 func (v *View) editDelete(back bool) error {
 	if back {
 		v.deleteRune(v.cx-1, v.cy)
@@ -41,7 +42,7 @@ func (v *View) editDelete(back bool) error {
 	return nil
 }
 
-// editLine inserts a new line under the cursor in edit mode.
+// editLine inserts a new line under the cursor.
 func (v *View) editLine() error {
 	_, maxY := v.Size()
 	v.addLine(v.cy + 1)
