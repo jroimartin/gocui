@@ -421,75 +421,31 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 		}
 	}
 	for _, kb := range g.keybindings {
-		if ev.Ch == kb.ch && Key(ev.Key) == kb.key && Modifier(ev.Mod) == kb.mod &&
+		if kb.h != nil && ev.Ch == kb.ch && Key(ev.Key) == kb.key && Modifier(ev.Mod) == kb.mod &&
 			(kb.viewName == "" || (g.currentView != nil && kb.viewName == g.currentView.name)) {
-			if kb.h == nil {
-				return nil
+			if err := kb.h(g, g.currentView); err != nil {
+				return err
 			}
-			return kb.h(g, g.currentView)
 		}
 	}
 	return nil
 }
 
-// handleEdit manages the edition mode
+// handleEdit manages the edition mode.
 func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
-	maxX, maxY := v.Size()
-
 	switch {
 	case ev.Ch != 0 && ev.Mod == 0:
-		v.writeRune(v.cx, v.cy, ev.Ch)
-		if v.cx == maxX-1 {
-			if err := v.SetOrigin(v.ox+1, v.oy); err != nil {
-				return err
-			}
-		} else {
-			if err := v.SetCursor(v.cx+1, v.cy); err != nil {
-				return err
-			}
-		}
+		return v.editWrite(ev.Ch)
 	case ev.Key == termbox.KeySpace:
-		v.writeRune(v.cx, v.cy, ' ')
-		if v.cx == maxX-1 {
-			if err := v.SetOrigin(v.ox+1, v.oy); err != nil {
-				return err
-			}
-		} else {
-			if err := v.SetCursor(v.cx+1, v.cy); err != nil {
-				return err
-			}
-		}
+		return v.editWrite(' ')
 	case ev.Key == termbox.KeyBackspace || ev.Key == termbox.KeyBackspace2:
-		v.deleteRune(v.cx-1, v.cy)
-		if v.cx == 0 {
-			if v.ox > 0 {
-				if err := v.SetOrigin(v.ox-1, v.oy); err != nil {
-					return err
-				}
-			}
-		} else {
-			if err := v.SetCursor(v.cx-1, v.cy); err != nil {
-				return err
-			}
-		}
+		return v.editDelete(true)
 	case ev.Key == termbox.KeyDelete:
-		v.deleteRune(v.cx, v.cy)
+		return v.editDelete(false)
 	case ev.Key == termbox.KeyInsert:
 		v.overwrite = !v.overwrite
 	case ev.Key == termbox.KeyEnter:
-		v.addLine(v.cy + 1)
-		if v.cy == maxY-1 {
-			if err := v.SetOrigin(0, v.oy+1); err != nil {
-				return err
-			}
-			if err := v.SetCursor(0, v.cy); err != nil {
-				return err
-			}
-		} else {
-			if err := v.SetCursor(0, v.cy+1); err != nil {
-				return err
-			}
-		}
+		return v.editLine()
 	}
 	return nil
 }
