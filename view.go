@@ -262,17 +262,23 @@ func (v *View) Word(x, y int) (string, error) {
 		return "", errors.New("invalid point")
 	}
 	l := string(v.lines[y])
-	nl := strings.LastIndex(l[:x], " ")
+	nl := strings.LastIndexFunc(l[:x], indexFunc)
 	if nl == -1 {
 		nl = 0
 	} else {
 		nl = nl + 1
 	}
-	nr := strings.Index(l[x:], " ")
+	nr := strings.IndexFunc(l[x:], indexFunc)
 	if nr == -1 {
 		nr = len(l)
 	} else {
 		nr = nr + x
 	}
 	return string(l[nl:nr]), nil
+}
+
+// indexFunc allows to split lines by words taking into account spaces
+// and 0
+func indexFunc(r rune) bool {
+	return r == ' ' || r == 0
 }
