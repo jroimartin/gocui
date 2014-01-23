@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"strings"
 
 	"github.com/nsf/termbox-go"
 )
@@ -238,4 +239,40 @@ func (v *View) addLine(y int) error {
 	copy(v.lines[y+1:], v.lines[y:])
 	v.lines[y] = nil
 	return nil
+}
+
+// Line returns a string with the line in the view's internal buffer
+// at the position corresponding to the point (x, y).
+func (v *View) Line(y int) (string, error) {
+	y = v.oy + y
+
+	if y < 0 || y >= len(v.lines) {
+		return "", errors.New("invalid point")
+	}
+	return string(v.lines[y]), nil
+}
+
+// Word returns a string with the word in the view's internal buffer
+// at the position corresponding to the point (x, y).
+func (v *View) Word(x, y int) (string, error) {
+	x = v.ox + x
+	y = v.oy + y
+
+	if y < 0 || y >= len(v.lines) || x >= len(v.lines[y]) {
+		return "", errors.New("invalid point")
+	}
+	l := string(v.lines[y])
+	nl := strings.LastIndex(l[:x], " ")
+	if nl == -1 {
+		nl = 0
+	} else {
+		nl = nl + 1
+	}
+	nr := strings.Index(l[x:], " ")
+	if nr == -1 {
+		nr = len(l)
+	} else {
+		nr = nr + x
+	}
+	return string(l[nl:nr]), nil
 }

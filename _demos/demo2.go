@@ -127,6 +127,44 @@ func setLayout2(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
+func getLine(g *gocui.Gui, v *gocui.View) error {
+	var l string
+	var err error
+
+	_, cy := v.Cursor()
+	if l, err = v.Line(cy); err != nil {
+		return err
+	}
+
+	maxX, maxY := g.Size()
+	if v, err := g.SetView("msg", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
+		if err != gocui.ErrorUnkView {
+			return err
+		}
+		fmt.Fprintln(v, l)
+	}
+	return nil
+}
+
+func getWord(g *gocui.Gui, v *gocui.View) error {
+	var w string
+	var err error
+
+	cx, cy := v.Cursor()
+	if w, err = v.Word(cx, cy); err != nil {
+		return err
+	}
+
+	maxX, maxY := g.Size()
+	if v, err := g.SetView("msg", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
+		if err != gocui.ErrorUnkView {
+			return err
+		}
+		fmt.Fprintf(v, "\"%s\"", w)
+	}
+	return nil
+}
+
 func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyCtrlSpace, 0, focusMain); err != nil {
 		return err
@@ -174,6 +212,12 @@ func keybindings(g *gocui.Gui) error {
 		return err
 	}
 	if err := g.SetKeybinding("", '4', 0, delMsg); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", '9', 0, getWord); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", '0', 0, getLine); err != nil {
 		return err
 	}
 
