@@ -241,7 +241,7 @@ func (v *View) addLine(y int) error {
 	return nil
 }
 
-// Line returns a string with the line in the view's internal buffer
+// Line returns a string with the line of the view's internal buffer
 // at the position corresponding to the point (x, y).
 func (v *View) Line(y int) (string, error) {
 	y = v.oy + y
@@ -252,7 +252,7 @@ func (v *View) Line(y int) (string, error) {
 	return string(v.lines[y]), nil
 }
 
-// Word returns a string with the word in the view's internal buffer
+// Word returns a string with the word of the view's internal buffer
 // at the position corresponding to the point (x, y).
 func (v *View) Word(x, y int) (string, error) {
 	x = v.ox + x
