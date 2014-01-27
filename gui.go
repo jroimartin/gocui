@@ -151,6 +151,12 @@ func (g *Gui) SetCurrentView(name string) error {
 	return ErrorUnkView
 }
 
+// Current View returns the currently focused view, or nil if no view
+// owns the focus.
+func (g *Gui) CurrentView() *View {
+	return g.currentView
+}
+
 // SetKeybinding creates a new keybinding. If viewname equals to ""
 // (empty string) then the keybinding will apply to all views. key must
 // be a rune or a Key.
@@ -423,9 +429,7 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 	for _, kb := range g.keybindings {
 		if kb.h != nil && ev.Ch == kb.ch && Key(ev.Key) == kb.key && Modifier(ev.Mod) == kb.mod &&
 			(kb.viewName == "" || (g.currentView != nil && kb.viewName == g.currentView.name)) {
-			if err := kb.h(g, g.currentView); err != nil {
-				return err
-			}
+			return kb.h(g, g.currentView)
 		}
 	}
 	return nil

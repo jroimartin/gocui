@@ -12,24 +12,12 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-func focusMain(g *gocui.Gui, v *gocui.View) error {
-	return g.SetCurrentView("main")
-}
-
-func focusSide(g *gocui.Gui, v *gocui.View) error {
+func nextView(g *gocui.Gui, v *gocui.View) error {
+	currentView := g.CurrentView()
+	if currentView == nil || currentView.Name() == "side" {
+		return g.SetCurrentView("main")
+	}
 	return g.SetCurrentView("side")
-
-}
-
-func focusCmdLine(g *gocui.Gui, v *gocui.View) error {
-	return g.SetCurrentView("cmdline")
-
-}
-
-func showHideCursor(g *gocui.Gui, v *gocui.View) error {
-	g.ShowCursor = !g.ShowCursor
-	return nil
-
 }
 
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
@@ -84,49 +72,6 @@ func cursorRight(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func clear(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		v.Clear()
-	}
-	return nil
-}
-
-func writeTest(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		fmt.Fprintln(v, "This is a test")
-	}
-	return nil
-}
-
-func showMsg(g *gocui.Gui, v *gocui.View) error {
-	maxX, maxY := g.Size()
-	if v, err := g.SetView("msg", maxX/2-10, maxY/2-10, maxX/2+10, maxY/2+10); err != nil {
-		if err != gocui.ErrorUnkView {
-			return err
-		}
-		fmt.Fprintln(v, "This is a message")
-	}
-	if err := g.SetCurrentView("msg"); err != nil {
-		return err
-	}
-	return nil
-}
-
-func delMsg(g *gocui.Gui, v *gocui.View) error {
-	g.DeleteView("msg")
-	return nil
-}
-
-func setLayout1(g *gocui.Gui, v *gocui.View) error {
-	g.SetLayout(layout)
-	return nil
-}
-
-func setLayout2(g *gocui.Gui, v *gocui.View) error {
-	g.SetLayout(layout2)
-	return nil
-}
-
 func getLine(g *gocui.Gui, v *gocui.View) error {
 	var l string
 	var err error
@@ -142,40 +87,32 @@ func getLine(g *gocui.Gui, v *gocui.View) error {
 			return err
 		}
 		fmt.Fprintln(v, l)
+		if err := g.SetCurrentView("msg"); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func getWord(g *gocui.Gui, v *gocui.View) error {
-	var w string
-	var err error
-
-	cx, cy := v.Cursor()
-	if w, err = v.Word(cx, cy); err != nil {
+func delMsg(g *gocui.Gui, v *gocui.View) error {
+	if err := g.DeleteView("msg"); err != nil {
 		return err
 	}
-
-	maxX, maxY := g.Size()
-	if v, err := g.SetView("msg", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
-		if err != gocui.ErrorUnkView {
-			return err
-		}
-		fmt.Fprintf(v, "\"%s\"", w)
+	if err := g.SetCurrentView("side"); err != nil {
+		return err
 	}
 	return nil
+}
+
+func quit(g *gocui.Gui, v *gocui.View) error {
+	return gocui.ErrorQuit
 }
 
 func keybindings(g *gocui.Gui) error {
-	if err := g.SetKeybinding("", gocui.KeyCtrlSpace, 0, focusMain); err != nil {
+	if err := g.SetKeybinding("side", gocui.KeyCtrlSpace, 0, nextView); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("", gocui.KeyCtrlS, 0, focusSide); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", gocui.KeyCtrlL, 0, focusCmdLine); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", 'c', gocui.ModAlt, showHideCursor); err != nil {
+	if err := g.SetKeybinding("main", gocui.KeyCtrlSpace, 0, nextView); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyArrowDown, 0, cursorDown); err != nil {
@@ -193,44 +130,19 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("main", 'q', 0, quit); err != nil {
+	if err := g.SetKeybinding("side", gocui.KeyEnter, 0, getLine); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("", 'c', 0, clear); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", 't', 0, writeTest); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", '1', 0, setLayout1); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", '2', 0, setLayout2); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", '3', 0, showMsg); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", '4', 0, delMsg); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", '9', 0, getWord); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", '0', 0, getLine); err != nil {
+	if err := g.SetKeybinding("msg", gocui.KeyEnter, 0, delMsg); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.ErrorQuit
-}
-
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("side", -1, -1, 30, maxY-5); err != nil {
+	if v, err := g.SetView("side", -1, -1, 30, maxY); err != nil {
 		if err != gocui.ErrorUnkView {
 			return err
 		}
@@ -240,7 +152,7 @@ func layout(g *gocui.Gui) error {
 		fmt.Fprintln(v, "Item 3")
 		fmt.Fprintln(v, "Item 4")
 	}
-	if v, err := g.SetView("main", 30, -1, maxX, maxY-5); err != nil {
+	if v, err := g.SetView("main", 30, -1, maxX, maxY); err != nil {
 		if err != gocui.ErrorUnkView {
 			return err
 		}
@@ -249,28 +161,8 @@ func layout(g *gocui.Gui) error {
 			panic(err)
 		}
 		fmt.Fprintf(v, "%s", b)
-		if err := g.SetCurrentView("main"); err != nil {
-			return err
-		}
-	}
-	if v, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY); err != nil {
-		if err != gocui.ErrorUnkView {
-			return err
-		}
 		v.Editable = true
-		fmt.Fprintln(v, "Command line test")
-	}
-	return nil
-}
-
-func layout2(g *gocui.Gui) error {
-	maxX, maxY := g.Size()
-	if v, err := g.SetView("center", maxX/2-10, maxY/2-10, maxX/2+10, maxY/2+10); err != nil {
-		if err != gocui.ErrorUnkView {
-			return err
-		}
-		fmt.Fprintln(v, "Center view test")
-		if err := g.SetCurrentView("center"); err != nil {
+		if err := g.SetCurrentView("main"); err != nil {
 			return err
 		}
 	}
