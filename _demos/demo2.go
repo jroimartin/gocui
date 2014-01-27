@@ -78,7 +78,7 @@ func getLine(g *gocui.Gui, v *gocui.View) error {
 
 	_, cy := v.Cursor()
 	if l, err = v.Line(cy); err != nil {
-		return err
+		l = ""
 	}
 
 	maxX, maxY := g.Size()

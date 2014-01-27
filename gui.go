@@ -151,7 +151,7 @@ func (g *Gui) SetCurrentView(name string) error {
 	return ErrorUnkView
 }
 
-// Current View returns the currently focused view, or nil if no view
+// CurrentView returns the currently focused view, or nil if no view
 // owns the focus.
 func (g *Gui) CurrentView() *View {
 	return g.currentView
