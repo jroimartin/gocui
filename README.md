@@ -1,7 +1,7 @@
 GOCUI - Go Console User Interface
 =================================
 
-Minimalist Go library aimed at creating Console User Interfaces.
+Minimalist Go package aimed at creating Console User Interfaces.
 
 Installation
 ------------
@@ -10,6 +10,15 @@ Installation
 Documentation
 -------------
 	godoc github.com/jroimartin/gocui
+
+Features
+--------
+* Minimalist API.
+* Views (the "windows" in the GUI) implement the interface io.Writer.
+* Support for overlapping views.
+* The GUI can be modified at runtime.
+* Global and view-level keybindings.
+* Edit mode.
 
 Example
 -------
