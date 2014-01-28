@@ -4,7 +4,7 @@
 
 package gocui
 
-import "github.com/nsf/termbox-go"
+import "../termbox-go"
 
 // Attributes can be combined using bitwise OR (|). Note that it is not
 // possible to combine multiple color attributes.
