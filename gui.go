@@ -177,6 +177,8 @@ func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, h Ke
 	return nil
 }
 
+// SetTabstop sets the amount of spaces used when the tab key
+// is hit
 func (g *Gui) SetTabstop(tabstop int) {
 	g.tabstop = tabstop
 }
@@ -450,7 +452,7 @@ func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 		return v.editWrite(' ')
 	case ev.Key == termbox.KeyTab:
 		for i := 0; i < g.tabstop; i++ {
-			v.editWrite('\t')
+			v.editWrite(' ')
 		}
 		return nil
 	case ev.Key == termbox.KeyBackspace || ev.Key == termbox.KeyBackspace2:
