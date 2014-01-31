@@ -27,6 +27,7 @@ type Gui struct {
 	layout      func(*Gui) error
 	keybindings []*keybinding
 	maxX, maxY  int
+	tabstop     int
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the GUI.
@@ -55,6 +56,7 @@ func (g *Gui) Init() error {
 	g.maxX, g.maxY = termbox.Size()
 	g.BgColor = ColorBlack
 	g.FgColor = ColorWhite
+	g.tabstop = 4
 	return nil
 }
 
@@ -173,6 +175,12 @@ func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, h Ke
 	}
 	g.keybindings = append(g.keybindings, kb)
 	return nil
+}
+
+// SetTabstop sets the amount of spaces used when the tab key
+// is hit
+func (g *Gui) SetTabstop(tabstop int) {
+	g.tabstop = tabstop
 }
 
 // SetLayout sets the current layout. A layout is a function that
@@ -442,6 +450,11 @@ func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 		return v.editWrite(ev.Ch)
 	case ev.Key == termbox.KeySpace:
 		return v.editWrite(' ')
+	case ev.Key == termbox.KeyTab:
+		for i := 0; i < g.tabstop; i++ {
+			v.editWrite(' ')
+		}
+		return nil
 	case ev.Key == termbox.KeyBackspace || ev.Key == termbox.KeyBackspace2:
 		return v.editDelete(true)
 	case ev.Key == termbox.KeyDelete:
