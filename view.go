@@ -241,6 +241,16 @@ func (v *View) addLine(y int) error {
 	return nil
 }
 
+// Buffer returns a string with the contents of the view's internal
+// buffer
+func (v *View) Buffer() string {
+	str := ""
+	for _, l := range v.lines {
+		str += string(l) + "\n"
+	}
+	return strings.Replace(str, "\x00", " ", -1)
+}
+
 // Line returns a string with the line of the view's internal buffer
 // at the position corresponding to the point (x, y).
 func (v *View) Line(y int) (string, error) {
