@@ -275,12 +275,12 @@ func (g *Gui) drawFrame(v *View) error {
 			continue
 		}
 		if v.y0 > -1 && v.y0 < g.maxY {
-			if err := g.SetRune(x, v.y0, '─'); err != nil {
+			if err := g.SetRune(x, v.y0, '-'); err != nil {
 				return err
 			}
 		}
 		if v.y1 > -1 && v.y1 < g.maxY {
-			if err := g.SetRune(x, v.y1, '─'); err != nil {
+			if err := g.SetRune(x, v.y1, '-'); err != nil {
 				return err
 			}
 		}
@@ -290,12 +290,12 @@ func (g *Gui) drawFrame(v *View) error {
 			continue
 		}
 		if v.x0 > -1 && v.x0 < g.maxX {
-			if err := g.SetRune(v.x0, y, '│'); err != nil {
+			if err := g.SetRune(v.x0, y, '|'); err != nil {
 				return err
 			}
 		}
 		if v.x1 > -1 && v.x1 < g.maxX {
-			if err := g.SetRune(v.x1, y, '│'); err != nil {
+			if err := g.SetRune(v.x1, y, '|'); err != nil {
 				return err
 			}
 		}
@@ -307,17 +307,6 @@ func (g *Gui) drawFrame(v *View) error {
 func (g *Gui) draw(v *View) error {
 	if g.ShowCursor {
 		if v := g.currentView; v != nil {
-			maxX, maxY := v.Size()
-			cx, cy := v.cx, v.cy
-			if v.cx >= maxX {
-				cx = maxX - 1
-			}
-			if v.cy >= maxY {
-				cy = maxY - 1
-			}
-			if err := v.SetCursor(cx, cy); err != nil {
-				return err
-			}
 			termbox.SetCursor(v.x0+v.cx+1, v.y0+v.cy+1)
 		}
 	} else {
@@ -378,23 +367,23 @@ func (g *Gui) intersectionRune(x, y int) (rune, bool) {
 	var ch rune
 	switch {
 	case !top && bottom && !left && right:
-		ch = '┌'
+		ch = '+'
 	case !top && bottom && left && !right:
-		ch = '┐'
+		ch = '+'
 	case top && !bottom && !left && right:
-		ch = '└'
+		ch = '+'
 	case top && !bottom && left && !right:
-		ch = '┘'
+		ch = '+'
 	case top && bottom && left && right:
-		ch = '┼'
+		ch = '+'
 	case top && bottom && !left && right:
-		ch = '├'
+		ch = '+'
 	case top && bottom && left && !right:
-		ch = '┤'
+		ch = '+'
 	case !top && bottom && left && right:
-		ch = '┬'
+		ch = '+'
 	case top && !bottom && left && right:
-		ch = '┴'
+		ch = '+'
 	default:
 		return ' ', false
 	}
@@ -403,7 +392,7 @@ func (g *Gui) intersectionRune(x, y int) (rune, bool) {
 
 // verticalRune returns if the given character is a vertical rune.
 func verticalRune(ch rune) bool {
-	if ch == '│' || ch == '┼' || ch == '├' || ch == '┤' {
+	if ch == '|' || ch == '+' {
 		return true
 	}
 	return false
@@ -411,7 +400,7 @@ func verticalRune(ch rune) bool {
 
 // verticalRune returns if the given character is a horizontal rune.
 func horizontalRune(ch rune) bool {
-	if ch == '─' || ch == '┼' || ch == '┬' || ch == '┴' {
+	if ch == '-' || ch == '+' || ch == '+' {
 		return true
 	}
 	return false
