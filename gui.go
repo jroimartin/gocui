@@ -38,6 +38,9 @@ type Gui struct {
 
 	// If ShowCursor is true then the cursor is enabled.
 	ShowCursor bool
+
+	// If the Gui should emulate the CR + LF newline
+	CRLF bool
 }
 
 // NewGui returns a new Gui object.
@@ -111,7 +114,7 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 		return v, nil
 	}
 
-	v := newView(name, x0, y0, x1, y1)
+	v := newView(name, x0, y0, x1, y1, g.CRLF)
 	v.bgColor, v.fgColor = g.BgColor, g.FgColor
 	v.selBgColor, v.selFgColor = g.SelBgColor, g.SelFgColor
 	g.views = append(g.views, v)
