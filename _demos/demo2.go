@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/zond/gocui"
+	"github.com/jroimartin/gocui"
 )
 
 func nextView(g *gocui.Gui, v *gocui.View) error {
