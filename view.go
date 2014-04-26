@@ -5,8 +5,6 @@
 package gocui
 
 import (
-	"bufio"
-	"bytes"
 	"errors"
 	"strings"
 
@@ -17,6 +15,7 @@ import (
 // position.
 type View struct {
 	name                   string
+	crlf                   bool
 	x0, y0, x1, y1         int
 	ox, oy                 int
 	cx, cy                 int
@@ -35,8 +34,9 @@ type View struct {
 }
 
 // newView returns a new View object.
-func newView(name string, x0, y0, x1, y1 int) *View {
+func newView(name string, x0, y0, x1, y1 int, crlf bool) *View {
 	v := &View{
+		crlf: crlf,
 		name: name,
 		x0:   x0,
 		y0:   y0,
@@ -119,14 +119,47 @@ func (v *View) Origin() (x, y int) {
 // of functions like fmt.Fprintf, fmt.Fprintln, io.Copy, etc. Clear must
 // be called to clear the view's buffer.
 func (v *View) Write(p []byte) (n int, err error) {
-	r := bytes.NewReader(p)
-	s := bufio.NewScanner(r)
-	for s.Scan() {
-		line := bytes.Runes(s.Bytes())
-		v.lines = append(v.lines, line)
+	lineNum := 0
+	line := []rune{}
+	linePos := 0
+	if len(v.lines) > 0 {
+		lineNum = len(v.lines) - 1
+		line = v.lines[lineNum]
+		linePos = len(line)
 	}
-	if err := s.Err(); err != nil {
-		return 0, err
+	for _, r := range string(p) {
+		switch r {
+		case '\r':
+			linePos = 0
+		case '\n':
+			if lineNum < len(v.lines) {
+				v.lines[lineNum] = line
+			} else {
+				v.lines = append(v.lines, line)
+			}
+			if v.crlf {
+				line = make([]rune, len(line))
+				for i, _ := range line {
+					line[i] = ' '
+				}
+			} else {
+				line = nil
+			}
+			v.lines = append(v.lines, line)
+			lineNum++
+		default:
+			if linePos < len(line) {
+				line[linePos] = r
+			} else {
+				line = append(line, r)
+			}
+			linePos++
+		}
+	}
+	if lineNum < len(v.lines) {
+		v.lines[lineNum] = line
+	} else {
+		v.lines = append(v.lines, line)
 	}
 	return len(p), nil
 }
