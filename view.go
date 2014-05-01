@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"io"
 	"strings"
 
 	"github.com/nsf/termbox-go"
@@ -24,6 +25,8 @@ type View struct {
 	bgColor, fgColor       Attribute
 	selBgColor, selFgColor Attribute
 	overwrite              bool // overwrite in edit mode
+	readOffset             int
+	readCache              string
 
 	// If Editable is true, keystrokes will be added to the view's internal
 	// buffer at the cursor position.
@@ -129,6 +132,28 @@ func (v *View) Write(p []byte) (n int, err error) {
 		return 0, err
 	}
 	return len(p), nil
+}
+
+// Read reads data into p. It returns the number of bytes read into p.
+// At EOF, err will be io.EOF. If the reading offset is 0, the cache
+// used by Read() will be refreshed with the contents of the view.
+func (v *View) Read(p []byte) (n int, err error) {
+	if v.readOffset == 0 {
+		v.readCache = v.Buffer()
+	}
+	if v.readOffset < len(v.readCache) {
+		n = copy(p, v.readCache[v.readOffset:])
+		v.readOffset += n
+	} else {
+		err = io.EOF
+	}
+	return
+}
+
+// Rewind sets the offset for the next Read to 0, which also refresh the
+// read cache.
+func (v *View) Rewind() {
+	v.readOffset = 0
 }
 
 // draw re-draws the view's contents.

@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 
@@ -137,6 +138,35 @@ func keybindings(g *gocui.Gui) error {
 		return err
 	}
 
+	if err := g.SetKeybinding("main", gocui.KeyCtrlS, 0, saveMain); err != nil {
+		return err
+	}
+	return nil
+}
+
+func saveMain(g *gocui.Gui, v *gocui.View) error {
+	f, err := ioutil.TempFile("", "gocui_demo_")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	p := make([]byte, 5)
+	v.Rewind()
+	for {
+		n, err := v.Read(p)
+		if n > 0 {
+			if _, err := f.Write(p[:n]); err != nil {
+				return err
+			}
+		}
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
