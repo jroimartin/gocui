@@ -112,8 +112,8 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	}
 
 	v := newView(name, x0, y0, x1, y1)
-	v.bgColor, v.fgColor = g.BgColor, g.FgColor
-	v.selBgColor, v.selFgColor = g.SelBgColor, g.SelFgColor
+	v.BgColor, v.FgColor = g.BgColor, g.FgColor
+	v.SelBgColor, v.SelFgColor = g.SelBgColor, g.SelFgColor
 	g.views = append(g.views, v)
 	return v, ErrorUnkView
 }

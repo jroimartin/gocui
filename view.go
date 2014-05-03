@@ -17,16 +17,22 @@ import (
 // A View is a window. It maintains its own internal buffer and cursor
 // position.
 type View struct {
-	name                   string
-	x0, y0, x1, y1         int
-	ox, oy                 int
-	cx, cy                 int
-	lines                  [][]rune
-	bgColor, fgColor       Attribute
-	selBgColor, selFgColor Attribute
-	overwrite              bool // overwrite in edit mode
-	readOffset             int
-	readCache              string
+	name           string
+	x0, y0, x1, y1 int
+	ox, oy         int
+	cx, cy         int
+	lines          [][]rune
+	overwrite      bool // overwrite in edit mode
+	readOffset     int
+	readCache      string
+
+	// BgColor and FgColor allow to configure the background and foreground
+	// colors of the View.
+	BgColor, FgColor Attribute
+
+	// SelBgColor and SelFgColor are used to configure the background and
+	// foreground colors of the selected line, when it is highlighted.
+	SelBgColor, SelFgColor Attribute
 
 	// If Editable is true, keystrokes will be added to the view's internal
 	// buffer at the cursor position.
@@ -70,11 +76,11 @@ func (v *View) setRune(x, y int, ch rune) error {
 
 	var fgColor, bgColor Attribute
 	if v.Highlight && y == v.cy {
-		fgColor = v.selFgColor
-		bgColor = v.selBgColor
+		fgColor = v.SelFgColor
+		bgColor = v.SelBgColor
 	} else {
-		fgColor = v.fgColor
-		bgColor = v.bgColor
+		fgColor = v.FgColor
+		bgColor = v.BgColor
 	}
 	termbox.SetCell(v.x0+x+1, v.y0+y+1, ch,
 		termbox.Attribute(fgColor), termbox.Attribute(bgColor))
@@ -135,8 +141,8 @@ func (v *View) Write(p []byte) (n int, err error) {
 }
 
 // Read reads data into p. It returns the number of bytes read into p.
-// At EOF, err will be io.EOF. If the reading offset is 0, the cache
-// used by Read() will be refreshed with the contents of the view.
+// At EOF, err will be io.EOF. Calling Read() after Rewind() makes the
+// cache to be refreshed with the contents of the view.
 func (v *View) Read(p []byte) (n int, err error) {
 	if v.readOffset == 0 {
 		v.readCache = v.Buffer()
@@ -193,7 +199,7 @@ func (v *View) clearRunes() {
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < maxY; y++ {
 			termbox.SetCell(v.x0+x+1, v.y0+y+1, ' ',
-				termbox.Attribute(v.fgColor), termbox.Attribute(v.bgColor))
+				termbox.Attribute(v.FgColor), termbox.Attribute(v.BgColor))
 		}
 	}
 }
