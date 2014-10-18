@@ -41,16 +41,20 @@ type View struct {
 	// If Highlight is true, Sel{Bg,Fg}Colors will be used
 	// for the line under the cursor position.
 	Highlight bool
+
+	// If Frame is true, a border will be drawn around the view
+	Frame bool
 }
 
 // newView returns a new View object.
 func newView(name string, x0, y0, x1, y1 int) *View {
 	v := &View{
-		name: name,
-		x0:   x0,
-		y0:   y0,
-		x1:   x1,
-		y1:   y1,
+		name:  name,
+		x0:    x0,
+		y0:    y0,
+		x1:    x1,
+		y1:    y1,
+		Frame: true,
 	}
 	return v
 }
