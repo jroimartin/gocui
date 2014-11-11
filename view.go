@@ -44,6 +44,13 @@ type View struct {
 
 	// If Frame is true, a border will be drawn around the view
 	Frame bool
+
+	// If Wrap is true, the content that is written to this View is
+	// automatically wrapped when it is longer than its width
+	Wrap bool
+
+	// If Wrap is true, each wrapping line is prefixed with this prefix.
+	WrapPrefix string
 }
 
 // newView returns a new View object.
@@ -179,7 +186,17 @@ func (v *View) draw() error {
 			if j < v.ox {
 				continue
 			}
-			if x >= 0 && x < maxX && y >= 0 && y < maxY {
+			if x == maxX && v.Wrap {
+				x = 0
+				y++
+				for _, p := range v.WrapPrefix {
+					if x == maxX {
+						break
+					}
+					v.setRune(x, y, p)
+					x++
+				}
+			} else if x < maxX && y < maxY {
 				if err := v.setRune(x, y, ch); err != nil {
 					return err
 				}
