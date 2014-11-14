@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"io"
 	"strings"
 
 	"github.com/nsf/termbox-go"
@@ -16,14 +17,22 @@ import (
 // A View is a window. It maintains its own internal buffer and cursor
 // position.
 type View struct {
-	name                   string
-	x0, y0, x1, y1         int
-	ox, oy                 int
-	cx, cy                 int
-	lines                  [][]rune
-	bgColor, fgColor       Attribute
-	selBgColor, selFgColor Attribute
-	overwrite              bool // overwrite in edit mode
+	name           string
+	x0, y0, x1, y1 int
+	ox, oy         int
+	cx, cy         int
+	lines          [][]rune
+	overwrite      bool // overwrite in edit mode
+	readOffset     int
+	readCache      string
+
+	// BgColor and FgColor allow to configure the background and foreground
+	// colors of the View.
+	BgColor, FgColor Attribute
+
+	// SelBgColor and SelFgColor are used to configure the background and
+	// foreground colors of the selected line, when it is highlighted.
+	SelBgColor, SelFgColor Attribute
 
 	// If Editable is true, keystrokes will be added to the view's internal
 	// buffer at the cursor position.
@@ -32,16 +41,27 @@ type View struct {
 	// If Highlight is true, Sel{Bg,Fg}Colors will be used
 	// for the line under the cursor position.
 	Highlight bool
+
+	// If Frame is true, a border will be drawn around the view
+	Frame bool
+
+	// If Wrap is true, the content that is written to this View is
+	// automatically wrapped when it is longer than its width
+	Wrap bool
+
+	// If Wrap is true, each wrapping line is prefixed with this prefix.
+	WrapPrefix string
 }
 
 // newView returns a new View object.
 func newView(name string, x0, y0, x1, y1 int) *View {
 	v := &View{
-		name: name,
-		x0:   x0,
-		y0:   y0,
-		x1:   x1,
-		y1:   y1,
+		name:  name,
+		x0:    x0,
+		y0:    y0,
+		x1:    x1,
+		y1:    y1,
+		Frame: true,
 	}
 	return v
 }
@@ -67,11 +87,11 @@ func (v *View) setRune(x, y int, ch rune) error {
 
 	var fgColor, bgColor Attribute
 	if v.Highlight && y == v.cy {
-		fgColor = v.selFgColor
-		bgColor = v.selBgColor
+		fgColor = v.SelFgColor
+		bgColor = v.SelBgColor
 	} else {
-		fgColor = v.fgColor
-		bgColor = v.bgColor
+		fgColor = v.FgColor
+		bgColor = v.BgColor
 	}
 	termbox.SetCell(v.x0+x+1, v.y0+y+1, ch,
 		termbox.Attribute(fgColor), termbox.Attribute(bgColor))
@@ -131,6 +151,28 @@ func (v *View) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+// Read reads data into p. It returns the number of bytes read into p.
+// At EOF, err will be io.EOF. Calling Read() after Rewind() makes the
+// cache to be refreshed with the contents of the view.
+func (v *View) Read(p []byte) (n int, err error) {
+	if v.readOffset == 0 {
+		v.readCache = v.Buffer()
+	}
+	if v.readOffset < len(v.readCache) {
+		n = copy(p, v.readCache[v.readOffset:])
+		v.readOffset += n
+	} else {
+		err = io.EOF
+	}
+	return
+}
+
+// Rewind sets the offset for the next Read to 0, which also refresh the
+// read cache.
+func (v *View) Rewind() {
+	v.readOffset = 0
+}
+
 // draw re-draws the view's contents.
 func (v *View) draw() error {
 	maxX, maxY := v.Size()
@@ -144,7 +186,14 @@ func (v *View) draw() error {
 			if j < v.ox {
 				continue
 			}
-			if x >= 0 && x < maxX && y >= 0 && y < maxY {
+			if x == maxX && v.Wrap {
+				x = 0
+				y++
+				for _, p := range v.WrapPrefix {
+					v.setRune(x, y, p)
+					x++
+				}
+			} else if x < maxX && y < maxY {
 				if err := v.setRune(x, y, ch); err != nil {
 					return err
 				}
@@ -168,7 +217,7 @@ func (v *View) clearRunes() {
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < maxY; y++ {
 			termbox.SetCell(v.x0+x+1, v.y0+y+1, ' ',
-				termbox.Attribute(v.fgColor), termbox.Attribute(v.bgColor))
+				termbox.Attribute(v.FgColor), termbox.Attribute(v.BgColor))
 		}
 	}
 }
@@ -239,6 +288,16 @@ func (v *View) addLine(y int) error {
 	copy(v.lines[y+1:], v.lines[y:])
 	v.lines[y] = nil
 	return nil
+}
+
+// Buffer returns a string with the contents of the view's internal
+// buffer
+func (v *View) Buffer() string {
+	str := ""
+	for _, l := range v.lines {
+		str += string(l) + "\n"
+	}
+	return strings.Replace(str, "\x00", " ", -1)
 }
 
 // Line returns a string with the line of the view's internal buffer
