@@ -42,11 +42,11 @@ type View struct {
 	// for the line under the cursor position.
 	Highlight bool
 
-	// If Frame is true, a border will be drawn around the view
+	// If Frame is true, a border will be drawn around the view.
 	Frame bool
 
 	// If Wrap is true, the content that is written to this View is
-	// automatically wrapped when it is longer than its width
+	// automatically wrapped when it is longer than its width.
 	Wrap bool
 
 	// If Wrap is true, each wrapping line is prefixed with this prefix.
