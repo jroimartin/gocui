@@ -189,19 +189,21 @@ func (v *View) draw() error {
 			if x == maxX && v.Wrap {
 				x = 0
 				y++
-				for _, p := range v.WrapPrefix {
-					if x == maxX {
+				for _, p := range v.WrapPrefix + string(ch) {
+					if x >= maxX || y >= maxY {
 						break
 					}
-					v.setRune(x, y, p)
+					if err := v.setRune(x, y, p); err != nil {
+						return err
+					}
 					x++
 				}
 			} else if x < maxX && y < maxY {
 				if err := v.setRune(x, y, ch); err != nil {
 					return err
 				}
+				x++
 			}
-			x++
 		}
 		y++
 	}
