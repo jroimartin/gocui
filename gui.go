@@ -27,6 +27,7 @@ type Gui struct {
 	layout      func(*Gui) error
 	keybindings []*keybinding
 	maxX, maxY  int
+	redrawBgFg  bool // hook for redraw the background and foreground
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the GUI.
@@ -55,6 +56,7 @@ func (g *Gui) Init() error {
 	g.maxX, g.maxY = termbox.Size()
 	g.BgColor = ColorBlack
 	g.FgColor = ColorWhite
+	g.redrawBgFg = true
 	return nil
 }
 
@@ -104,16 +106,22 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	}
 
 	if v := g.View(name); v != nil {
-		v.x0 = x0
-		v.y0 = y0
-		v.x1 = x1
-		v.y1 = y1
+		// compare coordinates
+		// if they are different - need to redraw the View
+		if v.x0 != x0 || v.x1 != x1 || v.y0 != y0 || v.y1 != y1 {
+			v.x0 = x0
+			v.y0 = y0
+			v.x1 = x1
+			v.y1 = y1
+			v.redraw = true
+		}
 		return v, nil
 	}
 
 	v := newView(name, x0, y0, x1, y1)
 	v.BgColor, v.FgColor = g.BgColor, g.FgColor
 	v.SelBgColor, v.SelFgColor = g.SelBgColor, g.SelFgColor
+	v.redraw = true
 	g.views = append(g.views, v)
 	return v, ErrorUnkView
 }
@@ -134,6 +142,36 @@ func (g *Gui) DeleteView(name string) error {
 	for i, v := range g.views {
 		if v.name == name {
 			g.views = append(g.views[:i], g.views[i+1:]...)
+			// if the deleted View was drawn over the other Views (or some parts
+			// of them), we must to redraw these Views
+			dvxy := struct {
+				x0, y0, x1, y1 int
+				xCross         bool
+				yCross         bool
+			}{
+				x0: v.x0,
+				y0: v.y0,
+				x1: v.x1,
+				y1: v.y1,
+			}
+			// compare the coordinates of the deleted View with existing
+			for _, r := range g.views {
+				if dvxy.x0 < r.x0 && dvxy.x1 > r.x0 {
+					dvxy.xCross = true
+				} else if dvxy.x0 > r.x0 && dvxy.x0 < r.x1 {
+					dvxy.xCross = true
+				}
+				if dvxy.y0 < r.y0 && dvxy.y1 > r.y0 {
+					dvxy.yCross = true
+				} else if dvxy.y0 > r.y0 && dvxy.y0 < r.y1 {
+					dvxy.yCross = true
+				}
+				if dvxy.xCross && dvxy.yCross {
+					r.redraw = true
+					dvxy.xCross = false
+					dvxy.yCross = false
+				}
+			}
 			return nil
 		}
 	}
@@ -145,6 +183,7 @@ func (g *Gui) SetCurrentView(name string) error {
 	for _, v := range g.views {
 		if v.name == name {
 			g.currentView = v
+			v.redraw = true
 			return nil
 		}
 	}
@@ -247,12 +286,26 @@ func (g *Gui) Flush() error {
 		return errors.New("Null layout")
 	}
 
-	termbox.Clear(termbox.Attribute(g.FgColor), termbox.Attribute(g.BgColor))
-	g.maxX, g.maxY = termbox.Size()
-	if err := g.layout(g); err != nil {
-		return err
+	if g.redrawBgFg {
+		termbox.Clear(termbox.Attribute(g.FgColor), termbox.Attribute(g.BgColor))
+		for _, v := range g.views {
+			v.redraw = true
+		}
+		g.redrawBgFg = false
 	}
-	for _, v := range g.views {
+
+	// check console size change
+	// and redraw all Views if the size changed
+	mX, mY := termbox.Size()
+	if mX != g.maxX || mY != g.maxY {
+		termbox.Clear(termbox.Attribute(g.FgColor), termbox.Attribute(g.BgColor))
+		for _, v := range g.views {
+			v.redraw = true
+		}
+	}
+	g.maxX, g.maxY = mX, mY
+
+	drawProc := func(v *View) error {
 		if v.Frame {
 			if err := g.drawFrame(v); err != nil {
 				return err
@@ -262,7 +315,35 @@ func (g *Gui) Flush() error {
 		if err := g.draw(v); err != nil {
 			return err
 		}
+
+		v.redraw = false
+		return nil
 	}
+
+	// "AlwaysOnTop" View pool
+	// they must be redrawn after the other Views
+	var topLevelViews []*View
+
+	if err := g.layout(g); err != nil {
+		return err
+	}
+	for _, v := range g.views {
+		if v.AlwaysOnTop {
+			topLevelViews = append(topLevelViews, v)
+			continue
+		}
+		if v.redraw {
+			if err := drawProc(v); err != nil {
+				return err
+			}
+		}
+	}
+	for _, v := range topLevelViews {
+		if err := drawProc(v); err != nil {
+			return err
+		}
+	}
+
 	if err := g.drawIntersections(); err != nil {
 		return err
 	}

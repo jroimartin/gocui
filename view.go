@@ -25,6 +25,7 @@ type View struct {
 	overwrite      bool // overwrite in edit mode
 	readOffset     int
 	readCache      string
+	redraw         bool // option for trigger redraw current View
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the View.
@@ -51,6 +52,9 @@ type View struct {
 
 	// If Wrap is true, each wrapping line is prefixed with this prefix.
 	WrapPrefix string
+
+	// If AlwaysOnTop is true then View draws on top of other Views.
+	AlwaysOnTop bool
 }
 
 // newView returns a new View object.
@@ -95,6 +99,7 @@ func (v *View) setRune(x, y int, ch rune) error {
 	}
 	termbox.SetCell(v.x0+x+1, v.y0+y+1, ch,
 		termbox.Attribute(fgColor), termbox.Attribute(bgColor))
+	v.redraw = true
 	return nil
 }
 
@@ -107,6 +112,7 @@ func (v *View) SetCursor(x, y int) error {
 	}
 	v.cx = x
 	v.cy = y
+	v.redraw = true
 	return nil
 }
 
@@ -126,6 +132,7 @@ func (v *View) SetOrigin(x, y int) error {
 	}
 	v.ox = x
 	v.oy = y
+	v.redraw = true
 	return nil
 }
 
@@ -141,6 +148,7 @@ func (v *View) Origin() (x, y int) {
 func (v *View) Write(p []byte) (n int, err error) {
 	r := bytes.NewReader(p)
 	s := bufio.NewScanner(r)
+	v.redraw = true
 	for s.Scan() {
 		line := bytes.Runes(s.Bytes())
 		v.lines = append(v.lines, line)
@@ -214,6 +222,7 @@ func (v *View) draw() error {
 func (v *View) Clear() {
 	v.lines = nil
 	v.clearRunes()
+	v.redraw = true
 }
 
 // clearRunes erases all the cells in the view.
@@ -225,6 +234,7 @@ func (v *View) clearRunes() {
 				termbox.Attribute(v.FgColor), termbox.Attribute(v.BgColor))
 		}
 	}
+	v.redraw = true
 }
 
 // writeRune writes a rune into the view's internal buffer, at the
@@ -264,6 +274,7 @@ func (v *View) writeRune(x, y int, ch rune) error {
 		copy(v.lines[y][x+1:], v.lines[y][x:])
 	}
 	v.lines[y][x] = ch
+	v.redraw = true
 	return nil
 }
 
@@ -278,6 +289,7 @@ func (v *View) deleteRune(x, y int) error {
 	}
 	copy(v.lines[y][x:], v.lines[y][x+1:])
 	v.lines[y][len(v.lines[y])-1] = ' '
+	v.redraw = true
 	return nil
 }
 
@@ -292,6 +304,7 @@ func (v *View) addLine(y int) error {
 	v.lines = append(v.lines, nil)
 	copy(v.lines[y+1:], v.lines[y:])
 	v.lines[y] = nil
+	v.redraw = true
 	return nil
 }
 
