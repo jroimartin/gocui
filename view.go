@@ -26,6 +26,7 @@ type View struct {
 	readOffset     int
 	readCache      string
 	redraw         bool // option for trigger redraw current View
+	deleted        bool // option for trigger delete proc
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the View.

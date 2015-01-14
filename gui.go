@@ -139,9 +139,25 @@ func (g *Gui) View(name string) *View {
 
 // DeleteView deletes a view by name.
 func (g *Gui) DeleteView(name string) error {
-	for i, v := range g.views {
+	for _, v := range g.views {
 		if v.name == name {
-			g.views = append(g.views[:i], g.views[i+1:]...)
+			// clear and change deleted View properties
+			v.Clear()
+			v.x0 = v.x0 - 1 // for borders overlap
+			v.y0 = v.y0 - 1
+			v.x1 = v.x1 + 1
+			v.y1 = v.y1 + 1
+			v.Frame = false
+			v.BgColor = g.BgColor
+			v.FgColor = g.FgColor
+			v.SelBgColor = g.SelBgColor
+			v.SelFgColor = g.SelFgColor
+			v.deleted = true
+			// if client create View with same name (on pseudo-delete step)
+			// he get View with this options; so to avoid such a fail situation,
+			// we will rename current candidate for removal
+			v.name = v.name + "-gocui-deleted"
+
 			// if the deleted View was drawn over the other Views (or some parts
 			// of them), we must to redraw these Views
 			dvxy := struct {
@@ -320,22 +336,42 @@ func (g *Gui) Flush() error {
 		return nil
 	}
 
-	// "AlwaysOnTop" View pool
-	// they must be redrawn after the other Views
-	var topLevelViews []*View
+	// сreate pools for alternately draw
+	var deletedViews []*View // must be redrawn first of all
+	var normalViews []*View
+	var topLevelViews []*View // must be redrawn after the normal Views
 
 	if err := g.layout(g); err != nil {
 		return err
 	}
-	for _, v := range g.views {
+	for i, v := range g.views {
+		if v.deleted && v.redraw {
+			deletedViews = append(deletedViews, v)
+			continue
+		}
+		if v.deleted && !v.redraw {
+			g.views = append(g.views[:i], g.views[i+1:]...)
+			continue
+		}
 		if v.AlwaysOnTop {
 			topLevelViews = append(topLevelViews, v)
 			continue
 		}
 		if v.redraw {
-			if err := drawProc(v); err != nil {
-				return err
-			}
+			normalViews = append(normalViews, v)
+			continue
+		}
+	}
+
+	for _, v := range deletedViews {
+		v.redraw = false
+		if err := drawProc(v); err != nil {
+			return err
+		}
+	}
+	for _, v := range normalViews {
+		if err := drawProc(v); err != nil {
+			return err
 		}
 	}
 	for _, v := range topLevelViews {
