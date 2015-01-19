@@ -389,12 +389,6 @@ func (g *Gui) Flush() error {
 		v.redraw = false
 	}
 
-	//for i, v := range g.views {
-	//	if v.deleted {
-	//		g.views = append(g.views[:i], g.views[i+1:]...)
-	//	}
-	//}
-
 	if err := g.drawIntersections(); err != nil {
 		return err
 	}
