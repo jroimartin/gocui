@@ -140,56 +140,52 @@ func (g *Gui) View(name string) *View {
 // DeleteView deletes a view by name.
 func (g *Gui) DeleteView(name string) error {
 	for _, v := range g.views {
-		if v.name == name {
-			// clear and change deleted View properties
-			v.Clear()
-			v.x0 = v.x0 - 1 // for borders overlap
-			v.y0 = v.y0 - 1
-			v.x1 = v.x1 + 1
-			v.y1 = v.y1 + 1
-			v.Frame = false
-			v.BgColor = g.BgColor
-			v.FgColor = g.FgColor
-			v.SelBgColor = g.SelBgColor
-			v.SelFgColor = g.SelFgColor
-			v.deleted = true
-			// if client create View with same name (on pseudo-delete step)
-			// he get View with this options; so to avoid such a fail situation,
-			// we will rename current candidate for removal
-			v.name = v.name + "-gocui-deleted"
-
-			// if the deleted View was drawn over the other Views (or some parts
-			// of them), we must to redraw these Views
-			dvxy := struct {
-				x0, y0, x1, y1 int
-				xCross         bool
-				yCross         bool
-			}{
-				x0: v.x0,
-				y0: v.y0,
-				x1: v.x1,
-				y1: v.y1,
-			}
-			// compare the coordinates of the deleted View with existing
-			for _, r := range g.views {
-				if dvxy.x0 < r.x0 && dvxy.x1 > r.x0 {
-					dvxy.xCross = true
-				} else if dvxy.x0 > r.x0 && dvxy.x0 < r.x1 {
-					dvxy.xCross = true
-				}
-				if dvxy.y0 < r.y0 && dvxy.y1 > r.y0 {
-					dvxy.yCross = true
-				} else if dvxy.y0 > r.y0 && dvxy.y0 < r.y1 {
-					dvxy.yCross = true
-				}
-				if dvxy.xCross && dvxy.yCross {
-					r.redraw = true
-					dvxy.xCross = false
-					dvxy.yCross = false
-				}
-			}
-			return nil
+		if v.name != name {
+			continue
 		}
+		// clear and change deleted View properties
+		v.Clear()
+		v.x0 = v.x0 - 1 // for borders overlap
+		v.y0 = v.y0 - 1
+		v.x1 = v.x1 + 1
+		v.y1 = v.y1 + 1
+		v.Frame = false
+		v.BgColor = g.BgColor
+		v.FgColor = g.FgColor
+		v.deleted = true
+
+		// if the deleted View was drawn over the other Views (or some parts
+		// of them), we must to redraw these Views
+		dvxy := struct {
+			x0, y0, x1, y1 int
+			xCross         bool
+			yCross         bool
+		}{
+			x0: v.x0,
+			y0: v.y0,
+			x1: v.x1,
+			y1: v.y1,
+		}
+		// compare the coordinates of the deleted View with existing
+		for _, r := range g.views {
+			if dvxy.x0 < r.x0 && dvxy.x1 > r.x0 {
+				dvxy.xCross = true
+			} else if dvxy.x0 > r.x0 && dvxy.x0 < r.x1 {
+				dvxy.xCross = true
+			}
+			if dvxy.y0 < r.y0 && dvxy.y1 > r.y0 {
+				dvxy.yCross = true
+			} else if dvxy.y0 > r.y0 && dvxy.y0 < r.y1 {
+				dvxy.yCross = true
+			}
+			if dvxy.xCross && dvxy.yCross {
+				r.redraw = true
+				dvxy.xCross = false
+				dvxy.yCross = false
+			}
+		}
+		return nil
+
 	}
 	return ErrorUnkView
 }
@@ -321,21 +317,6 @@ func (g *Gui) Flush() error {
 	}
 	g.maxX, g.maxY = mX, mY
 
-	drawProc := func(v *View) error {
-		if v.Frame {
-			if err := g.drawFrame(v); err != nil {
-				return err
-			}
-		}
-
-		if err := g.draw(v); err != nil {
-			return err
-		}
-
-		v.redraw = false
-		return nil
-	}
-
 	// сreate pools for alternately draw
 	var deletedViews []*View // must be redrawn first of all
 	var normalViews []*View
@@ -344,39 +325,33 @@ func (g *Gui) Flush() error {
 	if err := g.layout(g); err != nil {
 		return err
 	}
-	for i, v := range g.views {
-		if v.deleted && v.redraw {
+	for _, v := range g.views {
+		switch {
+		case v.deleted:
 			deletedViews = append(deletedViews, v)
-			continue
-		}
-		if v.deleted && !v.redraw {
-			g.views = append(g.views[:i], g.views[i+1:]...)
-			continue
-		}
-		if v.AlwaysOnTop {
+		case v.AlwaysOnTop:
 			topLevelViews = append(topLevelViews, v)
-			continue
-		}
-		if v.redraw {
+		case v.redraw:
 			normalViews = append(normalViews, v)
-			continue
 		}
+	}
+	drawList := append(append(deletedViews, normalViews...), topLevelViews...)
+
+	for _, v := range drawList {
+		if v.Frame {
+			if err := g.drawFrame(v); err != nil {
+				return err
+			}
+		}
+		if err := g.draw(v); err != nil {
+			return err
+		}
+		v.redraw = false
 	}
 
-	for _, v := range deletedViews {
-		v.redraw = false
-		if err := drawProc(v); err != nil {
-			return err
-		}
-	}
-	for _, v := range normalViews {
-		if err := drawProc(v); err != nil {
-			return err
-		}
-	}
-	for _, v := range topLevelViews {
-		if err := drawProc(v); err != nil {
-			return err
+	for i, v := range g.views {
+		if v.deleted {
+			g.views = append(g.views[:i], g.views[i+1:]...)
 		}
 	}
 
