@@ -108,13 +108,68 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	if v := g.View(name); v != nil {
 		// compare coordinates
 		// if they are different - need to redraw the View
-		if v.x0 != x0 || v.x1 != x1 || v.y0 != y0 || v.y1 != y1 {
-			v.x0 = x0
-			v.y0 = y0
-			v.x1 = x1
-			v.y1 = y1
-			v.redraw = true
+		if v.x0 == x0 && v.x1 == x1 && v.y0 == y0 && v.y1 == y1 {
+			return v, nil
 		}
+
+		vxy := &View{
+			x0: x0,
+			y0: y0,
+			x1: x1,
+			y1: y1,
+		}
+		// compare old and new coordinates with the overlapping of other Views
+		for _, r := range g.views {
+			if v.name == r.name {
+				continue
+			}
+
+			oldCross := g.checkOwerlap(vxy, v)
+			newCross := g.checkOwerlap(vxy, r)
+			var x0Cross, x1Cross, y0Cross, y1Cross bool
+
+			if oldCross && !newCross {
+				r.redraw = true
+				continue
+			}
+
+			if (r.x0 < v.x0 && v.x0 < x0) || (r.x0 > v.x0 && x0 > r.x0) {
+				x0Cross = true
+			}
+			if (r.y0 < v.y0 && v.y0 < y0) || (r.y0 > v.y0 && y0 > r.y0) {
+				y0Cross = true
+			}
+			if (r.x1 > v.x1 && v.x1 > x1) || (r.x1 < v.x1 && x1 < r.x1) {
+				x1Cross = true
+			}
+			if (r.y1 > v.y1 && v.y1 > y1) || (r.y1 < v.y1 && y1 < r.y1) {
+				y1Cross = true
+			}
+
+			if x0Cross || y0Cross || x1Cross || y1Cross {
+				r.redraw = true
+			}
+		}
+		// create View with old coordinates and set "delete" option;
+		// this View will "close holes" in the background
+		for i, z := range g.views {
+			if z.name == v.name+"-delmask" {
+				g.views = append(g.views[:i], g.views[i+1:]...)
+			}
+		}
+		k := newView(v.name+"-delmask", v.x0-1, v.y0-1, v.x1+1, v.y1+1)
+		k.Frame = false
+		k.BgColor, k.FgColor = g.BgColor, g.FgColor
+		k.deleted = true
+		g.views = append(g.views, k)
+
+		// accept the new coordinates
+		v.x0 = x0
+		v.y0 = y0
+		v.x1 = x1
+		v.y1 = y1
+		v.redraw = true
+
 		return v, nil
 	}
 
@@ -156,11 +211,7 @@ func (g *Gui) DeleteView(name string) error {
 
 		// if the deleted View was drawn over the other Views (or some parts
 		// of them), we must to redraw these Views
-		dvxy := struct {
-			x0, y0, x1, y1 int
-			xCross         bool
-			yCross         bool
-		}{
+		dvxy := &View{
 			x0: v.x0,
 			y0: v.y0,
 			x1: v.x1,
@@ -168,20 +219,8 @@ func (g *Gui) DeleteView(name string) error {
 		}
 		// compare the coordinates of the deleted View with existing
 		for _, r := range g.views {
-			if dvxy.x0 < r.x0 && dvxy.x1 > r.x0 {
-				dvxy.xCross = true
-			} else if dvxy.x0 > r.x0 && dvxy.x0 < r.x1 {
-				dvxy.xCross = true
-			}
-			if dvxy.y0 < r.y0 && dvxy.y1 > r.y0 {
-				dvxy.yCross = true
-			} else if dvxy.y0 > r.y0 && dvxy.y0 < r.y1 {
-				dvxy.yCross = true
-			}
-			if dvxy.xCross && dvxy.yCross {
+			if g.checkOwerlap(dvxy, r) {
 				r.redraw = true
-				dvxy.xCross = false
-				dvxy.yCross = false
 			}
 		}
 		return nil
@@ -325,10 +364,11 @@ func (g *Gui) Flush() error {
 	if err := g.layout(g); err != nil {
 		return err
 	}
-	for _, v := range g.views {
+	for i, v := range g.views {
 		switch {
 		case v.deleted:
 			deletedViews = append(deletedViews, v)
+			g.views = append(g.views[:i], g.views[i+1:]...)
 		case v.AlwaysOnTop:
 			topLevelViews = append(topLevelViews, v)
 		case v.redraw:
@@ -349,11 +389,11 @@ func (g *Gui) Flush() error {
 		v.redraw = false
 	}
 
-	for i, v := range g.views {
-		if v.deleted {
-			g.views = append(g.views[:i], g.views[i+1:]...)
-		}
-	}
+	//for i, v := range g.views {
+	//	if v.deleted {
+	//		g.views = append(g.views[:i], g.views[i+1:]...)
+	//	}
+	//}
 
 	if err := g.drawIntersections(); err != nil {
 		return err
@@ -547,4 +587,19 @@ func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
 		return v.editLine()
 	}
 	return nil
+}
+
+// checkOwerlap checks whether overlapping Views or not
+func (g *Gui) checkOwerlap(v0, v1 *View) bool {
+	var xCross, yCross bool
+	if (v0.x0 < v1.x0 && v0.x1 > v1.x0) || (v0.x0 > v1.x0 && v0.x0 < v1.x1) {
+		xCross = true
+	}
+	if (v0.y0 < v1.y0 && v0.y1 > v1.y0) || (v0.y0 > v1.y0 && v0.y0 < v1.y1) {
+		yCross = true
+	}
+	if xCross && yCross {
+		return true
+	}
+	return false
 }
