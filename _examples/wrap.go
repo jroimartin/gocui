@@ -5,9 +5,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/jroimartin/gocui"
 )
@@ -20,6 +20,10 @@ func layout(g *gocui.Gui) error {
 		}
 		v.Wrap = true
 		v.WrapPrefix = "> "
+
+		line := strings.Repeat("This is a long line -- ", 10)
+		fmt.Fprintf(v, "%v\n\n", line)
+		fmt.Fprint(v, "Short")
 	}
 	return nil
 }
@@ -38,25 +42,12 @@ func main() {
 	defer g.Close()
 
 	g.SetLayout(layout)
-	if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
-
-	go func() {
-		var line bytes.Buffer
-		for i := 0; i < 10; i++ {
-			line.WriteString("This is a long line -- ")
-		}
-		fmt.Fprint(g.View("main"), line.String())
-
-		fmt.Fprintln(g.View("main"), "")
-
-		fmt.Fprint(g.View("main"), "Short")
-	}()
 
 	err = g.MainLoop()
 	if err != nil && err != gocui.ErrorQuit {
 		log.Panicln(err)
 	}
-
 }

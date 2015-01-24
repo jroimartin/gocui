@@ -96,7 +96,8 @@ const (
 
 // Modifiers.
 const (
-	ModAlt Modifier = Modifier(termbox.ModAlt)
+	ModNone Modifier = Modifier(0)
+	ModAlt           = Modifier(termbox.ModAlt)
 )
 
 // Keybidings are used to link a given key-press event with an action.
