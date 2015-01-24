@@ -43,7 +43,7 @@ Example
 		}
 		defer g.Close()
 		g.SetLayout(layout)
-		if err := g.SetKeybinding("", gocui.KeyCtrlC, 0, quit); err != nil {
+		if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 			log.Panicln(err)
 		}
 		err = g.MainLoop()
