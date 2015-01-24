@@ -22,8 +22,8 @@ func layout(g *gocui.Gui) error {
 		v.WrapPrefix = "> "
 
 		line := strings.Repeat("This is a long line -- ", 10)
-		fmt.Fprintf(v, "%v\n\n", line)
-		fmt.Fprint(v, "Short")
+		fmt.Fprintf(v, "%s\n\n", line)
+		fmt.Fprintln(v, "Short")
 	}
 	return nil
 }
