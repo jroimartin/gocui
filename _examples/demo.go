@@ -14,8 +14,7 @@ import (
 )
 
 func nextView(g *gocui.Gui, v *gocui.View) error {
-	currentView := g.CurrentView()
-	if currentView == nil || currentView.Name() == "side" {
+	if v == nil || v.Name() == "side" {
 		return g.SetCurrentView("main")
 	}
 	return g.SetCurrentView("side")
