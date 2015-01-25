@@ -62,7 +62,7 @@ func initKeybindings(g *gocui.Gui) error {
 	}
 	if err := g.SetKeybinding("", gocui.KeyTab, gocui.ModNone,
 		func(g *gocui.Gui, v *gocui.View) error {
-			return nextView(g)
+			return nextView(g, true)
 		}); err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func newView(g *gocui.Gui) error {
 
 	views = append(views, name)
 	curView = len(views) - 1
-	idxViews += 1
+	idxView += 1
 	return nil
 }
 
@@ -137,25 +137,10 @@ func delView(g *gocui.Gui) error {
 	}
 	views = append(views[:curView], views[curView+1:]...)
 
-	next := curView + 1
-	if next > len(views)-1 {
-		next = 0
-	}
-
-	nv, err := g.View(views[next])
-	if err != nil {
-		return err
-	}
-	if err := g.SetCurrentView(views[next]); err != nil {
-		return err
-	}
-	nv.BgColor = gocui.ColorRed
-
-	curView = next
-	return nil
+	return nextView(g, false)
 }
 
-func nextView(g *gocui.Gui) error {
+func nextView(g *gocui.Gui, disableCurrent bool) error {
 	next := curView + 1
 	if next > len(views)-1 {
 		next = 0
@@ -170,11 +155,13 @@ func nextView(g *gocui.Gui) error {
 	}
 	nv.BgColor = gocui.ColorRed
 
-	cv, err := g.View(views[curView])
-	if err != nil {
-		return err
+	if disableCurrent {
+		cv, err := g.View(views[curView])
+		if err != nil {
+			return err
+		}
+		cv.BgColor = g.BgColor
 	}
-	cv.BgColor = g.BgColor
 
 	curView = next
 	return nil
