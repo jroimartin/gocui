@@ -103,7 +103,7 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 		return nil, errors.New("invalid name")
 	}
 
-	if v := g.View(name); v != nil {
+	if v, err := g.View(name); err == nil {
 		v.x0 = x0
 		v.y0 = y0
 		v.x1 = x1
@@ -118,15 +118,26 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	return v, ErrorUnkView
 }
 
-// View returns a pointer to the view with the given name, or nil if
-// a view with that name does not exist.
-func (g *Gui) View(name string) *View {
+// View returns a pointer to the view with the given name, or error
+// ErrorUnkView if a view with that name does not exist.
+func (g *Gui) View(name string) (*View, error) {
 	for _, v := range g.views {
 		if v.name == name {
-			return v
+			return v, nil
 		}
 	}
-	return nil
+	return nil, ErrorUnkView
+}
+
+// Position returns the coordinates of the view with the given name,
+// or error ErrorUnkView if a view with that name does not exist.
+func (g *Gui) ViewPosition(name string) (x0, y0, x1, y1 int, err error) {
+	for _, v := range g.views {
+		if v.name == name {
+			return v.x0, v.y0, v.x1, v.y1, nil
+		}
+	}
+	return 0, 0, 0, 0, ErrorUnkView
 }
 
 // DeleteView deletes a view by name.
