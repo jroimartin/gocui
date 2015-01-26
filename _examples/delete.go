@@ -34,7 +34,7 @@ func main() {
 	if err := initKeybindings(g); err != nil {
 		log.Panicln(err)
 	}
-	if err := newView(g); err != nil {
+	if err := initViews(g); err != nil {
 		log.Panicln(err)
 	}
 
@@ -97,6 +97,25 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrorQuit
 }
 
+func initViews(g *gocui.Gui) error {
+	maxX, _ := g.Size()
+	v, err := g.SetView("legend", maxX-22, 0, maxX-1, 6)
+	if err != nil {
+		if err != gocui.ErrorUnkView {
+			return err
+		}
+		fmt.Fprintln(v, "KEYBINDINGS")
+		fmt.Fprintln(v, "Space: New View")
+		fmt.Fprintln(v, "Tab: Next View")
+		fmt.Fprintln(v, "← ↑ → ↓: Move View")
+		fmt.Fprintln(v, "^C: Exit")
+	}
+	if err := newView(g); err != nil {
+		log.Panicln(err)
+	}
+	return nil
+}
+
 func newView(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	name := fmt.Sprintf("v%v", idxView)
@@ -155,7 +174,7 @@ func nextView(g *gocui.Gui, disableCurrent bool) error {
 	}
 	nv.BgColor = gocui.ColorRed
 
-	if disableCurrent {
+	if disableCurrent && len(views) > 1 {
 		cv, err := g.View(views[curView])
 		if err != nil {
 			return err
