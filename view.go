@@ -5,7 +5,6 @@
 package gocui
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"io"
@@ -139,14 +138,26 @@ func (v *View) Origin() (x, y int) {
 // of functions like fmt.Fprintf, fmt.Fprintln, io.Copy, etc. Clear must
 // be called to clear the view's buffer.
 func (v *View) Write(p []byte) (n int, err error) {
-	r := bytes.NewReader(p)
-	s := bufio.NewScanner(r)
-	for s.Scan() {
-		line := bytes.Runes(s.Bytes())
-		v.lines = append(v.lines, line)
-	}
-	if err := s.Err(); err != nil {
-		return 0, err
+	for _, ch := range bytes.Runes(p) {
+		switch ch {
+		case '\n':
+			v.lines = append(v.lines, nil)
+		case '\r':
+			nl := len(v.lines)
+			if nl > 0 {
+				v.lines[nl-1] = nil
+			} else {
+				v.lines = make([][]rune, 1)
+			}
+		default:
+			nl := len(v.lines)
+			if nl > 0 {
+				v.lines[nl-1] = append(v.lines[nl-1], ch)
+			} else {
+				v.lines = make([][]rune, 1)
+				v.lines[0] = append(v.lines[0], ch)
+			}
+		}
 	}
 	return len(p), nil
 }

@@ -179,7 +179,8 @@ func layout(g *gocui.Gui) error {
 		fmt.Fprintln(v, "Item 1")
 		fmt.Fprintln(v, "Item 2")
 		fmt.Fprintln(v, "Item 3")
-		fmt.Fprintln(v, "Item 4")
+		fmt.Fprint(v, "\rWill be")
+		fmt.Fprintln(v, "deleted\rItem 4\nItem 5")
 	}
 	if v, err := g.SetView("main", 30, -1, maxX, maxY); err != nil {
 		if err != gocui.ErrorUnkView {
