@@ -28,7 +28,7 @@ func layout(g *gocui.Gui) error {
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.ErrorQuit
+	return gocui.Quit
 }
 
 func main() {
@@ -47,7 +47,7 @@ func main() {
 	}
 
 	err = g.MainLoop()
-	if err != nil && err != gocui.ErrorQuit {
+	if err != nil && err != gocui.Quit {
 		log.Panicln(err)
 	}
 }

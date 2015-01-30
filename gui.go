@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	// ErrorQuit is used to decide if the MainLoop finished succesfully.
-	ErrorQuit error = errors.New("quit")
+	// Quit is used to decide if the MainLoop finished succesfully.
+	Quit error = errors.New("quit")
 
 	// ErrorUnkView allows to assert if a View must be initialized.
 	ErrorUnkView error = errors.New("unknown view")
@@ -197,7 +197,7 @@ func (g *Gui) SetLayout(layout func(*Gui) error) {
 }
 
 // MainLoop runs the main loop until an error is returned. A successful
-// finish should return ErrorQuit.
+// finish should return Quit.
 func (g *Gui) MainLoop() error {
 	go func() {
 		for {

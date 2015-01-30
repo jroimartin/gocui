@@ -105,7 +105,7 @@ func delMsg(g *gocui.Gui, v *gocui.View) error {
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.ErrorQuit
+	return gocui.Quit
 }
 
 func keybindings(g *gocui.Gui) error {
@@ -217,7 +217,7 @@ func main() {
 	g.ShowCursor = true
 
 	err = g.MainLoop()
-	if err != nil && err != gocui.ErrorQuit {
+	if err != nil && err != gocui.Quit {
 		log.Panicln(err)
 	}
 }
