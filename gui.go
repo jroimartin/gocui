@@ -256,7 +256,8 @@ func (g *Gui) handleEvent(ev *termbox.Event) error {
 	}
 }
 
-// Flush updates the gui, re-drawing frames and buffers.
+// Flush updates the gui, re-drawing frames and buffers. It is safe for
+// concurrent use by multiple goroutines.
 func (g *Gui) Flush() error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
