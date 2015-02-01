@@ -45,11 +45,16 @@ type View struct {
 	Frame bool
 
 	// If Wrap is true, the content that is written to this View is
-	// automatically wrapped when it is longer than its width.
+	// automatically wrapped when it is longer than its width. If true the
+	// view's x-origin will be ignored.
 	Wrap bool
 
 	// If Wrap is true, each wrapping line is prefixed with this prefix.
 	WrapPrefix string
+
+	// If Autoscroll is true, the View will automatically scroll down when the
+	// text overflows. If true the view's y-origin will be ignored.
+	Autoscroll bool
 }
 
 // newView returns a new View object.
@@ -187,33 +192,60 @@ func (v *View) Rewind() {
 // draw re-draws the view's contents.
 func (v *View) draw() error {
 	maxX, maxY := v.Size()
+
+	// This buffering takes care of v.ox
+	if v.Wrap {
+		if len(v.WrapPrefix) >= maxX {
+			return errors.New("WrapPrefix bigger or equal to X size")
+		}
+		v.ox = 0
+	}
+	buf := make([][]rune, 0)
+	for _, line := range v.lines {
+		if v.Wrap {
+			// Copy first line
+			bufLine := make([]rune, maxX)
+			// if v.ox >= len(line), then the line will be empty
+			if v.ox < len(line) {
+				copy(bufLine, line[v.ox:])
+			}
+			buf = append(buf, bufLine)
+			// Append wrapped lines with WrapPrefix
+			for n := maxX; n < len(line); n += maxX - len(v.WrapPrefix) {
+				prefixLine := make([]rune, maxX)
+				if v.ox < len(line) {
+					copy(prefixLine, []rune(v.WrapPrefix))
+					copy(prefixLine[len([]rune(v.WrapPrefix)):], line[v.ox+n:])
+				}
+				buf = append(buf, prefixLine)
+			}
+		} else {
+			bufLine := make([]rune, maxX)
+			if v.ox < len(line) {
+				copy(bufLine, line[v.ox:])
+			}
+			buf = append(buf, bufLine)
+		}
+	}
+
+	// The actual drawing takes into account v.oy
+	if v.Autoscroll && len(buf) > maxY {
+		v.oy = len(buf) - maxY
+	}
 	y := 0
-	for i, line := range v.lines {
+	for i, line := range buf {
 		if i < v.oy {
 			continue
 		}
-		x := 0
-		for j, ch := range line {
-			if j < v.ox {
-				continue
+		if y >= maxY {
+			break
+		}
+		for x, ch := range line {
+			if x >= maxX {
+				break
 			}
-			if x == maxX && v.Wrap {
-				x = 0
-				y++
-				for _, p := range v.WrapPrefix + string(ch) {
-					if x >= maxX || y >= maxY {
-						break
-					}
-					if err := v.setRune(x, y, p); err != nil {
-						return err
-					}
-					x++
-				}
-			} else if x < maxX && y < maxY {
-				if err := v.setRune(x, y, ch); err != nil {
-					return err
-				}
-				x++
+			if err := v.setRune(x, y, ch); err != nil {
+				return err
 			}
 		}
 		y++
