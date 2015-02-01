@@ -2,14 +2,6 @@
 
 Minimalist Go package aimed at creating Console User Interfaces.
 
-## Installation
-
-`go get github.com/jroimartin/gocui`
-
-## Documentation
-
-`godoc github.com/jroimartin/gocui`
-
 ## Features
 
 * Minimalist API.
@@ -62,3 +54,11 @@ _examples/demo.go:
 _examples/delete.go:
 
 ![_examples/delete.go](https://cloud.githubusercontent.com/assets/1223476/5992751/76ad5cc2-aa36-11e4-8204-6a90269db827.png)
+
+## Installation
+
+`go get github.com/jroimartin/gocui`
+
+## Documentation
+
+`godoc github.com/jroimartin/gocui`
