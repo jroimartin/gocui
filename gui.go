@@ -6,6 +6,7 @@ package gocui
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/nsf/termbox-go"
 )
@@ -27,6 +28,9 @@ type Gui struct {
 	layout      func(*Gui) error
 	keybindings []*keybinding
 	maxX, maxY  int
+
+	// Protects the gui from being flushed concurrently.
+	mu sync.Mutex
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the GUI.
@@ -254,6 +258,9 @@ func (g *Gui) handleEvent(ev *termbox.Event) error {
 
 // Flush updates the gui, re-drawing frames and buffers.
 func (g *Gui) Flush() error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
 	if g.layout == nil {
 		return errors.New("Null layout")
 	}
