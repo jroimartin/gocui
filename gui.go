@@ -256,8 +256,12 @@ func (g *Gui) handleEvent(ev *termbox.Event) error {
 	}
 }
 
-// Flush updates the gui, re-drawing frames and buffers. It is safe for
-// concurrent use by multiple goroutines.
+// Flush updates the gui, re-drawing frames and buffers.
+//
+// Flush is safe for concurrent use by multiple goroutines. However it is
+// important to note that it will make the layout function to be called, which
+// could lead to a dead lock if the same mutex is used in both the function
+// calling Flush and the layout function.
 func (g *Gui) Flush() error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
