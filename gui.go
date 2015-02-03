@@ -271,7 +271,16 @@ func (g *Gui) Flush() error {
 	}
 
 	termbox.Clear(termbox.Attribute(g.FgColor), termbox.Attribute(g.BgColor))
-	g.maxX, g.maxY = termbox.Size()
+
+	maxX, maxY := termbox.Size()
+	// if GUI's size has changed, we need to redraw all views
+	if maxX != g.maxX || maxY != g.maxY {
+		for _, v := range g.views {
+			v.tainted = true
+		}
+	}
+	g.maxX, g.maxY = maxX, maxY
+
 	if err := g.layout(g); err != nil {
 		return err
 	}

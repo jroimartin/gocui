@@ -192,6 +192,7 @@ func layout(g *gocui.Gui) error {
 		}
 		fmt.Fprintf(v, "%s", b)
 		v.Editable = true
+		v.Wrap = true
 		if err := g.SetCurrentView("main"); err != nil {
 			return err
 		}

@@ -25,6 +25,9 @@ type View struct {
 	readOffset     int
 	readCache      string
 
+	tainted    bool       // marks if the viewBuffer must be updated
+	viewBuffer []viewLine // internal representation of the view's buffer
+
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the View.
 	BgColor, FgColor Attribute
@@ -57,15 +60,22 @@ type View struct {
 	Autoscroll bool
 }
 
+type viewLine struct {
+	lineX int
+	lineY int
+	line  []rune
+}
+
 // newView returns a new View object.
 func newView(name string, x0, y0, x1, y1 int) *View {
 	v := &View{
-		name:  name,
-		x0:    x0,
-		y0:    y0,
-		x1:    x1,
-		y1:    y1,
-		Frame: true,
+		name:    name,
+		x0:      x0,
+		y0:      y0,
+		x1:      x1,
+		y1:      y1,
+		Frame:   true,
+		tainted: true,
 	}
 	return v
 }
@@ -143,6 +153,8 @@ func (v *View) Origin() (x, y int) {
 // of functions like fmt.Fprintf, fmt.Fprintln, io.Copy, etc. Clear must
 // be called to clear the view's buffer.
 func (v *View) Write(p []byte) (n int, err error) {
+	v.tainted = true
+
 	for _, ch := range bytes.Runes(p) {
 		switch ch {
 		case '\n':
@@ -200,40 +212,44 @@ func (v *View) draw() error {
 		}
 		v.ox = 0
 	}
-	buf := make([][]rune, 0)
-	for _, line := range v.lines {
-		if v.Wrap {
-			// Copy first line
-			bufLine := make([]rune, maxX)
-			// if v.ox >= len(line), then the line will be empty
-			if v.ox < len(line) {
-				copy(bufLine, line[v.ox:])
-			}
-			buf = append(buf, bufLine)
-			// Append wrapped lines with WrapPrefix
-			for n := maxX; n < len(line); n += maxX - len(v.WrapPrefix) {
-				prefixLine := make([]rune, maxX)
+
+	if v.tainted {
+		v.viewBuffer = nil
+		for _, line := range v.lines {
+			if v.Wrap {
+				// Copy first line
+				// if v.ox >= len(line), then the line will be empty
 				if v.ox < len(line) {
-					copy(prefixLine, []rune(v.WrapPrefix))
-					copy(prefixLine[len([]rune(v.WrapPrefix)):], line[v.ox+n:])
+					v.viewBuffer = append(v.viewBuffer, line[v.ox:])
+				} else {
+					v.viewBuffer = append(v.viewBuffer, nil)
 				}
-				buf = append(buf, prefixLine)
+				// Append wrapped lines with WrapPrefix
+				for n := maxX; n < len(line); n += maxX - len(v.WrapPrefix) {
+					if v.ox < len(line) {
+						v.viewBuffer = append(v.viewBuffer,
+							append([]rune(v.WrapPrefix), line[v.ox+n:]...))
+					} else {
+						v.viewBuffer = append(v.viewBuffer, nil)
+					}
+				}
+			} else {
+				if v.ox < len(line) {
+					v.viewBuffer = append(v.viewBuffer, line[v.ox:])
+				} else {
+					v.viewBuffer = append(v.viewBuffer, nil)
+				}
 			}
-		} else {
-			bufLine := make([]rune, maxX)
-			if v.ox < len(line) {
-				copy(bufLine, line[v.ox:])
-			}
-			buf = append(buf, bufLine)
 		}
+		v.tainted = false
 	}
 
 	// The actual drawing takes into account v.oy
-	if v.Autoscroll && len(buf) > maxY {
-		v.oy = len(buf) - maxY
+	if v.Autoscroll && len(v.viewBuffer) > maxY {
+		v.oy = len(v.viewBuffer) - maxY
 	}
 	y := 0
-	for i, line := range buf {
+	for i, line := range v.viewBuffer {
 		if i < v.oy {
 			continue
 		}
@@ -255,6 +271,8 @@ func (v *View) draw() error {
 
 // Clear empties the view's internal buffer.
 func (v *View) Clear() {
+	v.tainted = true
+
 	v.lines = nil
 	v.clearRunes()
 }
@@ -275,6 +293,8 @@ func (v *View) clearRunes() {
 // buffer is increased if the point is out of bounds. Overwrite mode is
 // governed by the value of View.overwrite.
 func (v *View) writeRune(x, y int, ch rune) error {
+	v.tainted = true
+
 	x = v.ox + x
 	y = v.oy + y
 
@@ -313,6 +333,8 @@ func (v *View) writeRune(x, y int, ch rune) error {
 // deleteRune removes a rune from the view's internal buffer, at the
 // position corresponding to the point (x, y).
 func (v *View) deleteRune(x, y int) error {
+	v.tainted = true
+
 	x = v.ox + x
 	y = v.oy + y
 
@@ -327,6 +349,8 @@ func (v *View) deleteRune(x, y int) error {
 // addLine adds a line into the view's internal buffer at the position
 // corresponding to the point (x, y).
 func (v *View) addLine(y int) error {
+	v.tainted = true
+
 	y = v.oy + y
 
 	if y < 0 || y >= len(v.lines) {
@@ -385,7 +409,7 @@ func (v *View) Word(x, y int) (string, error) {
 }
 
 // indexFunc allows to split lines by words taking into account spaces
-// and 0
+// and 0.
 func indexFunc(r rune) bool {
 	return r == ' ' || r == 0
 }
