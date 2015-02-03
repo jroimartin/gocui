@@ -199,7 +199,6 @@ func (v *View) Rewind() {
 func (v *View) draw() error {
 	maxX, maxY := v.Size()
 
-	// This buffering takes care of v.ox
 	if v.Wrap {
 		if len(v.WrapPrefix) >= maxX {
 			return errors.New("WrapPrefix bigger or equal to X size")
@@ -211,34 +210,28 @@ func (v *View) draw() error {
 		v.viewBuffer = nil
 		for _, line := range v.lines {
 			if v.Wrap {
-				// Copy first line
-				// if v.ox >= len(line), then the line will be empty
-				if v.ox < len(line) {
-					v.viewBuffer = append(v.viewBuffer, line[v.ox:])
+				if len(line) <= maxX {
+					v.viewBuffer = append(v.viewBuffer, line)
+					continue
 				} else {
-					v.viewBuffer = append(v.viewBuffer, nil)
+					v.viewBuffer = append(v.viewBuffer, line[:maxX])
 				}
-				// Append wrapped lines with WrapPrefix
+				// Append remaining lines with WrapPrefix
 				for n := maxX; n < len(line); n += maxX - len(v.WrapPrefix) {
-					if v.ox < len(line) {
-						v.viewBuffer = append(v.viewBuffer,
-							append([]rune(v.WrapPrefix), line[v.ox+n:]...))
+					wrappedLine := append(append([]rune(v.WrapPrefix), line[n:]...))
+					if len(wrappedLine) <= maxX {
+						v.viewBuffer = append(v.viewBuffer, wrappedLine)
 					} else {
-						v.viewBuffer = append(v.viewBuffer, nil)
+						v.viewBuffer = append(v.viewBuffer, wrappedLine[:maxX])
 					}
 				}
 			} else {
-				if v.ox < len(line) {
-					v.viewBuffer = append(v.viewBuffer, line[v.ox:])
-				} else {
-					v.viewBuffer = append(v.viewBuffer, nil)
-				}
+				v.viewBuffer = append(v.viewBuffer, line)
 			}
 		}
 		v.tainted = false
 	}
 
-	// The actual drawing takes into account v.oy
 	if v.Autoscroll && len(v.viewBuffer) > maxY {
 		v.oy = len(v.viewBuffer) - maxY
 	}
@@ -250,13 +243,18 @@ func (v *View) draw() error {
 		if y >= maxY {
 			break
 		}
-		for x, ch := range line {
+		x := 0
+		for j, ch := range line {
+			if j < v.ox {
+				continue
+			}
 			if x >= maxX {
 				break
 			}
 			if err := v.setRune(x, y, ch); err != nil {
 				return err
 			}
+			x++
 		}
 		y++
 	}
