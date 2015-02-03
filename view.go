@@ -25,8 +25,8 @@ type View struct {
 	readOffset     int
 	readCache      string
 
-	tainted    bool     // marks if the viewBuffer must be updated
-	viewBuffer [][]rune // internal representation of the view's buffer
+	tainted   bool       // marks if the viewBuffer must be updated
+	viewLines []viewLine // internal representation of the view's buffer
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the View.
@@ -58,6 +58,12 @@ type View struct {
 	// If Autoscroll is true, the View will automatically scroll down when the
 	// text overflows. If true the view's y-origin will be ignored.
 	Autoscroll bool
+}
+
+type viewLine struct {
+	linesX, linesY int
+	wrapped        bool
+	line           []rune
 }
 
 // newView returns a new View object.
@@ -207,36 +213,41 @@ func (v *View) draw() error {
 	}
 
 	if v.tainted {
-		v.viewBuffer = nil
-		for _, line := range v.lines {
+		v.viewLines = nil
+		for i, line := range v.lines {
 			if v.Wrap {
 				if len(line) <= maxX {
-					v.viewBuffer = append(v.viewBuffer, line)
+					vline := viewLine{linesX: 0, linesY: i, line: line}
+					v.viewLines = append(v.viewLines, vline)
 					continue
 				} else {
-					v.viewBuffer = append(v.viewBuffer, line[:maxX])
+					vline := viewLine{linesX: 0, linesY: i, line: line[:maxX]}
+					v.viewLines = append(v.viewLines, vline)
 				}
 				// Append remaining lines with WrapPrefix
 				for n := maxX; n < len(line); n += maxX - len(v.WrapPrefix) {
 					wrappedLine := append(append([]rune(v.WrapPrefix), line[n:]...))
 					if len(wrappedLine) <= maxX {
-						v.viewBuffer = append(v.viewBuffer, wrappedLine)
+						vline := viewLine{linesX: n, linesY: i, wrapped: true, line: wrappedLine}
+						v.viewLines = append(v.viewLines, vline)
 					} else {
-						v.viewBuffer = append(v.viewBuffer, wrappedLine[:maxX])
+						vline := viewLine{linesX: n, linesY: i, wrapped: true, line: wrappedLine[:maxX]}
+						v.viewLines = append(v.viewLines, vline)
 					}
 				}
 			} else {
-				v.viewBuffer = append(v.viewBuffer, line)
+				vline := viewLine{linesX: 0, linesY: i, line: line}
+				v.viewLines = append(v.viewLines, vline)
 			}
 		}
 		v.tainted = false
 	}
 
-	if v.Autoscroll && len(v.viewBuffer) > maxY {
-		v.oy = len(v.viewBuffer) - maxY
+	if v.Autoscroll && len(v.viewLines) > maxY {
+		v.oy = len(v.viewLines) - maxY
 	}
 	y := 0
-	for i, line := range v.viewBuffer {
+	for i, vline := range v.viewLines {
 		if i < v.oy {
 			continue
 		}
@@ -244,7 +255,7 @@ func (v *View) draw() error {
 			break
 		}
 		x := 0
-		for j, ch := range line {
+		for j, ch := range vline.line {
 			if j < v.ox {
 				continue
 			}
