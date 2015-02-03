@@ -25,8 +25,8 @@ type View struct {
 	readOffset     int
 	readCache      string
 
-	tainted    bool       // marks if the viewBuffer must be updated
-	viewBuffer []viewLine // internal representation of the view's buffer
+	tainted    bool     // marks if the viewBuffer must be updated
+	viewBuffer [][]rune // internal representation of the view's buffer
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the View.
@@ -58,12 +58,6 @@ type View struct {
 	// If Autoscroll is true, the View will automatically scroll down when the
 	// text overflows. If true the view's y-origin will be ignored.
 	Autoscroll bool
-}
-
-type viewLine struct {
-	lineX int
-	lineY int
-	line  []rune
 }
 
 // newView returns a new View object.
