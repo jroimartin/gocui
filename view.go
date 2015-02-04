@@ -286,6 +286,10 @@ func (v *View) realPosition(vx, vy int) (x, y int, err error) {
 		return 0, 0, errors.New("invalid point")
 	}
 
+	if len(v.viewLines) == 0 {
+		return vx, vy, nil
+	}
+
 	if vy < len(v.viewLines) {
 		vline := v.viewLines[vy]
 		x = vline.linesX + vline.offset + vx
