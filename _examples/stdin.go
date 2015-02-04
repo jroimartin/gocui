@@ -61,8 +61,6 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 		v.Wrap = true
-		v.Autoscroll = true
-		v.Editable = true
 	}
 
 	return nil
