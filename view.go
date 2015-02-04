@@ -61,8 +61,8 @@ type View struct {
 }
 
 type viewLine struct {
-	linesX, linesY int
-	wrapped        bool
+	linesX, linesY int // coordinates relative to v.lines
+	offset         int // len(v.WrapPrefix) or 0
 	line           []rune
 }
 
@@ -171,8 +171,7 @@ func (v *View) Write(p []byte) (n int, err error) {
 			if nl > 0 {
 				v.lines[nl-1] = append(v.lines[nl-1], ch)
 			} else {
-				v.lines = make([][]rune, 1)
-				v.lines[0] = append(v.lines[0], ch)
+				v.lines = append(v.lines, []rune{ch})
 			}
 		}
 	}
@@ -204,9 +203,10 @@ func (v *View) Rewind() {
 // draw re-draws the view's contents.
 func (v *View) draw() error {
 	maxX, maxY := v.Size()
+	lenPfx := len(v.WrapPrefix)
 
 	if v.Wrap {
-		if len(v.WrapPrefix) >= maxX {
+		if lenPfx >= maxX {
 			return errors.New("WrapPrefix bigger or equal to X size")
 		}
 		v.ox = 0
@@ -225,13 +225,17 @@ func (v *View) draw() error {
 					v.viewLines = append(v.viewLines, vline)
 				}
 				// Append remaining lines with WrapPrefix
-				for n := maxX; n < len(line); n += maxX - len(v.WrapPrefix) {
+				for n := maxX; n < len(line); n += maxX - lenPfx {
 					wrappedLine := append(append([]rune(v.WrapPrefix), line[n:]...))
 					if len(wrappedLine) <= maxX {
-						vline := viewLine{linesX: n, linesY: i, wrapped: true, line: wrappedLine}
+						vline := viewLine{linesX: n, linesY: i,
+							offset: lenPfx,
+							line:   wrappedLine}
 						v.viewLines = append(v.viewLines, vline)
 					} else {
-						vline := viewLine{linesX: n, linesY: i, wrapped: true, line: wrappedLine[:maxX]}
+						vline := viewLine{linesX: n, linesY: i,
+							offset: lenPfx,
+							line:   wrappedLine[:maxX]}
 						v.viewLines = append(v.viewLines, vline)
 					}
 				}
@@ -272,6 +276,29 @@ func (v *View) draw() error {
 	return nil
 }
 
+// realPosition returns the position in the internal buffer corresponding to the
+// point (x, y) of the view.
+func (v *View) realPosition(vx, vy int) (x, y int, err error) {
+	vx = v.ox + vx
+	vy = v.oy + vy
+
+	if vx < 0 || vy < 0 {
+		return 0, 0, errors.New("invalid point")
+	}
+
+	if vy < len(v.viewLines) {
+		vline := v.viewLines[vy]
+		x = vline.linesX + vline.offset + vx
+		y = vline.linesY
+	} else {
+		vline := v.viewLines[len(v.viewLines)-1]
+		x = vx
+		y = vline.linesY + vy - len(v.viewLines) + 1
+	}
+
+	return x, y, nil
+}
+
 // Clear empties the view's internal buffer.
 func (v *View) Clear() {
 	v.tainted = true
@@ -298,8 +325,10 @@ func (v *View) clearRunes() {
 func (v *View) writeRune(x, y int, ch rune) error {
 	v.tainted = true
 
-	x = v.ox + x
-	y = v.oy + y
+	x, y, err := v.realPosition(x, y)
+	if err != nil {
+		return err
+	}
 
 	if x < 0 || y < 0 {
 		return errors.New("invalid point")
@@ -338,8 +367,10 @@ func (v *View) writeRune(x, y int, ch rune) error {
 func (v *View) deleteRune(x, y int) error {
 	v.tainted = true
 
-	x = v.ox + x
-	y = v.oy + y
+	x, y, err := v.realPosition(x, y)
+	if err != nil {
+		return err
+	}
 
 	if x < 0 || y < 0 || y >= len(v.lines) || v.lines[y] == nil || x >= len(v.lines[y]) {
 		return errors.New("invalid point")
@@ -349,12 +380,16 @@ func (v *View) deleteRune(x, y int) error {
 	return nil
 }
 
-// addLine adds a line into the view's internal buffer at the position
+// addLine adds a line into the view's internal buffer under the position
 // corresponding to the point (x, y).
 func (v *View) addLine(y int) error {
 	v.tainted = true
 
-	y = v.oy + y
+	_, y, err := v.realPosition(0, y)
+	if err != nil {
+		return err
+	}
+	y = y + 1 // the line must be added under (x, y)
 
 	if y < 0 || y >= len(v.lines) {
 		return errors.New("invalid point")
@@ -378,7 +413,10 @@ func (v *View) Buffer() string {
 // Line returns a string with the line of the view's internal buffer
 // at the position corresponding to the point (x, y).
 func (v *View) Line(y int) (string, error) {
-	y = v.oy + y
+	_, y, err := v.realPosition(0, y)
+	if err != nil {
+		return "", err
+	}
 
 	if y < 0 || y >= len(v.lines) {
 		return "", errors.New("invalid point")
@@ -389,8 +427,10 @@ func (v *View) Line(y int) (string, error) {
 // Word returns a string with the word of the view's internal buffer
 // at the position corresponding to the point (x, y).
 func (v *View) Word(x, y int) (string, error) {
-	x = v.ox + x
-	y = v.oy + y
+	x, y, err := v.realPosition(x, y)
+	if err != nil {
+		return "", err
+	}
 
 	if y < 0 || y >= len(v.lines) || x >= len(v.lines[y]) {
 		return "", errors.New("invalid point")

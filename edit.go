@@ -33,7 +33,7 @@ func (v *View) editDelete(back bool) error {
 
 // editLine inserts a new line under the cursor.
 func (v *View) editLine() error {
-	v.addLine(v.cy + 1)
+	v.addLine(v.cy)
 	if err := v.SetCursor(v.cx, v.cy+1); err != nil {
 		if err := v.SetOrigin(v.ox, v.oy+1); err != nil {
 			return err
