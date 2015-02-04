@@ -52,9 +52,6 @@ type View struct {
 	// view's x-origin will be ignored.
 	Wrap bool
 
-	// If Wrap is true, each wrapping line is prefixed with this prefix.
-	WrapPrefix string
-
 	// If Autoscroll is true, the View will automatically scroll down when the
 	// text overflows. If true the view's y-origin will be ignored.
 	Autoscroll bool
@@ -62,7 +59,6 @@ type View struct {
 
 type viewLine struct {
 	linesX, linesY int // coordinates relative to v.lines
-	offset         int // len(v.WrapPrefix) or 0
 	line           []rune
 }
 
@@ -203,15 +199,13 @@ func (v *View) Rewind() {
 // draw re-draws the view's contents.
 func (v *View) draw() error {
 	maxX, maxY := v.Size()
-	lenPfx := len(v.WrapPrefix)
 
 	if v.Wrap {
-		if lenPfx >= maxX {
-			return errors.New("WrapPrefix bigger or equal to X size")
+		if maxX == 0 {
+			return errors.New("X size of the view cannot be 0")
 		}
 		v.ox = 0
 	}
-
 	if v.tainted {
 		v.viewLines = nil
 		for i, line := range v.lines {
@@ -225,17 +219,12 @@ func (v *View) draw() error {
 					v.viewLines = append(v.viewLines, vline)
 				}
 				// Append remaining lines with WrapPrefix
-				for n := maxX; n < len(line); n += maxX - lenPfx {
-					wrappedLine := append(append([]rune(v.WrapPrefix), line[n:]...))
-					if len(wrappedLine) <= maxX {
-						vline := viewLine{linesX: n, linesY: i,
-							offset: lenPfx,
-							line:   wrappedLine}
+				for n := maxX; n < len(line); n += maxX {
+					if len(line[n:]) <= maxX {
+						vline := viewLine{linesX: n, linesY: i, line: line[n:]}
 						v.viewLines = append(v.viewLines, vline)
 					} else {
-						vline := viewLine{linesX: n, linesY: i,
-							offset: lenPfx,
-							line:   wrappedLine[:maxX]}
+						vline := viewLine{linesX: n, linesY: i, line: line[n : n+maxX]}
 						v.viewLines = append(v.viewLines, vline)
 					}
 				}
@@ -292,7 +281,7 @@ func (v *View) realPosition(vx, vy int) (x, y int, err error) {
 
 	if vy < len(v.viewLines) {
 		vline := v.viewLines[vy]
-		x = vline.linesX + vline.offset + vx
+		x = vline.linesX + vx
 		y = vline.linesY
 	} else {
 		vline := v.viewLines[len(v.viewLines)-1]
