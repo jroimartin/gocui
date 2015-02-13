@@ -4,6 +4,27 @@
 
 package gocui
 
+import "github.com/nsf/termbox-go"
+
+// handleEdit manages the edition mode.
+func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
+	switch {
+	case ev.Ch != 0 && ev.Mod == 0:
+		return v.editWrite(ev.Ch)
+	case ev.Key == termbox.KeySpace:
+		return v.editWrite(' ')
+	case ev.Key == termbox.KeyBackspace || ev.Key == termbox.KeyBackspace2:
+		return v.editDelete(true)
+	case ev.Key == termbox.KeyDelete:
+		return v.editDelete(false)
+	case ev.Key == termbox.KeyInsert:
+		v.overwrite = !v.overwrite
+	case ev.Key == termbox.KeyEnter:
+		return v.editLine()
+	}
+	return nil
+}
+
 // editWrite writes a rune at the cursor position.
 func (v *View) editWrite(ch rune) error {
 	v.writeRune(v.cx, v.cy, ch)

@@ -469,22 +469,3 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 	}
 	return nil
 }
-
-// handleEdit manages the edition mode.
-func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
-	switch {
-	case ev.Ch != 0 && ev.Mod == 0:
-		return v.editWrite(ev.Ch)
-	case ev.Key == termbox.KeySpace:
-		return v.editWrite(' ')
-	case ev.Key == termbox.KeyBackspace || ev.Key == termbox.KeyBackspace2:
-		return v.editDelete(true)
-	case ev.Key == termbox.KeyDelete:
-		return v.editDelete(false)
-	case ev.Key == termbox.KeyInsert:
-		v.overwrite = !v.overwrite
-	case ev.Key == termbox.KeyEnter:
-		return v.editLine()
-	}
-	return nil
-}
