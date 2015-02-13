@@ -461,10 +461,20 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 			return err
 		}
 	}
+
+	var cv string
+	if g.currentView != nil {
+		cv = g.currentView.name
+
+	}
 	for _, kb := range g.keybindings {
-		if kb.h != nil && ev.Ch == kb.ch && Key(ev.Key) == kb.key && Modifier(ev.Mod) == kb.mod &&
-			(kb.viewName == "" || (g.currentView != nil && kb.viewName == g.currentView.name)) {
-			return kb.h(g, g.currentView)
+		if kb.h == nil {
+			continue
+		}
+		if kb.matchKeypress(Key(ev.Key), ev.Ch, Modifier(ev.Mod)) && kb.matchView(cv) {
+			if err := kb.h(g, g.currentView); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

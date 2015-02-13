@@ -120,3 +120,13 @@ func newKeybinding(viewname string, key Key, ch rune, mod Modifier, h Keybinding
 	}
 	return kb
 }
+
+// match returns if the keybinding matches the keypress
+func (kb *keybinding) matchKeypress(key Key, ch rune, mod Modifier) bool {
+	return kb.key == key && kb.ch == ch && kb.mod == mod
+}
+
+// match returns if the keybinding matches the current view
+func (kb *keybinding) matchView(viewname string) bool {
+	return kb.viewName == "" || kb.viewName == viewname
+}
