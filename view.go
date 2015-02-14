@@ -368,28 +368,39 @@ func (v *View) deleteRune(x, y int) error {
 	if x < 0 || y < 0 || y >= len(v.lines) || v.lines[y] == nil || x >= len(v.lines[y]) {
 		return errors.New("invalid point")
 	}
-	copy(v.lines[y][x:], v.lines[y][x+1:])
-	v.lines[y][len(v.lines[y])-1] = ' '
+	v.lines[y] = append(v.lines[y][:x], v.lines[y][x+1:]...)
 	return nil
 }
 
-// addLine adds a line into the view's internal buffer under the position
-// corresponding to the point (x, y).
-func (v *View) addLine(y int) error {
+// breakLine breaks a line of the internal buffer at the position corresponding
+// to the point (x, y).
+func (v *View) breakLine(x, y int) error {
 	v.tainted = true
 
-	_, y, err := v.realPosition(0, y)
+	x, y, err := v.realPosition(x, y)
 	if err != nil {
 		return err
 	}
-	y = y + 1 // the line must be added under (x, y)
 
 	if y < 0 || y >= len(v.lines) {
 		return errors.New("invalid point")
 	}
-	v.lines = append(v.lines, nil)
-	copy(v.lines[y+1:], v.lines[y:])
-	v.lines[y] = nil
+
+	if x < len(v.lines[y]) { // break line
+		left := make([]rune, len(v.lines[y][x:]))
+		copy(left, v.lines[y][x:])
+		right := make([]rune, len(v.lines[y][:x]))
+		copy(right, v.lines[y][:x])
+
+		v.lines[y] = left
+		v.lines = append(v.lines, nil)
+		copy(v.lines[y+1:], v.lines[y:])
+		v.lines[y] = right
+	} else { // new empty line
+		v.lines = append(v.lines, nil)
+		copy(v.lines[y+2:], v.lines[y+1:])
+		v.lines[y+1] = nil
+	}
 	return nil
 }
 
