@@ -386,21 +386,22 @@ func (v *View) breakLine(x, y int) error {
 		return errors.New("invalid point")
 	}
 
+	var left, right []rune
 	if x < len(v.lines[y]) { // break line
-		left := make([]rune, len(v.lines[y][x:]))
-		copy(left, v.lines[y][x:])
-		right := make([]rune, len(v.lines[y][:x]))
-		copy(right, v.lines[y][:x])
-
-		v.lines[y] = left
-		v.lines = append(v.lines, nil)
-		copy(v.lines[y+1:], v.lines[y:])
-		v.lines[y] = right
+		left = make([]rune, len(v.lines[y][:x]))
+		copy(left, v.lines[y][:x])
+		right = make([]rune, len(v.lines[y][x:]))
+		copy(right, v.lines[y][x:])
 	} else { // new empty line
-		v.lines = append(v.lines, nil)
-		copy(v.lines[y+2:], v.lines[y+1:])
-		v.lines[y+1] = nil
+		left = v.lines[y]
 	}
+
+	lines := make([][]rune, len(v.lines)+1)
+	lines[y] = left
+	lines[y+1] = right
+	copy(lines, v.lines[:y])
+	copy(lines[y+2:], v.lines[y+1:])
+	v.lines = lines
 	return nil
 }
 
