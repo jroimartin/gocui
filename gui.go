@@ -350,9 +350,7 @@ func (g *Gui) draw(v *View) error {
 			if v.cy >= maxY {
 				cy = maxY - 1
 			}
-			if err := v.SetCursor(cx, cy); err != nil {
-				return err
-			}
+			v.cx, v.cy = cx, cy
 			termbox.SetCursor(v.x0+v.cx+1, v.y0+v.cy+1)
 		}
 	} else {

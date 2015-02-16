@@ -218,7 +218,7 @@ func (v *View) draw() error {
 					vline := viewLine{linesX: 0, linesY: i, line: line[:maxX]}
 					v.viewLines = append(v.viewLines, vline)
 				}
-				// Append remaining lines with WrapPrefix
+				// Append remaining lines
 				for n := maxX; n < len(line); n += maxX {
 					if len(line[n:]) <= maxX {
 						vline := viewLine{linesX: n, linesY: i, line: line[n:]}
