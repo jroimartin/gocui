@@ -455,15 +455,12 @@ func horizontalRune(ch rune) bool {
 // currentView's internal buffer is modified if currentView.Editable is true.
 func (g *Gui) onKey(ev *termbox.Event) error {
 	if g.currentView != nil && g.currentView.Editable {
-		if err := g.handleEdit(g.currentView, ev); err != nil {
-			return err
-		}
+		g.handleEdit(g.currentView, ev)
 	}
 
 	var cv string
 	if g.currentView != nil {
 		cv = g.currentView.name
-
 	}
 	for _, kb := range g.keybindings {
 		if kb.h == nil {

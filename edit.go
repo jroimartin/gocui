@@ -6,65 +6,137 @@ package gocui
 
 import "github.com/nsf/termbox-go"
 
-// handleEdit manages the edition mode.
-func (g *Gui) handleEdit(v *View, ev *termbox.Event) error {
+// handleEdit manages the edition mode. We do not handle errors here because if
+// an error happens, it is enough to keep the view without modifications.
+func (g *Gui) handleEdit(v *View, ev *termbox.Event) {
 	switch {
 	case ev.Ch != 0 && ev.Mod == 0:
-		return v.editWrite(ev.Ch)
+		v.editWrite(ev.Ch)
 	case ev.Key == termbox.KeySpace:
-		return v.editWrite(' ')
+		v.editWrite(' ')
 	case ev.Key == termbox.KeyBackspace || ev.Key == termbox.KeyBackspace2:
-		return v.editDelete(true)
+		v.editDelete(true)
 	case ev.Key == termbox.KeyDelete:
-		return v.editDelete(false)
+		v.editDelete(false)
 	case ev.Key == termbox.KeyInsert:
 		v.overwrite = !v.overwrite
 	case ev.Key == termbox.KeyEnter:
-		return v.editLine()
+		v.editNewLine()
+	case ev.Key == termbox.KeyArrowDown:
+		v.moveCursor(0, 1, false)
+	case ev.Key == termbox.KeyArrowUp:
+		v.moveCursor(0, -1, false)
+	case ev.Key == termbox.KeyArrowLeft:
+		v.moveCursor(-1, 0, false)
+	case ev.Key == termbox.KeyArrowRight:
+		v.moveCursor(1, 0, false)
 	}
-	return nil
 }
 
 // editWrite writes a rune at the cursor position.
-func (v *View) editWrite(ch rune) error {
+func (v *View) editWrite(ch rune) {
 	v.writeRune(v.cx, v.cy, ch)
-	if err := v.SetCursor(v.cx+1, v.cy); err != nil {
-		if err := v.SetOrigin(v.ox+1, v.oy); err != nil {
-			return err
-		}
-	}
-	return nil
+	v.moveCursor(1, 0, true)
 }
 
 // editDelete deletes a rune at the cursor position. back determines
 // the direction.
-func (v *View) editDelete(back bool) error {
+func (v *View) editDelete(back bool) {
 	if back {
-		v.deleteRune(v.cx-1, v.cy)
-		if err := v.SetCursor(v.cx-1, v.cy); err != nil && v.ox > 0 {
-			if err := v.SetOrigin(v.ox-1, v.oy); err != nil {
-				return err
-			}
+		if v.cx == 0 {
+			v.mergeLines(v.cy - 1)
+		} else {
+			v.deleteRune(v.cx-1, v.cy)
 		}
+		v.moveCursor(-1, 0, true)
 	} else {
-		v.deleteRune(v.cx, v.cy)
+		y := v.oy + v.cy
+		if y >= 0 && y < len(v.viewLines) && v.cx == len(v.viewLines[y].line) {
+			v.mergeLines(v.cy)
+		} else {
+			v.deleteRune(v.cx, v.cy)
+		}
 	}
-	return nil
 }
 
-// editLine inserts a new line under the cursor.
-func (v *View) editLine() error {
+// editNewLine inserts a new line under the cursor.
+func (v *View) editNewLine() {
 	v.breakLine(v.cx, v.cy)
-	if err := v.SetCursor(v.cx, v.cy+1); err != nil {
-		if err := v.SetOrigin(v.ox, v.oy+1); err != nil {
-			return err
+
+	y := v.oy + v.cy
+	if y >= len(v.viewLines) || (y >= 0 && y < len(v.viewLines) &&
+		!(v.Wrap && v.cx == 0 && v.viewLines[y].linesX > 0)) {
+		// new line at the end of the buffer or
+		// cursor is not at the beginning of a wrapped line
+		v.ox = 0
+		v.cx = 0
+		v.moveCursor(0, 1, true)
+	}
+}
+
+// moveCursor moves the cursor taking into account the line or view widths and
+// moves the origin when necessary. If writeMode is false, the cursor jumps to
+// the next line when it reaches the end of the line, otherwise it jumps when
+// the cursor reaches the width of the view.
+func (v *View) moveCursor(dx, dy int, writeMode bool) {
+	maxX, maxY := v.Size()
+	cx, cy := v.cx+dx, v.cy+dy
+	y := v.oy + cy
+
+	var curLineWidth, prevLineWidth int
+	// get the width of the current line
+	if writeMode {
+		curLineWidth = maxX - 1
+	} else {
+		if y >= 0 && y < len(v.viewLines) {
+			w := len(v.viewLines[y].line)
+			if w < maxX {
+				curLineWidth = w
+			} else {
+				curLineWidth = maxX - 1
+			}
+		} else {
+			curLineWidth = 0
 		}
 	}
-	if err := v.SetCursor(0, v.cy); err != nil {
-		return err
+	// get the width of the previous line
+	if y-1 >= 0 && y-1 < len(v.viewLines) {
+		prevLineWidth = len(v.viewLines[y-1].line)
+	} else {
+		prevLineWidth = 0
 	}
-	if err := v.SetOrigin(0, v.oy); err != nil {
-		return err
+
+	// adjust cursor's x position and view's x origin
+	if cx > curLineWidth { // move to next line
+		if dx > 0 { // horizontal movement
+			v.cx = 0
+			cy += 1
+		} else { // vertical movement
+			if curLineWidth > 0 {
+				v.cx = curLineWidth
+			} else {
+				v.cx = 0
+			}
+		}
+	} else if cx < 0 { // move to previous line
+		if prevLineWidth > 0 {
+			v.cx = prevLineWidth
+		} else {
+			v.cx = 0
+		}
+		cy -= 1
+	} else { // stay on the same line
+		v.cx = cx
 	}
-	return nil
+
+	// adjust cursor's y position and view's y origin
+	if cy >= maxY {
+		v.oy += 1
+	} else if cy < 0 {
+		if v.oy > 0 {
+			v.oy -= 1
+		}
+	} else {
+		v.cy = cy
+	}
 }

@@ -328,27 +328,18 @@ func (v *View) writeRune(x, y int, ch rune) error {
 	}
 
 	if y >= len(v.lines) {
-		if y >= cap(v.lines) {
-			s := make([][]rune, y+1, (y+1)*2)
-			copy(s, v.lines)
-			v.lines = s
-		} else {
-			v.lines = v.lines[:y+1]
-		}
+		s := make([][]rune, y-len(v.lines)+1)
+		v.lines = append(v.lines, s...)
 	}
-	if v.lines[y] == nil {
-		v.lines[y] = make([]rune, x+1, (x+1)*2)
-	} else if x >= len(v.lines[y]) {
-		if x >= cap(v.lines[y]) {
-			s := make([]rune, x+1, (x+1)*2)
-			copy(s, v.lines[y])
-			v.lines[y] = s
-		} else {
-			v.lines[y] = v.lines[y][:x+1]
-		}
+
+	olen := len(v.lines[y])
+	if x >= len(v.lines[y]) {
+		s := make([]rune, x-len(v.lines[y])+1)
+		v.lines[y] = append(v.lines[y], s...)
 	}
-	if !v.overwrite {
-		v.lines[y] = append(v.lines[y], ' ')
+
+	if !v.overwrite && x < olen {
+		v.lines[y] = append(v.lines[y], '\x00')
 		copy(v.lines[y][x+1:], v.lines[y][x:])
 	}
 	v.lines[y][x] = ch
@@ -365,10 +356,30 @@ func (v *View) deleteRune(x, y int) error {
 		return err
 	}
 
-	if x < 0 || y < 0 || y >= len(v.lines) || v.lines[y] == nil || x >= len(v.lines[y]) {
+	if x < 0 || y < 0 || y >= len(v.lines) || x >= len(v.lines[y]) {
 		return errors.New("invalid point")
 	}
 	v.lines[y] = append(v.lines[y][:x], v.lines[y][x+1:]...)
+	return nil
+}
+
+// mergeLines merges the lines "y" and "y+1" if possible.
+func (v *View) mergeLines(y int) error {
+	v.tainted = true
+
+	_, y, err := v.realPosition(0, y)
+	if err != nil {
+		return err
+	}
+
+	if y < 0 || y >= len(v.lines) {
+		return errors.New("invalid point")
+	}
+
+	if y < len(v.lines)-1 { // otherwise we don't need to merge anything
+		v.lines[y] = append(v.lines[y], v.lines[y+1]...)
+		v.lines = append(v.lines[:y+1], v.lines[y+2:]...)
+	}
 	return nil
 }
 
@@ -437,7 +448,7 @@ func (v *View) Word(x, y int) (string, error) {
 		return "", err
 	}
 
-	if y < 0 || y >= len(v.lines) || x >= len(v.lines[y]) {
+	if x < 0 || y < 0 || y >= len(v.lines) || x >= len(v.lines[y]) {
 		return "", errors.New("invalid point")
 	}
 	l := string(v.lines[y])
