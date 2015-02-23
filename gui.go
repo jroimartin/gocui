@@ -112,6 +112,7 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 		v.y0 = y0
 		v.x1 = x1
 		v.y1 = y1
+		v.tainted = true
 		return v, nil
 	}
 

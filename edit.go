@@ -144,7 +144,7 @@ func (v *View) moveCursor(dx, dy int, writeMode bool) {
 			v.cx = 0
 			cy += 1
 		} else { // vertical movement
-			if curLineWidth > 0 { // move cursor to the EOF
+			if curLineWidth > 0 { // move cursor to the EOL
 				if v.Wrap {
 					v.cx = curLineWidth
 				} else {
