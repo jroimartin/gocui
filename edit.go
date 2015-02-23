@@ -4,51 +4,53 @@
 
 package gocui
 
-import "github.com/nsf/termbox-go"
-
 const MaxInt = int(^uint(0) >> 1)
 
-// handleEdit manages the edition mode. We do not handle errors here because if
-// an error happens, it is enough to keep the view without modifications.
-func (g *Gui) handleEdit(v *View, ev *termbox.Event) {
+// EditHandler allows to define the handler that manages the edition mode,
+// including keybindings or cursor behaviour. DefaultEditHandler is used by
+// default.
+var EditHandler = DefaultEditHandler
+
+// DefaultEditHandler is used as the default EditHandler.
+func DefaultEditHandler(v *View, key Key, ch rune, mod Modifier) {
 	switch {
-	case ev.Ch != 0 && ev.Mod == 0:
-		v.editWrite(ev.Ch)
-	case ev.Key == termbox.KeySpace:
-		v.editWrite(' ')
-	case ev.Key == termbox.KeyBackspace || ev.Key == termbox.KeyBackspace2:
-		v.editDelete(true)
-	case ev.Key == termbox.KeyDelete:
-		v.editDelete(false)
-	case ev.Key == termbox.KeyInsert:
-		v.overwrite = !v.overwrite
-	case ev.Key == termbox.KeyEnter:
-		v.editNewLine()
-	case ev.Key == termbox.KeyArrowDown:
-		v.moveCursor(0, 1, false)
-	case ev.Key == termbox.KeyArrowUp:
-		v.moveCursor(0, -1, false)
-	case ev.Key == termbox.KeyArrowLeft:
-		v.moveCursor(-1, 0, false)
-	case ev.Key == termbox.KeyArrowRight:
-		v.moveCursor(1, 0, false)
+	case ch != 0 && mod == 0:
+		v.EditWrite(ch)
+	case key == KeySpace:
+		v.EditWrite(' ')
+	case key == KeyBackspace || key == KeyBackspace2:
+		v.EditDelete(true)
+	case key == KeyDelete:
+		v.EditDelete(false)
+	case key == KeyInsert:
+		v.Overwrite = !v.Overwrite
+	case key == KeyEnter:
+		v.EditNewLine()
+	case key == KeyArrowDown:
+		v.MoveCursor(0, 1, false)
+	case key == KeyArrowUp:
+		v.MoveCursor(0, -1, false)
+	case key == KeyArrowLeft:
+		v.MoveCursor(-1, 0, false)
+	case key == KeyArrowRight:
+		v.MoveCursor(1, 0, false)
 	}
 }
 
-// editWrite writes a rune at the cursor position.
-func (v *View) editWrite(ch rune) {
+// EditWrite writes a rune at the cursor position.
+func (v *View) EditWrite(ch rune) {
 	v.writeRune(v.cx, v.cy, ch)
-	v.moveCursor(1, 0, true)
+	v.MoveCursor(1, 0, true)
 }
 
-// editDelete deletes a rune at the cursor position. back determines
-// the direction.
-func (v *View) editDelete(back bool) {
+// EditDelete deletes a rune at the cursor position. back determines the
+// direction.
+func (v *View) EditDelete(back bool) {
 	x, y := v.ox+v.cx, v.oy+v.cy
 	if y < 0 {
 		return
 	} else if y >= len(v.viewLines) {
-		v.moveCursor(-1, 0, true)
+		v.MoveCursor(-1, 0, true)
 		return
 	}
 
@@ -69,15 +71,15 @@ func (v *View) editDelete(back bool) {
 			if v.viewLines[y].linesX == 0 { // regular line
 				v.mergeLines(v.cy - 1)
 				if len(v.viewLines[y-1].line) < maxPrevWidth {
-					v.moveCursor(-1, 0, true)
+					v.MoveCursor(-1, 0, true)
 				}
 			} else { // wrapped line
 				v.deleteRune(len(v.viewLines[y-1].line)-1, v.cy-1)
-				v.moveCursor(-1, 0, true)
+				v.MoveCursor(-1, 0, true)
 			}
 		} else { // middle/end of the line
 			v.deleteRune(v.cx-1, v.cy)
-			v.moveCursor(-1, 0, true)
+			v.MoveCursor(-1, 0, true)
 		}
 	} else {
 		if x == len(v.viewLines[y].line) { // end of the line
@@ -88,8 +90,8 @@ func (v *View) editDelete(back bool) {
 	}
 }
 
-// editNewLine inserts a new line under the cursor.
-func (v *View) editNewLine() {
+// EditNewLine inserts a new line under the cursor.
+func (v *View) EditNewLine() {
 	v.breakLine(v.cx, v.cy)
 
 	y := v.oy + v.cy
@@ -99,13 +101,13 @@ func (v *View) editNewLine() {
 		// cursor is not at the beginning of a wrapped line
 		v.ox = 0
 		v.cx = 0
-		v.moveCursor(0, 1, true)
+		v.MoveCursor(0, 1, true)
 	}
 }
 
-// moveCursor moves the cursor taking into account the line or view widths and
-// moves the origin when necessary.
-func (v *View) moveCursor(dx, dy int, writeMode bool) {
+// MoveCursor moves the cursor taking into account the width of the line/view,
+// displacing the origin if necessary.
+func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 	maxX, maxY := v.Size()
 	cx, cy := v.cx+dx, v.cy+dy
 	x, y := v.ox+cx, v.oy+cy

@@ -455,8 +455,8 @@ func horizontalRune(ch rune) bool {
 // a key-press event satisfies a configured keybinding. Furthermore,
 // currentView's internal buffer is modified if currentView.Editable is true.
 func (g *Gui) onKey(ev *termbox.Event) error {
-	if g.currentView != nil && g.currentView.Editable {
-		g.handleEdit(g.currentView, ev)
+	if g.currentView != nil && g.currentView.Editable && EditHandler != nil {
+		EditHandler(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
 	}
 
 	var cv string

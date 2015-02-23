@@ -21,7 +21,6 @@ type View struct {
 	ox, oy         int
 	cx, cy         int
 	lines          [][]rune
-	overwrite      bool // overwrite in edit mode
 	readOffset     int
 	readCache      string
 
@@ -39,6 +38,9 @@ type View struct {
 	// If Editable is true, keystrokes will be added to the view's internal
 	// buffer at the cursor position.
 	Editable bool
+
+	// Overwrite enables or disables the overwrite mode of the view.
+	Overwrite bool
 
 	// If Highlight is true, Sel{Bg,Fg}Colors will be used
 	// for the line under the cursor position.
@@ -338,7 +340,7 @@ func (v *View) writeRune(x, y int, ch rune) error {
 		v.lines[y] = append(v.lines[y], s...)
 	}
 
-	if !v.overwrite && x < olen {
+	if !v.Overwrite && x < olen {
 		v.lines[y] = append(v.lines[y], '\x00')
 		copy(v.lines[y][x+1:], v.lines[y][x:])
 	}
