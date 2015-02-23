@@ -6,6 +6,8 @@ package gocui
 
 import "github.com/nsf/termbox-go"
 
+const MaxInt = int(^uint(0) >> 1)
+
 // handleEdit manages the edition mode. We do not handle errors here because if
 // an error happens, it is enough to keep the view without modifications.
 func (g *Gui) handleEdit(v *View, ev *termbox.Event) {
@@ -81,18 +83,20 @@ func (v *View) editNewLine() {
 func (v *View) moveCursor(dx, dy int, writeMode bool) {
 	maxX, maxY := v.Size()
 	cx, cy := v.cx+dx, v.cy+dy
-	y := v.oy + cy
+	x, y := v.ox+cx, v.oy+cy
 
 	var curLineWidth, prevLineWidth int
 	// get the width of the current line
 	if writeMode {
-		curLineWidth = maxX - 1
+		if v.Wrap {
+			curLineWidth = maxX - 1
+		} else {
+			curLineWidth = MaxInt
+		}
 	} else {
 		if y >= 0 && y < len(v.viewLines) {
-			w := len(v.viewLines[y].line)
-			if w < maxX {
-				curLineWidth = w
-			} else {
+			curLineWidth = len(v.viewLines[y].line)
+			if v.Wrap && curLineWidth >= maxX {
 				curLineWidth = maxX - 1
 			}
 		} else {
@@ -107,26 +111,68 @@ func (v *View) moveCursor(dx, dy int, writeMode bool) {
 	}
 
 	// adjust cursor's x position and view's x origin
-	if cx > curLineWidth { // move to next line
+	if x > curLineWidth { // move to next line
 		if dx > 0 { // horizontal movement
+			if !v.Wrap {
+				v.ox = 0
+			}
 			v.cx = 0
 			cy += 1
 		} else { // vertical movement
-			if curLineWidth > 0 {
-				v.cx = curLineWidth
+			if curLineWidth > 0 { // move cursor to the EOF
+				if v.Wrap {
+					v.cx = curLineWidth
+				} else {
+					ncx := curLineWidth - v.ox
+					if ncx < 0 {
+						v.ox += ncx
+						if v.ox < 0 {
+							v.ox = 0
+						}
+						v.cx = 0
+					} else {
+						v.cx = ncx
+					}
+				}
 			} else {
+				if !v.Wrap {
+					v.ox = 0
+				}
 				v.cx = 0
 			}
 		}
-	} else if cx < 0 { // move to previous line
-		if prevLineWidth > 0 {
-			v.cx = prevLineWidth
-		} else {
-			v.cx = 0
+	} else if cx < 0 {
+		if !v.Wrap && v.ox > 0 { // move origin to the left
+			v.ox -= 1
+		} else { // move to previous line
+			if prevLineWidth > 0 {
+				if !v.Wrap { // set origin so the EOL is visible
+					nox := prevLineWidth - maxX + 1
+					if nox < 0 {
+						v.ox = 0
+					} else {
+						v.ox = nox
+					}
+				}
+				v.cx = prevLineWidth
+			} else {
+				if !v.Wrap {
+					v.ox = 0
+				}
+				v.cx = 0
+			}
+			cy -= 1
 		}
-		cy -= 1
 	} else { // stay on the same line
-		v.cx = cx
+		if v.Wrap {
+			v.cx = cx
+		} else {
+			if cx >= maxX {
+				v.ox += 1
+			} else {
+				v.cx = cx
+			}
+		}
 	}
 
 	// adjust cursor's y position and view's y origin
