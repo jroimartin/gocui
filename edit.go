@@ -44,7 +44,7 @@ func (v *View) editWrite(ch rune) {
 // editDelete deletes a rune at the cursor position. back determines
 // the direction.
 func (v *View) editDelete(back bool) {
-	y := v.oy + v.cy
+	x, y := v.ox+v.cx, v.oy+v.cy
 	if y < 0 {
 		return
 	} else if y >= len(v.viewLines) {
@@ -54,7 +54,7 @@ func (v *View) editDelete(back bool) {
 
 	maxX, _ := v.Size()
 	if back {
-		if v.cx == 0 { // start of the line
+		if x == 0 { // start of the line
 			if y < 1 {
 				return
 			}
@@ -79,12 +79,10 @@ func (v *View) editDelete(back bool) {
 			v.deleteRune(v.cx-1, v.cy)
 			v.moveCursor(-1, 0, true)
 		}
-	} else { // middle/end of the line
-		if v.cx == len(v.viewLines[y].line) {
-			v.mergeLines(v.cy)
-		} else {
-			v.deleteRune(v.cx, v.cy)
-		}
+	} else if x == len(v.viewLines[y].line) { // end of the line
+		v.mergeLines(v.cy)
+	} else { // middle of the line
+		v.deleteRune(v.cx, v.cy)
 	}
 }
 
