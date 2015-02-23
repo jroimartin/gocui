@@ -44,16 +44,43 @@ func (v *View) editWrite(ch rune) {
 // editDelete deletes a rune at the cursor position. back determines
 // the direction.
 func (v *View) editDelete(back bool) {
+	y := v.oy + v.cy
+	if y < 0 {
+		return
+	} else if y >= len(v.viewLines) {
+		v.moveCursor(-1, 0, true)
+		return
+	}
+
+	maxX, _ := v.Size()
 	if back {
-		if v.cx == 0 {
-			v.mergeLines(v.cy - 1)
+		if v.cx == 0 { // start of the line
+			if y < 1 {
+				return
+			}
+
+			var maxPrevWidth int
+			if v.Wrap {
+				maxPrevWidth = maxX
+			} else {
+				maxPrevWidth = MaxInt
+			}
+
+			if v.viewLines[y].linesX == 0 { // regular line
+				v.mergeLines(v.cy - 1)
+				if len(v.viewLines[y-1].line) < maxPrevWidth {
+					v.moveCursor(-1, 0, true)
+				}
+			} else { // wrapped line
+				v.deleteRune(len(v.viewLines[y-1].line)-1, v.cy-1)
+				v.moveCursor(-1, 0, true)
+			}
 		} else {
 			v.deleteRune(v.cx-1, v.cy)
+			v.moveCursor(-1, 0, true)
 		}
-		v.moveCursor(-1, 0, true)
-	} else {
-		y := v.oy + v.cy
-		if y >= 0 && y < len(v.viewLines) && v.cx == len(v.viewLines[y].line) {
+	} else { // middle/end of the line
+		if v.cx == len(v.viewLines[y].line) {
 			v.mergeLines(v.cy)
 		} else {
 			v.deleteRune(v.cx, v.cy)
@@ -77,9 +104,7 @@ func (v *View) editNewLine() {
 }
 
 // moveCursor moves the cursor taking into account the line or view widths and
-// moves the origin when necessary. If writeMode is false, the cursor jumps to
-// the next line when it reaches the end of the line, otherwise it jumps when
-// the cursor reaches the width of the view.
+// moves the origin when necessary.
 func (v *View) moveCursor(dx, dy int, writeMode bool) {
 	maxX, maxY := v.Size()
 	cx, cy := v.cx+dx, v.cy+dy
