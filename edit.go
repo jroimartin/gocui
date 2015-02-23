@@ -75,14 +75,14 @@ func (v *View) editDelete(back bool) {
 				v.deleteRune(len(v.viewLines[y-1].line)-1, v.cy-1)
 				v.moveCursor(-1, 0, true)
 			}
-		} else {
+		} else { // middle/end of the line
 			v.deleteRune(v.cx-1, v.cy)
 			v.moveCursor(-1, 0, true)
 		}
 	} else {
 		if x == len(v.viewLines[y].line) { // end of the line
 			v.mergeLines(v.cy)
-		} else { // middle of the line
+		} else { // start/middle of the line
 			v.deleteRune(v.cx, v.cy)
 		}
 	}
