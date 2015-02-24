@@ -4,15 +4,30 @@
 
 package gocui
 
-const MaxInt = int(^uint(0) >> 1)
+const maxInt = int(^uint(0) >> 1)
 
-// EditHandler allows to define the handler that manages the edition mode,
-// including keybindings or cursor behaviour. DefaultEditHandler is used by
+// Edit allows to define the editor that manages the edition mode,
+// including keybindings or cursor behaviour. DefaultEditor is used by
 // default.
-var EditHandler = DefaultEditHandler
+var Edit = EditorFunc(DefaultEditor)
 
-// DefaultEditHandler is used as the default EditHandler.
-func DefaultEditHandler(v *View, key Key, ch rune, mod Modifier) {
+// Objects implementing the Editor interface can be used as gocui editors.
+type Editor interface {
+	Edit(v *View, key Key, ch rune, mod Modifier)
+}
+
+// The EditorFunc type is an adapter to allow the use of ordinary functions as
+// Editors. If f is a function with the appropriate signature, EditorFunc(f)
+// is an Editor object that calls f.
+type EditorFunc func(v *View, key Key, ch rune, mod Modifier)
+
+// Edit calls f(v, key, ch, mod)
+func (f EditorFunc) Edit(v *View, key Key, ch rune, mod Modifier) {
+	f(v, key, ch, mod)
+}
+
+// DefaultEditor is used as the default gocui editor.
+func DefaultEditor(v *View, key Key, ch rune, mod Modifier) {
 	switch {
 	case ch != 0 && mod == 0:
 		v.EditWrite(ch)
@@ -65,7 +80,7 @@ func (v *View) EditDelete(back bool) {
 			if v.Wrap {
 				maxPrevWidth = maxX
 			} else {
-				maxPrevWidth = MaxInt
+				maxPrevWidth = maxInt
 			}
 
 			if v.viewLines[y].linesX == 0 { // regular line
@@ -118,7 +133,7 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 		if v.Wrap {
 			curLineWidth = maxX - 1
 		} else {
-			curLineWidth = MaxInt
+			curLineWidth = maxInt
 		}
 	} else {
 		if y >= 0 && y < len(v.viewLines) {
