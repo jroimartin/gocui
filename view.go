@@ -428,6 +428,16 @@ func (v *View) Buffer() string {
 	return strings.Replace(str, "\x00", " ", -1)
 }
 
+// ViewBuffer returns a string with the contents of the view's buffer that is
+// showed to the user
+func (v *View) ViewBuffer() string {
+	str := ""
+	for _, l := range v.viewLines {
+		str += string(l.line) + "\n"
+	}
+	return strings.Replace(str, "\x00", " ", -1)
+}
+
 // Line returns a string with the line of the view's internal buffer
 // at the position corresponding to the point (x, y).
 func (v *View) Line(y int) (string, error) {

@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"strings"
 
 	"github.com/jroimartin/gocui"
 )
@@ -108,6 +109,9 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("main", gocui.KeyCtrlS, gocui.ModNone, saveMain); err != nil {
 		return err
 	}
+	if err := g.SetKeybinding("main", gocui.KeyCtrlW, gocui.ModNone, saveVisualMain); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -133,6 +137,20 @@ func saveMain(g *gocui.Gui, v *gocui.View) error {
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func saveVisualMain(g *gocui.Gui, v *gocui.View) error {
+	f, err := ioutil.TempFile("", "gocui_demo_")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	vb := v.ViewBuffer()
+	if _, err := io.Copy(f, strings.NewReader(vb)); err != nil {
+		return err
 	}
 	return nil
 }
