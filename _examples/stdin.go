@@ -10,14 +10,11 @@ import (
 	"io"
 	"log"
 	"os"
-	"runtime"
 
 	"github.com/jroimartin/gocui"
 )
 
 func main() {
-	runtime.LockOSThread()
-
 	g := gocui.NewGui()
 	if err := g.Init(); err != nil {
 		log.Fatalln(err)
