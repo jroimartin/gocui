@@ -6,8 +6,9 @@ package gocui
 
 import "github.com/nsf/termbox-go"
 
-// Attributes can be combined using bitwise OR (|). Note that it is not
-// possible to combine multiple color attributes.
+// Attribute represents a terminal attribute, like color, font style, etc. They
+// can be combined using bitwise OR (|). Note that it is not possible to
+// combine multiple color attributes.
 type Attribute termbox.Attribute
 
 // Color attributes.

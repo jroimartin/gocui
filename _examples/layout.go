@@ -13,22 +13,22 @@ import (
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	if _, err := g.SetView("side", -1, -1, int(0.2*float32(maxX)), maxY-5); err != nil &&
-		err != gocui.ErrorUnkView {
+		err != gocui.ErrUnknownView {
 		return err
 	}
 	if _, err := g.SetView("main", int(0.2*float32(maxX)), -1, maxX, maxY-5); err != nil &&
-		err != gocui.ErrorUnkView {
+		err != gocui.ErrUnknownView {
 		return err
 	}
 	if _, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY); err != nil &&
-		err != gocui.ErrorUnkView {
+		err != gocui.ErrUnknownView {
 		return err
 	}
 	return nil
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.Quit
+	return gocui.ErrQuit
 }
 
 func main() {
@@ -47,7 +47,7 @@ func main() {
 	}
 
 	err = g.MainLoop()
-	if err != nil && err != gocui.Quit {
+	if err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
 	}
 }

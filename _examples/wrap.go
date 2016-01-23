@@ -15,7 +15,7 @@ import (
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	if v, err := g.SetView("main", 1, 1, maxX-1, maxY-1); err != nil {
-		if err != gocui.ErrorUnkView {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
 		v.Wrap = true
@@ -28,7 +28,7 @@ func layout(g *gocui.Gui) error {
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.Quit
+	return gocui.ErrQuit
 }
 
 func main() {
@@ -46,7 +46,7 @@ func main() {
 	}
 
 	err = g.MainLoop()
-	if err != nil && err != gocui.Quit {
+	if err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
 	}
 }

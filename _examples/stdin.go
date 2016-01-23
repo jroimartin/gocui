@@ -28,7 +28,7 @@ func main() {
 	g.ShowCursor = true
 
 	err := g.MainLoop()
-	if err != nil && err != gocui.Quit {
+	if err != nil && err != gocui.ErrQuit {
 		log.Fatalln(err)
 	}
 }
@@ -37,7 +37,7 @@ func layout(g *gocui.Gui) error {
 	maxX, _ := g.Size()
 
 	if v, err := g.SetView("legend", maxX-23, 0, maxX-1, 5); err != nil {
-		if err != gocui.ErrorUnkView {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
 		fmt.Fprintln(v, "KEYBINDINGS")
@@ -47,7 +47,7 @@ func layout(g *gocui.Gui) error {
 	}
 
 	if v, err := g.SetView("stdin", 0, 0, 80, 35); err != nil {
-		if err != gocui.ErrorUnkView {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
 		if err := g.SetCurrentView("stdin"); err != nil {
@@ -88,7 +88,7 @@ func initKeybindings(g *gocui.Gui) error {
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.Quit
+	return gocui.ErrQuit
 }
 
 func autoscroll(g *gocui.Gui, v *gocui.View) error {

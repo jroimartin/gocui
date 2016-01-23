@@ -38,22 +38,23 @@ func main() {
 	}
 
 	err = g.MainLoop()
-	if err != nil && err != gocui.Quit {
+	if err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
 	}
 }
 
 func layout(g *gocui.Gui) error {
 	maxX, _ := g.Size()
-	v, err := g.SetView("legend", maxX-22, 0, maxX-1, 6)
+	v, err := g.SetView("legend", maxX-25, 0, maxX-1, 7)
 	if err != nil {
-		if err != gocui.ErrorUnkView {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
 		fmt.Fprintln(v, "KEYBINDINGS")
 		fmt.Fprintln(v, "Space: New View")
 		fmt.Fprintln(v, "Tab: Next View")
 		fmt.Fprintln(v, "← ↑ → ↓: Move View")
+		fmt.Fprintln(v, "Backspace: Delete View")
 		fmt.Fprintln(v, "^C: Exit")
 	}
 	return nil
@@ -109,7 +110,7 @@ func initKeybindings(g *gocui.Gui) error {
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.Quit
+	return gocui.ErrQuit
 }
 
 func newView(g *gocui.Gui) error {
@@ -117,7 +118,7 @@ func newView(g *gocui.Gui) error {
 	name := fmt.Sprintf("v%v", idxView)
 	v, err := g.SetView(name, maxX/2-5, maxY/2-5, maxX/2+5, maxY/2+5)
 	if err != nil {
-		if err != gocui.ErrorUnkView {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
 		v.Wrap = true

@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	// Quit is used to decide if the MainLoop finished succesfully.
-	Quit error = errors.New("quit")
+	// ErrQuit is used to decide if the MainLoop finished succesfully.
+	ErrQuit = errors.New("quit")
 
-	// ErrorUnkView allows to assert if a View must be initialized.
-	ErrorUnkView error = errors.New("unknown view")
+	// ErrUnknownView allows to assert if a View must be initialized.
+	ErrUnknownView = errors.New("unknown view")
 )
 
 // Gui represents the whole User Interface, including the views, layouts
@@ -43,7 +43,7 @@ type Gui struct {
 	// If ShowCursor is true then the cursor is enabled.
 	ShowCursor bool
 
-	// If EnableMouse is true then mouse clicks will be recognized.
+	// If EnableMouse is true then mouse events will be enabled.
 	EnableMouse bool
 }
 
@@ -100,7 +100,7 @@ func (g *Gui) Rune(x, y int) (rune, error) {
 // SetView creates a new view with its top-left corner at (x0, y0)
 // and the bottom-right one at (x1, y1). If a view with the same name
 // already exists, its dimensions are updated; otherwise, the error
-// ErrorUnkView is returned, which allows to assert if the View must
+// ErrUnknownView is returned, which allows to assert if the View must
 // be initialized. It checks if the position is valid.
 func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	if x0 >= x1 || y0 >= y1 {
@@ -123,29 +123,40 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	v.BgColor, v.FgColor = g.BgColor, g.FgColor
 	v.SelBgColor, v.SelFgColor = g.SelBgColor, g.SelFgColor
 	g.views = append(g.views, v)
-	return v, ErrorUnkView
+	return v, ErrUnknownView
 }
 
 // View returns a pointer to the view with the given name, or error
-// ErrorUnkView if a view with that name does not exist.
+// ErrUnknownView if a view with that name does not exist.
 func (g *Gui) View(name string) (*View, error) {
 	for _, v := range g.views {
 		if v.name == name {
 			return v, nil
 		}
 	}
-	return nil, ErrorUnkView
+	return nil, ErrUnknownView
 }
 
-// Position returns the coordinates of the view with the given name,
-// or error ErrorUnkView if a view with that name does not exist.
+// ViewByPosition returns a pointer to a view matching the given position, or
+// error ErrUnknownView if a view in that position does not exist.
+func (g *Gui) ViewByPosition(x, y int) (*View, error) {
+	for _, v := range g.views {
+		if x >= v.x0 && x <= v.x1 && y >= v.y0 && y <= v.y1 {
+			return v, nil
+		}
+	}
+	return nil, ErrUnknownView
+}
+
+// ViewPosition returns the coordinates of the view with the given name, or
+// error ErrUnknownView if a view with that name does not exist.
 func (g *Gui) ViewPosition(name string) (x0, y0, x1, y1 int, err error) {
 	for _, v := range g.views {
 		if v.name == name {
 			return v.x0, v.y0, v.x1, v.y1, nil
 		}
 	}
-	return 0, 0, 0, 0, ErrorUnkView
+	return 0, 0, 0, 0, ErrUnknownView
 }
 
 // DeleteView deletes a view by name.
@@ -156,7 +167,7 @@ func (g *Gui) DeleteView(name string) error {
 			return nil
 		}
 	}
-	return ErrorUnkView
+	return ErrUnknownView
 }
 
 // SetCurrentView gives the focus to a given view.
@@ -167,7 +178,7 @@ func (g *Gui) SetCurrentView(name string) error {
 			return nil
 		}
 	}
-	return ErrorUnkView
+	return ErrUnknownView
 }
 
 // CurrentView returns the currently focused view, or nil if no view
@@ -205,7 +216,7 @@ func (g *Gui) SetLayout(layout func(*Gui) error) {
 }
 
 // MainLoop runs the main loop until an error is returned. A successful
-// finish should return Quit.
+// finish should return ErrQuit.
 func (g *Gui) MainLoop() error {
 	go func() {
 		for {
@@ -213,11 +224,11 @@ func (g *Gui) MainLoop() error {
 		}
 	}()
 
-	termbox.SetInputMode(termbox.InputAlt)
-
+	inputMode := termbox.InputAlt
 	if g.EnableMouse == true {
-		termbox.SetInputMode(termbox.InputMouse)
+		inputMode |= termbox.InputMouse
 	}
+	termbox.SetInputMode(inputMode)
 
 	if err := g.Flush(); err != nil {
 		return err
@@ -459,23 +470,29 @@ func horizontalRune(ch rune) bool {
 }
 
 // onKey manages key-press events. A keybinding handler is called when
-// a key-press event satisfies a configured keybinding. Furthermore,
+// a key-press or mouse event satisfies a configured keybinding. Furthermore,
 // currentView's internal buffer is modified if currentView.Editable is true.
 func (g *Gui) onKey(ev *termbox.Event) error {
-	if g.currentView != nil && g.currentView.Editable && Edit != nil {
-		Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
+	var curView *View
+
+	switch ev.Type {
+	case termbox.EventKey:
+		if g.currentView != nil && g.currentView.Editable && Edit != nil {
+			Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
+		}
+		curView = g.currentView
+	case termbox.EventMouse:
+		if v, err := g.ViewByPosition(ev.MouseX, ev.MouseY); err == nil {
+			curView = v
+		}
 	}
 
-	var cv string
-	if g.currentView != nil {
-		cv = g.currentView.name
-	}
 	for _, kb := range g.keybindings {
 		if kb.h == nil {
 			continue
 		}
-		if kb.matchKeypress(Key(ev.Key), ev.Ch, Modifier(ev.Mod)) && kb.matchView(cv) {
-			if err := kb.h(g, g.currentView); err != nil {
+		if kb.matchKeypress(Key(ev.Key), ev.Ch, Modifier(ev.Mod)) && kb.matchView(curView) {
+			if err := kb.h(g, curView); err != nil {
 				return err
 			}
 		}

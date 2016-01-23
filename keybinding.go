@@ -7,12 +7,12 @@ package gocui
 import "github.com/nsf/termbox-go"
 
 type (
-	// Keys represent special keys or keys combinations.
+	// Key represents special keys or keys combinations.
 	Key termbox.Key
-	// Modifiers allow to define special keys combinations. They can be used
+	// Modifier allows to define special keys combinations. They can be used
 	// in combination with Keys or Runes when a new keybinding is defined.
 	Modifier termbox.Modifier
-	// KeybindingHandlers represent the actions linked to keybindings. The
+	// KeybindingHandler represents the actions linked to keybindings. The
 	// handler is called when a key-press event satisfies a configured
 	// keybinding.
 	KeybindingHandler func(*Gui, *View) error
@@ -125,12 +125,15 @@ func newKeybinding(viewname string, key Key, ch rune, mod Modifier, h Keybinding
 	return kb
 }
 
-// match returns if the keybinding matches the keypress
+// matchKeypress returns if the keybinding matches the keypress.
 func (kb *keybinding) matchKeypress(key Key, ch rune, mod Modifier) bool {
 	return kb.key == key && kb.ch == ch && kb.mod == mod
 }
 
-// match returns if the keybinding matches the current view
-func (kb *keybinding) matchView(viewname string) bool {
-	return kb.viewName == "" || kb.viewName == viewname
+// matchView returns if the keybinding matches the current view.
+func (kb *keybinding) matchView(v *View) bool {
+	if kb.viewName == "" {
+		return true
+	}
+	return v != nil && kb.viewName == v.name
 }

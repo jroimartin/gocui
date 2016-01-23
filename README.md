@@ -17,7 +17,7 @@ Minimalist Go package aimed at creating Console User Interfaces.
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	if v, err := g.SetView("center", maxX/2-10, maxY/2, maxX/2+10, maxY/2+2); err != nil {
-		if err != gocui.ErrorUnkView {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
 		fmt.Fprintln(v, "This is an example")
@@ -25,7 +25,7 @@ func layout(g *gocui.Gui) error {
 	return nil
 }
 func quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.Quit
+	return gocui.ErrQuit
 }
 func main() {
 	var err error
@@ -39,7 +39,7 @@ func main() {
 		log.Panicln(err)
 	}
 	err = g.MainLoop()
-	if err != nil && err != gocui.Quit {
+	if err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
 	}
 }
