@@ -43,8 +43,8 @@ type Gui struct {
 	// If ShowCursor is true then the cursor is enabled.
 	ShowCursor bool
 
-	// If EnableMouse is true then mouse events will be enabled.
-	EnableMouse bool
+	// If Mouse is true then mouse events will be enabled.
+	Mouse bool
 }
 
 // NewGui returns a new Gui object.
@@ -225,7 +225,7 @@ func (g *Gui) MainLoop() error {
 	}()
 
 	inputMode := termbox.InputAlt
-	if g.EnableMouse == true {
+	if g.Mouse {
 		inputMode |= termbox.InputMouse
 	}
 	termbox.SetInputMode(inputMode)

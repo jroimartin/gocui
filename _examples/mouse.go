@@ -24,7 +24,7 @@ func main() {
 	if err := keybindings(g); err != nil {
 		log.Panicln(err)
 	}
-	g.EnableMouse = true
+	g.Mouse = true
 
 	err = g.MainLoop()
 	if err != nil && err != gocui.ErrQuit {
