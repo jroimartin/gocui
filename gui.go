@@ -6,10 +6,19 @@ package gocui
 
 import (
 	"errors"
-	"sync"
 
 	"github.com/nsf/termbox-go"
 )
+
+// UserHandler represents a handler to be executed programmatically by the user
+// via Gui.Execute, for instance, from a goroutine that wants to update the
+// GUI.
+type UserHandler func(*Gui) error
+
+// userEvent represents an event triggered by the user.
+type userEvent struct {
+	h UserHandler
+}
 
 var (
 	// ErrQuit is used to decide if the MainLoop finished succesfully.
@@ -22,15 +31,13 @@ var (
 // Gui represents the whole User Interface, including the views, layouts
 // and keybindings.
 type Gui struct {
-	events      chan termbox.Event
+	tbEvents    chan termbox.Event
+	userEvents  chan userEvent
 	views       []*View
 	currentView *View
 	layout      func(*Gui) error
 	keybindings []*keybinding
 	maxX, maxY  int
-
-	// Protects the gui from being flushed concurrently.
-	mu sync.Mutex
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the GUI.
@@ -58,7 +65,8 @@ func (g *Gui) Init() error {
 	if err := termbox.Init(); err != nil {
 		return err
 	}
-	g.events = make(chan termbox.Event, 20)
+	g.tbEvents = make(chan termbox.Event, 20)
+	g.userEvents = make(chan userEvent, 20)
 	g.maxX, g.maxY = termbox.Size()
 	g.BgColor = ColorBlack
 	g.FgColor = ColorWhite
@@ -205,6 +213,14 @@ func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, h Ke
 	return nil
 }
 
+// Execute executes the given handler. This function can be called safely from
+// a goroutine in order to update the GUI. It is important to note that it
+// won't be executed immediately, instead it will be added to the user events
+// queue.
+func (g *Gui) Execute(h UserHandler) {
+	go func() { g.userEvents <- userEvent{h: h} }()
+}
+
 // SetLayout sets the current layout. A layout is a function that
 // will be called everytime the gui is re-drawed, it must contain
 // the base views and its initializations.
@@ -212,7 +228,7 @@ func (g *Gui) SetLayout(layout func(*Gui) error) {
 	g.layout = layout
 	g.currentView = nil
 	g.views = nil
-	go func() { g.events <- termbox.Event{Type: termbox.EventResize} }()
+	go func() { g.tbEvents <- termbox.Event{Type: termbox.EventResize} }()
 }
 
 // MainLoop runs the main loop until an error is returned. A successful
@@ -220,7 +236,7 @@ func (g *Gui) SetLayout(layout func(*Gui) error) {
 func (g *Gui) MainLoop() error {
 	go func() {
 		for {
-			g.events <- termbox.PollEvent()
+			g.tbEvents <- termbox.PollEvent()
 		}
 	}()
 
@@ -230,18 +246,24 @@ func (g *Gui) MainLoop() error {
 	}
 	termbox.SetInputMode(inputMode)
 
-	if err := g.Flush(); err != nil {
+	if err := g.flush(); err != nil {
 		return err
 	}
 	for {
-		ev := <-g.events
-		if err := g.handleEvent(&ev); err != nil {
-			return err
+		select {
+		case ev := <-g.tbEvents:
+			if err := g.handleEvent(&ev); err != nil {
+				return err
+			}
+		case ev := <-g.userEvents:
+			if err := ev.h(g); err != nil {
+				return err
+			}
 		}
 		if err := g.consumeevents(); err != nil {
 			return err
 		}
-		if err := g.Flush(); err != nil {
+		if err := g.flush(); err != nil {
 			return err
 		}
 	}
@@ -252,8 +274,12 @@ func (g *Gui) MainLoop() error {
 func (g *Gui) consumeevents() error {
 	for {
 		select {
-		case ev := <-g.events:
+		case ev := <-g.tbEvents:
 			if err := g.handleEvent(&ev); err != nil {
+				return err
+			}
+		case ev := <-g.userEvents:
+			if err := ev.h(g); err != nil {
 				return err
 			}
 		default:
@@ -275,16 +301,8 @@ func (g *Gui) handleEvent(ev *termbox.Event) error {
 	}
 }
 
-// Flush updates the gui, re-drawing frames and buffers.
-//
-// Flush is safe for concurrent use by multiple goroutines. However it is
-// important to note that it will make the layout function to be called, which
-// could lead to a dead lock if the same mutex is used in both the function
-// calling Flush and the layout function.
-func (g *Gui) Flush() error {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
+// flush updates the gui, re-drawing frames and buffers.
+func (g *Gui) flush() error {
 	if g.layout == nil {
 		return errors.New("Null layout")
 	}

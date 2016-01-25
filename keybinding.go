@@ -9,12 +9,14 @@ import "github.com/nsf/termbox-go"
 type (
 	// Key represents special keys or keys combinations.
 	Key termbox.Key
+
 	// Modifier allows to define special keys combinations. They can be used
 	// in combination with Keys or Runes when a new keybinding is defined.
 	Modifier termbox.Modifier
-	// KeybindingHandler represents the actions linked to keybindings. The
-	// handler is called when a key-press event satisfies a configured
-	// keybinding.
+
+	// KeybindingHandler represents the handler linked to a specific
+	// keybindings. The handler is called when a key-press event satisfies a
+	// configured keybinding.
 	KeybindingHandler func(*Gui, *View) error
 )
 
@@ -104,7 +106,7 @@ const (
 	ModAlt           = Modifier(termbox.ModAlt)
 )
 
-// Keybidings are used to link a given key-press event with an action.
+// Keybidings are used to link a given key-press event with a handler.
 type keybinding struct {
 	viewName string
 	key      Key
