@@ -84,6 +84,7 @@ func counter(g *gocui.Gui) {
 				if err != nil {
 					return err
 				}
+
 				mu.Lock()
 				n := ctr
 				ctr++

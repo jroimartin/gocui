@@ -10,14 +10,12 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
-// UserHandler represents a handler to be executed programmatically by the user
-// via Gui.Execute, for instance, from a goroutine that wants to update the
-// GUI.
-type UserHandler func(*Gui) error
+// Handler represents a handler that can be used to update or modify the GUI.
+type Handler func(*Gui) error
 
 // userEvent represents an event triggered by the user.
 type userEvent struct {
-	h UserHandler
+	h Handler
 }
 
 var (
@@ -35,7 +33,7 @@ type Gui struct {
 	userEvents  chan userEvent
 	views       []*View
 	currentView *View
-	layout      func(*Gui) error
+	layout      Handler
 	keybindings []*keybinding
 	maxX, maxY  int
 
@@ -217,14 +215,14 @@ func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, h Ke
 // a goroutine in order to update the GUI. It is important to note that it
 // won't be executed immediately, instead it will be added to the user events
 // queue.
-func (g *Gui) Execute(h UserHandler) {
+func (g *Gui) Execute(h Handler) {
 	go func() { g.userEvents <- userEvent{h: h} }()
 }
 
 // SetLayout sets the current layout. A layout is a function that
 // will be called everytime the gui is re-drawed, it must contain
 // the base views and its initializations.
-func (g *Gui) SetLayout(layout func(*Gui) error) {
+func (g *Gui) SetLayout(layout Handler) {
 	g.layout = layout
 	g.currentView = nil
 	g.views = nil
