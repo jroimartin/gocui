@@ -201,7 +201,7 @@ func main() {
 	}
 	g.SelBgColor = gocui.ColorGreen
 	g.SelFgColor = gocui.ColorBlack
-	g.ShowCursor = true
+	g.Cursor = true
 
 	err = g.MainLoop()
 	if err != nil && err != gocui.ErrQuit {

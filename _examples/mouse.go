@@ -26,7 +26,7 @@ func main() {
 	}
 	g.SelBgColor = gocui.ColorGreen
 	g.SelFgColor = gocui.ColorBlack
-	g.ShowCursor = true
+	g.Cursor = true
 	g.Mouse = true
 
 	err = g.MainLoop()

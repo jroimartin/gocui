@@ -45,8 +45,8 @@ type Gui struct {
 	// foreground colors of the selected line, when it is highlighted.
 	SelBgColor, SelFgColor Attribute
 
-	// If ShowCursor is true then the cursor is enabled.
-	ShowCursor bool
+	// If Cursor is true then the cursor is enabled.
+	Cursor bool
 
 	// If Mouse is true then mouse events will be enabled.
 	Mouse bool
@@ -375,7 +375,7 @@ func (g *Gui) drawFrame(v *View) error {
 
 // draw manages the cursor and calls the draw function of a view.
 func (g *Gui) draw(v *View) error {
-	if g.ShowCursor {
+	if g.Cursor {
 		if v := g.currentView; v != nil {
 			maxX, maxY := v.Size()
 			cx, cy := v.cx, v.cy

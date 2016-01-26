@@ -25,7 +25,7 @@ func main() {
 	if err := initKeybindings(g); err != nil {
 		log.Fatalln(err)
 	}
-	g.ShowCursor = true
+	g.Cursor = true
 
 	err := g.MainLoop()
 	if err != nil && err != gocui.ErrQuit {
