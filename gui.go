@@ -147,7 +147,7 @@ func (g *Gui) View(name string) (*View, error) {
 // error ErrUnknownView if a view in that position does not exist.
 func (g *Gui) ViewByPosition(x, y int) (*View, error) {
 	for _, v := range g.views {
-		if x >= v.x0 && x <= v.x1 && y >= v.y0 && y <= v.y1 {
+		if x > v.x0 && x < v.x1 && y > v.y0 && y < v.y1 {
 			return v, nil
 		}
 	}
@@ -498,9 +498,15 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 		}
 		curView = g.currentView
 	case termbox.EventMouse:
-		if v, err := g.ViewByPosition(ev.MouseX, ev.MouseY); err == nil {
-			curView = v
+		mx, my := ev.MouseX, ev.MouseY
+		v, err := g.ViewByPosition(mx, my)
+		if err != nil {
+			break
 		}
+		if err := v.SetCursor(mx-v.x0-1, my-v.y0-1); err != nil {
+			return err
+		}
+		curView = v
 	}
 
 	for _, kb := range g.keybindings {
