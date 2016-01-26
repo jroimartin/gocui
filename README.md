@@ -1,4 +1,4 @@
-# GOCUI - Go Console User Interface
+# GOCUI - Go Console User Interface [![GoDoc](https://godoc.org/github.com/jroimartin/gocui?status.svg)](https://godoc.org/github.com/jroimartin/gocui)
 
 Minimalist Go package aimed at creating Console User Interfaces.
 
@@ -44,6 +44,13 @@ func main() {
 	}
 }
 ```
+
+## Concurrency
+
+Gocui implements mechanisms to be concurrent safe. Specifically, Gui and View
+objects must be updated from a layout function or via *Gui.Execute.
+
+For more information, see _examples/goroutine.go
 
 ## Screenshots
 
