@@ -16,9 +16,9 @@ Minimalist Go package aimed at creating Console User Interfaces.
 
 `go get github.com/jroimartin/gocui`
 
-## Documentation
+## Documentation [![GoDoc](https://godoc.org/github.com/jroimartin/gocui?status.svg)](https://godoc.org/github.com/jroimartin/gocui)
 
-`godoc github.com/jroimartin/gocui` [![GoDoc](https://godoc.org/github.com/jroimartin/gocui?status.svg)](https://godoc.org/github.com/jroimartin/gocui)
+`godoc github.com/jroimartin/gocui`
 
 ## Example
 
