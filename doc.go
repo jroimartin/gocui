@@ -44,7 +44,7 @@ Create and initialize a view with absolute coordinates:
 		// ...
 	}
 
-Views can also being created using relative coordinates:
+Views can also be created using relative coordinates:
 
 	maxX, maxY := g.Size()
 	if v, err := g.SetView("viewname", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
@@ -72,7 +72,7 @@ Configure keybindings:
 		// handle error
 	}
 
-gocui implements full mouse support than can be enabled with:
+gocui implements full mouse support that can be enabled with:
 
 	g.Mouse = true
 
