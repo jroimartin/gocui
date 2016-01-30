@@ -24,15 +24,15 @@ Set the layout function:
 
 	g.SetLayout(fcn)
 
-On each iteration of the GUI's main loop, the "layout function" will be
-executed.  These layout functions can be used to set-up and update the main
-application views, being possible to freely switch between them. Also, it is
-important to mention that a main loop iteration is executed on each reported
-event (key-press, mouse event, window resize, etc).
+On each iteration of the GUI's main loop, the "layout function" is executed.
+These layout functions can be used to set-up and update the application's main
+views, being possible to freely switch between them. Also, it is important to
+mention that a main loop iteration is executed on each reported event
+(key-press, mouse event, window resize, etc).
 
-GUIs are composed by Views, you can think of it as free text buffers. Views
-implement the io.ReadWriter interface, so you can just write to them if you
-want to modify their content and the same is valid for reading.
+GUIs are composed by Views, you can think of it as buffers. Views implement the
+io.ReadWriter interface, so you can just write to them if you want to modify
+their content. The same is valid for reading.
 
 Create and initialize a view with absolute coordinates:
 
