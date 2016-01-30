@@ -34,7 +34,7 @@ GUIs are composed by Views, you can think of it as free text buffers. Views
 implement the io.ReadWriter interface, so you can just write to them if you
 want to modify their content and the same is valid for reading.
 
-Create and intialize a view with absolute coordinates:
+Create and initialize a view with absolute coordinates:
 
 	if v, err := g.SetView("viewname", 2, 2, 22, 7); err != nil {
 		if err != gocui.ErrUnknownView {
@@ -83,7 +83,7 @@ Mouse events are handled like any other keybinding:
 	}
 
 By default, gocui provides a basic edition mode. This mode can be extended
-and customized creating a new Editor and asigning it to *Gui.Editor:
+and customized creating a new Editor and assigning it to *Gui.Editor:
 
 	type Editor interface {
 		Edit(v *View, key Key, ch rune, mod Modifier)
