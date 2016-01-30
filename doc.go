@@ -91,7 +91,7 @@ and customized creating a new Editor and assigning it to *Gui.Editor:
 
 DefaultEditor can be taken as example to create your own custom Editor:
 
-	var DefaultEditor = EditorFunc(simpleEditor)
+	var DefaultEditor Editor = EditorFunc(simpleEditor)
 
 	func simpleEditor(v *View, key Key, ch rune, mod Modifier) {
 		switch {
