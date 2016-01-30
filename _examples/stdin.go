@@ -27,8 +27,7 @@ func main() {
 	}
 	g.Cursor = true
 
-	err := g.MainLoop()
-	if err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Fatalln(err)
 	}
 }

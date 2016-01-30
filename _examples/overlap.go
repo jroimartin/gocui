@@ -56,8 +56,6 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func main() {
-	var err error
-
 	g := gocui.NewGui()
 	if err := g.Init(); err != nil {
 		log.Panicln(err)
@@ -69,8 +67,7 @@ func main() {
 		log.Panicln(err)
 	}
 
-	err = g.MainLoop()
-	if err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
 	}
 }

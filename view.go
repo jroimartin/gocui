@@ -419,7 +419,7 @@ func (v *View) breakLine(x, y int) error {
 }
 
 // Buffer returns a string with the contents of the view's internal
-// buffer
+// buffer.
 func (v *View) Buffer() string {
 	str := ""
 	for _, l := range v.lines {
@@ -429,7 +429,7 @@ func (v *View) Buffer() string {
 }
 
 // ViewBuffer returns a string with the contents of the view's buffer that is
-// showed to the user
+// shown to the user.
 func (v *View) ViewBuffer() string {
 	str := ""
 	for _, l := range v.viewLines {

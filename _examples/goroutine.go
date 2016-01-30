@@ -79,20 +79,18 @@ func counter(g *gocui.Gui) {
 		case <-done:
 			return
 		case <-time.After(500 * time.Millisecond):
+			mu.Lock()
+			n := ctr
+			ctr++
+			mu.Unlock()
+
 			g.Execute(func(g *gocui.Gui) error {
 				v, err := g.View("ctr")
 				if err != nil {
 					return err
 				}
-
-				mu.Lock()
-				n := ctr
-				ctr++
-				mu.Unlock()
-
 				v.Clear()
 				fmt.Fprintln(v, n)
-
 				return nil
 			})
 		}

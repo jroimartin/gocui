@@ -6,11 +6,6 @@ package gocui
 
 const maxInt = int(^uint(0) >> 1)
 
-// Edit allows to define the editor that manages the edition mode,
-// including keybindings or cursor behaviour. DefaultEditor is used by
-// default.
-var Edit = EditorFunc(DefaultEditor)
-
 // Editor interface must be satisfied by gocui editors.
 type Editor interface {
 	Edit(v *View, key Key, ch rune, mod Modifier)
@@ -26,8 +21,11 @@ func (f EditorFunc) Edit(v *View, key Key, ch rune, mod Modifier) {
 	f(v, key, ch, mod)
 }
 
-// DefaultEditor is used as the default gocui editor.
-func DefaultEditor(v *View, key Key, ch rune, mod Modifier) {
+// DefaultEditor is the default editor.
+var DefaultEditor Editor = EditorFunc(simpleEditor)
+
+// simpleEditor is used as the default gocui editor.
+func simpleEditor(v *View, key Key, ch rune, mod Modifier) {
 	switch {
 	case ch != 0 && mod == 0:
 		v.EditWrite(ch)

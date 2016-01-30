@@ -5,36 +5,106 @@
 /*
 Package gocui allows to create console user interfaces.
 
-Example:
+Create a new GUI:
 
-	func layout(g *gocui.Gui) error {
-		maxX, maxY := g.Size()
-		if v, err := g.SetView("center", maxX/2-10, maxY/2, maxX/2+10, maxY/2+2); err != nil {
-			if err != gocui.ErrUnknownView {
-				return err
-			}
-			fmt.Fprintln(v, "This is an example")
+	g := gocui.NewGui()
+	if err := g.Init(); err != nil {
+		// handle error
+	}
+	defer g.Close()
+
+	// Set layout and key bindings
+	// ...
+
+	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+		// handle error
+	}
+
+Set the layout function:
+
+	g.SetLayout(fcn)
+
+On each iteration of the GUI's main loop, the "layout function" will be
+executed.  These layout functions can be used to set-up and update the main
+application views, being possible to freely switch between them. Also, it is
+important to mention that a main loop iteration is executed on each reported
+event (key-press, mouse event, window resize, etc).
+
+GUIs are composed by Views, you can think of it as free text buffers. Views
+implement the io.ReadWriter interface, so you can just write to them if you
+want to modify their content and the same is valid for reading.
+
+Create and intialize a view with absolute coordinates:
+
+	if v, err := g.SetView("viewname", 2, 2, 22, 7); err != nil {
+		if err != gocui.ErrUnknownView {
+			// handle error
 		}
+		fmt.Fprintln(v, "This is a new view")
+		// ...
+	}
+
+Views can also being created using relative coordinates:
+
+	maxX, maxY := g.Size()
+	if v, err := g.SetView("viewname", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
+		// ...
+	}
+
+IMPORTANT: Views can only be created, destroyed or updated in two ways: from a
+layout funcion or via *Gui.Execute(). The reason for this is that it allows
+gocui to be conccurent-safe. So, if you want to update your GUI from a
+goroutine, you must use *Gui.Execute(). For example:
+
+	g.Execute(func(g *gocui.Gui) error {
+		v, err := g.View("viewname")
+		if err != nil {
+			// handle error
+		}
+		v.Clear()
+		fmt.Fprintln(v, "Writing from different goroutines")
 		return nil
+	})
+
+Configure keybindings:
+
+	if err := g.SetKeybinding("viewname", gocui.KeyEnter, gocui.ModNone, fcn); err != nil {
+		// handle error
 	}
-	func quit(g *gocui.Gui, v *gocui.View) error {
-		return gocui.ErrQuit
+
+gocui implements full mouse support than can be enabled with:
+
+	g.Mouse = true
+
+Mouse events are handled like any other keybinding:
+
+	if err := g.SetKeybinding("viewname", gocui.MouseLeft, gocui.ModNone, fcn); err != nil {
+		// handle error
 	}
-	func main() {
-		var err error
-		g := gocui.NewGui()
-		if err := g.Init(); err != nil {
-			log.Panicln(err)
-		}
-		defer g.Close()
-		g.SetLayout(layout)
-		if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
-			log.Panicln(err)
-		}
-		err = g.MainLoop()
-		if err != nil && err != gocui.ErrQuit {
-			log.Panicln(err)
+
+By default, gocui provides a basic edition mode. This mode can be extended
+and customized creating a new Editor and asigning it to *Gui.Editor:
+
+	type Editor interface {
+		Edit(v *View, key Key, ch rune, mod Modifier)
+	}
+
+DefaultEditor can be taken as example to create your own custom Editor:
+
+	var DefaultEditor = EditorFunc(simpleEditor)
+
+	func simpleEditor(v *View, key Key, ch rune, mod Modifier) {
+		switch {
+		case ch != 0 && mod == 0:
+			v.EditWrite(ch)
+		case key == KeySpace:
+			v.EditWrite(' ')
+		case key == KeyBackspace || key == KeyBackspace2:
+			v.EditDelete(true)
+		// ...
 		}
 	}
+
+For more information, see the examples in folder "_examples/".
 */
 package gocui

@@ -19,7 +19,7 @@ type userEvent struct {
 }
 
 var (
-	// ErrQuit is used to decide if the MainLoop finished succesfully.
+	// ErrQuit is used to decide if the MainLoop finished successfully.
 	ErrQuit = errors.New("quit")
 
 	// ErrUnknownView allows to assert if a View must be initialized.
@@ -50,6 +50,11 @@ type Gui struct {
 
 	// If Mouse is true then mouse events will be enabled.
 	Mouse bool
+
+	// Editor allows to define the editor that manages the edition mode,
+	// including keybindings or cursor behaviour. DefaultEditor is used by
+	// default.
+	Editor Editor
 }
 
 // NewGui returns a new Gui object.
@@ -68,6 +73,7 @@ func (g *Gui) Init() error {
 	g.maxX, g.maxY = termbox.Size()
 	g.BgColor = ColorBlack
 	g.FgColor = ColorWhite
+	g.Editor = DefaultEditor
 	return nil
 }
 
@@ -220,7 +226,7 @@ func (g *Gui) Execute(h Handler) {
 }
 
 // SetLayout sets the current layout. A layout is a function that
-// will be called everytime the gui is re-drawed, it must contain
+// will be called every time the gui is redrawn, it must contain
 // the base views and its initializations.
 func (g *Gui) SetLayout(layout Handler) {
 	g.layout = layout
@@ -493,8 +499,8 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 
 	switch ev.Type {
 	case termbox.EventKey:
-		if g.currentView != nil && g.currentView.Editable && Edit != nil {
-			Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
+		if g.currentView != nil && g.currentView.Editable && g.Editor != nil {
+			g.Editor.Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
 		}
 		curView = g.currentView
 	case termbox.EventMouse:
