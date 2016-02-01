@@ -19,7 +19,7 @@ Minimalist Go package aimed at creating Console User Interfaces.
 Execute:
 
 ```
-$ go get github.com/jroimartin/gocui`
+$ go get github.com/jroimartin/gocui
 ```
 
 ## Documentation
@@ -27,11 +27,11 @@ $ go get github.com/jroimartin/gocui`
 Execute:
 
 ```
-$ godoc github.com/jroimartin/gocui`
+$ godoc github.com/jroimartin/gocui
 ```
 
-Or visit [godoc.org](https://godoc.org/github.com/jroimartin/gocui) if you want
-to read it online.
+Or visit [godoc.org](https://godoc.org/github.com/jroimartin/gocui) to read it
+online.
 
 ## Example
 
