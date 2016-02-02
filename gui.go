@@ -4,7 +4,8 @@
 
 package gocui
 
-import (
+import
+(
 	"errors"
 
 	"github.com/nsf/termbox-go"
@@ -330,6 +331,11 @@ func (g *Gui) flush() error {
 			if err := g.drawFrame(v); err != nil {
 				return err
 			}
+			if v.Title != "" {
+				if err := g.drawTitle(v); err != nil {
+					return err
+				}
+			}
 		}
 
 		if err := g.draw(v); err != nil {
@@ -376,6 +382,26 @@ func (g *Gui) drawFrame(v *View) error {
 			}
 		}
 	}
+	return nil
+}
+
+// drawTitle draws the title on top of a framed view 2 spaces left
+func (g *Gui) drawTitle(v *View) error {
+	titleMax := len(v.Title)
+	for x := v.x0 + 2; x < v.x1-1 && x < g.maxX; x++ {
+		if x < 0 {
+			continue
+		}
+		if v.y0 > -1 && v.y0 < g.maxY {
+			if (x-v.x0-2) >= 0 && (x-v.x0-2) < titleMax {
+				titleChar := rune(v.Title[x-v.x0-2])
+				if err := g.SetRune(x, v.y0, titleChar/*'x'*/ ); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
