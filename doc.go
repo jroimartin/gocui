@@ -51,21 +51,6 @@ Views can also be created using relative coordinates:
 		// ...
 	}
 
-IMPORTANT: Views can only be created, destroyed or updated in two ways: from a
-layout funcion or via *Gui.Execute(). The reason for this is that it allows
-gocui to be conccurent-safe. So, if you want to update your GUI from a
-goroutine, you must use *Gui.Execute(). For example:
-
-	g.Execute(func(g *gocui.Gui) error {
-		v, err := g.View("viewname")
-		if err != nil {
-			// handle error
-		}
-		v.Clear()
-		fmt.Fprintln(v, "Writing from different goroutines")
-		return nil
-	})
-
 Configure keybindings:
 
 	if err := g.SetKeybinding("viewname", gocui.KeyEnter, gocui.ModNone, fcn); err != nil {
@@ -81,6 +66,21 @@ Mouse events are handled like any other keybinding:
 	if err := g.SetKeybinding("viewname", gocui.MouseLeft, gocui.ModNone, fcn); err != nil {
 		// handle error
 	}
+
+IMPORTANT: Views can only be created, destroyed or updated in three ways: from
+layout funcions, from keybinding callbacks or via *Gui.Execute(). The reason
+for this is that it allows gocui to be conccurent-safe. So, if you want to
+update your GUI from a goroutine, you must use *Gui.Execute(). For example:
+
+	g.Execute(func(g *gocui.Gui) error {
+		v, err := g.View("viewname")
+		if err != nil {
+			// handle error
+		}
+		v.Clear()
+		fmt.Fprintln(v, "Writing from different goroutines")
+		return nil
+	})
 
 By default, gocui provides a basic edition mode. This mode can be extended
 and customized creating a new Editor and assigning it to *Gui.Editor:

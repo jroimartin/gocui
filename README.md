@@ -1,5 +1,7 @@
 # GOCUI - Go Console User Interface
 
+[![GoDoc](https://godoc.org/github.com/jroimartin/gocui?status.svg)](https://godoc.org/github.com/jroimartin/gocui)
+
 Minimalist Go package aimed at creating Console User Interfaces.
 
 ## Features
@@ -14,11 +16,22 @@ Minimalist Go package aimed at creating Console User Interfaces.
 
 ## Installation
 
-`go get github.com/jroimartin/gocui`
+Execute:
 
-## Documentation [![GoDoc](https://godoc.org/github.com/jroimartin/gocui?status.svg)](https://godoc.org/github.com/jroimartin/gocui)
+```
+$ go get github.com/jroimartin/gocui
+```
 
-`godoc github.com/jroimartin/gocui`
+## Documentation
+
+Execute:
+
+```
+$ godoc github.com/jroimartin/gocui
+```
+
+Or visit [godoc.org](https://godoc.org/github.com/jroimartin/gocui) to read it
+online.
 
 ## Example
 
