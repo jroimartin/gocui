@@ -57,6 +57,9 @@ type View struct {
 	// If Autoscroll is true, the View will automatically scroll down when the
 	// text overflows. If true the view's y-origin will be ignored.
 	Autoscroll bool
+
+	// If te view is framed, allow to show a title on it
+	Title string
 }
 
 type viewLine struct {
@@ -74,6 +77,7 @@ func newView(name string, x0, y0, x1, y1 int) *View {
 		y1:      y1,
 		Frame:   true,
 		tainted: true,
+		Title: "",
 	}
 	return v
 }
