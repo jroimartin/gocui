@@ -330,6 +330,11 @@ func (g *Gui) flush() error {
 			if err := g.drawFrame(v); err != nil {
 				return err
 			}
+			if v.Title != "" {
+				if err := g.drawTitle(v); err != nil {
+					return err
+				}
+			}
 		}
 
 		if err := g.draw(v); err != nil {
@@ -374,6 +379,26 @@ func (g *Gui) drawFrame(v *View) error {
 			if err := g.SetRune(v.x1, y, '│'); err != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+// drawTitle draws the title of the view.
+func (g *Gui) drawTitle(v *View) error {
+	if v.y0 < 0 || v.y0 >= g.maxY {
+		return nil
+	}
+
+	for i, ch := range v.Title {
+		x := v.x0 + i + 2
+		if x < 0 {
+			continue
+		} else if x > v.x1-2 || x >= g.maxX {
+			break
+		}
+		if err := g.SetRune(x, v.y0, ch); err != nil {
+			return err
 		}
 	}
 	return nil

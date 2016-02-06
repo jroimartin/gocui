@@ -57,6 +57,9 @@ type View struct {
 	// If Autoscroll is true, the View will automatically scroll down when the
 	// text overflows. If true the view's y-origin will be ignored.
 	Autoscroll bool
+
+	// If Frame is true, Title allows to configure a title for the view.
+	Title string
 }
 
 type viewLine struct {
