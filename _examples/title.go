@@ -62,6 +62,32 @@ func layout(g *gocui.Gui) error {
 		v.Title = "Regular title"
 	}
 
+	// Overlap (frame)
+	if v, err := g.SetView("v15", 90, 2, 110, 5); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Title = "Regular title"
+	}
+	if v, err := g.SetView("v16", 100, 5, 120, 8); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Title = "Regular title"
+	}
+	if v, err := g.SetView("v17", 140, 5, 160, 8); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Title = "Regular title"
+	}
+	if v, err := g.SetView("v18", 130, 2, 150, 5); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Title = "Regular title"
+	}
+
 	// Long title
 	if v, err := g.SetView("v5", 10, 12, 30, 16); err != nil {
 		if err != gocui.ErrUnknownView {
