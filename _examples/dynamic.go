@@ -12,7 +12,7 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-const delta = 2
+const delta = 1
 
 var (
 	views   = []string{}
