@@ -420,16 +420,25 @@ func (g *Gui) drawTitle(v *View) error {
 func (g *Gui) draw(v *View) error {
 	if g.Cursor {
 		if v := g.currentView; v != nil {
-			maxX, maxY := v.Size()
-			cx, cy := v.cx, v.cy
-			if v.cx >= maxX {
-				cx = maxX - 1
+			vMaxX, vMaxY := v.Size()
+			if v.cx < 0 {
+				v.cx = 0
+			} else if v.cx >= vMaxX {
+				v.cx = vMaxX - 1
 			}
-			if v.cy >= maxY {
-				cy = maxY - 1
+			if v.cy < 0 {
+				v.cy = 0
+			} else if v.cy >= vMaxY {
+				v.cy = vMaxY - 1
 			}
-			v.cx, v.cy = cx, cy
-			termbox.SetCursor(v.x0+v.cx+1, v.y0+v.cy+1)
+
+			gMaxX, gMaxY := g.Size()
+			cx, cy := v.x0+v.cx+1, v.y0+v.cy+1
+			if cx >= 0 && cx < gMaxX && cy >= 0 && cy < gMaxY {
+				termbox.SetCursor(cx, cy)
+			} else {
+				termbox.HideCursor()
+			}
 		}
 	} else {
 		termbox.HideCursor()
