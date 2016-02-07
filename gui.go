@@ -138,6 +138,18 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	return v, ErrUnknownView
 }
 
+// SetViewOnTop sets the given view on top of the existing ones.
+func (g *Gui) SetViewOnTop(name string) (*View, error) {
+	for i, v := range g.views {
+		if v.name == name {
+			s := append(g.views[:i], g.views[i+1:]...)
+			g.views = append(s, v)
+			return v, nil
+		}
+	}
+	return nil, ErrUnknownView
+}
+
 // View returns a pointer to the view with the given name, or error
 // ErrUnknownView if a view with that name does not exist.
 func (g *Gui) View(name string) (*View, error) {
