@@ -362,9 +362,8 @@ func (ei *escapeInterpreter) parseOne(ch rune) (interpreterReturn, error) {
 
 //prints the runes in s, it parseEscape is true, we'll try to interpret
 //terminal escape sequences
-func printLine(v *View, s []rune, maxX, y int, parseEscape bool) error {
+func printLine(v *View, s []rune, maxX, y int, ei *escapeInterpreter) error {
 	x := 0
-	ei := NewEscapeInterpreter(v.FgColor, v.BgColor)
 	for j, ch := range s {
 		var fgColor, bgColor Attribute
 		if j < v.ox {
@@ -374,11 +373,11 @@ func printLine(v *View, s []rune, maxX, y int, parseEscape bool) error {
 			break
 		}
 
-		if parseEscape {
+		if ei != nil {
 			ret, _ := ei.parseOne(ch)
 			switch ret {
 			case ERROR:
-				printLine(v, ei.runes(), maxX, y, false)
+				printLine(v, ei.runes(), maxX, y, nil)
 				ei.reset()
 			case IS_ESCAPE:
 				continue
@@ -445,6 +444,7 @@ func (v *View) draw() error {
 	}
 	y := 0
 
+	ei := NewEscapeInterpreter(v.FgColor, v.BgColor)
 	for i, vline := range v.viewLines {
 		if i < v.oy {
 			continue
@@ -452,7 +452,7 @@ func (v *View) draw() error {
 		if y >= maxY {
 			break
 		}
-		printLine(v, vline.line, maxX, y, true)
+		printLine(v, vline.line, maxX, y, ei)
 		y++
 	}
 	return nil
