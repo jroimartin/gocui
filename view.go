@@ -60,6 +60,9 @@ type View struct {
 
 	// If Frame is true, Title allows to configure a title for the view.
 	Title string
+
+	// If set and view is Editable, displays the mask instead of the real content
+	Mask rune
 }
 
 type viewLine struct {
@@ -107,6 +110,10 @@ func (v *View) setRune(x, y int, ch rune) error {
 	} else {
 		fgColor = v.FgColor
 		bgColor = v.BgColor
+	}
+
+	if v.Mask != 0 {
+		ch = v.Mask
 	}
 	termbox.SetCell(v.x0+x+1, v.y0+y+1, ch,
 		termbox.Attribute(fgColor), termbox.Attribute(bgColor))
