@@ -112,7 +112,7 @@ func (v *View) setRune(x, y int, ch rune) error {
 		bgColor = v.BgColor
 	}
 
-	if v.Mask!=0{
+	if v.Mask != 0 {
 		ch = v.Mask
 	}
 	termbox.SetCell(v.x0+x+1, v.y0+y+1, ch,
