@@ -85,6 +85,6 @@ _examples/demo.go:
 
 ![_examples/demo.go](https://cloud.githubusercontent.com/assets/1223476/5992750/720b84f0-aa36-11e4-88ec-296fa3247b52.png)
 
-_examples/delete.go:
+_examples/dynamic.go:
 
 ![_examples/delete.go](https://cloud.githubusercontent.com/assets/1223476/5992751/76ad5cc2-aa36-11e4-8204-6a90269db827.png)
