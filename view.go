@@ -61,7 +61,8 @@ type View struct {
 	// If Frame is true, Title allows to configure a title for the view.
 	Title string
 
-	// If set and view is Editable, displays the mask instead of the real content
+	// If Mask is true, the View will display the mask instead of the real
+	// content
 	Mask rune
 }
 
