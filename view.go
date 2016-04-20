@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/nsf/termbox-go"
@@ -92,22 +93,13 @@ func (v *View) Name() string {
 }
 
 // setRune writes a rune at the given point, relative to the view. It
-// checks if the position is valid and applies the view's colors, taking
-// into account if the cell must be highlighted.
-func (v *View) setRune(x, y int, ch rune) error {
+// checks if the position is valid
+func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 	maxX, maxY := v.Size()
 	if x < 0 || x >= maxX || y < 0 || y >= maxY {
 		return errors.New("invalid point")
 	}
 
-	var fgColor, bgColor Attribute
-	if v.Highlight && y == v.cy {
-		fgColor = v.SelFgColor
-		bgColor = v.SelBgColor
-	} else {
-		fgColor = v.FgColor
-		bgColor = v.BgColor
-	}
 	termbox.SetCell(v.x0+x+1, v.y0+y+1, ch,
 		termbox.Attribute(fgColor), termbox.Attribute(bgColor))
 	return nil
@@ -201,6 +193,212 @@ func (v *View) Rewind() {
 	v.readOffset = 0
 }
 
+type escapeState int
+type interpreterReturn int
+
+const (
+	NONE escapeState = iota
+	ESCAPE
+	CSI
+	PARAMS
+)
+
+const (
+	ERROR interpreterReturn = iota
+	IS_ESCAPE
+	IS_NOT_ESCAPE
+)
+
+type escapeInterpreter struct {
+	state                          escapeState
+	curch                          rune
+	csi_param                      []string
+	curFgColor, curBgColor         Attribute
+	defaultFgColor, defaultBgColor Attribute
+}
+
+// In case of error, this will output the non-parsed runes as a string
+func (ei *escapeInterpreter) runes() []rune {
+	switch ei.state {
+	case NONE:
+		return []rune{0x1b}
+	case ESCAPE:
+		return []rune{0x1b, ei.curch}
+	case CSI:
+		return []rune{0x1b, '[', ei.curch}
+	case PARAMS:
+		ret := []rune{0x1b, '['}
+		for _, s := range ei.csi_param {
+			ret = append(ret, []rune(s)...)
+			ret = append(ret, ';')
+		}
+		return append(ret, ei.curch)
+	}
+	return []rune{}
+}
+
+//returns an escapeInterpreter that will be able to parse terminal escape sequences
+func NewEscapeInterpreter(fg, bg Attribute) *escapeInterpreter {
+	ei := &escapeInterpreter{}
+	ei.defaultFgColor = fg
+	ei.defaultBgColor = bg
+	ei.state = NONE
+	ei.curFgColor = ei.defaultFgColor
+	ei.curBgColor = ei.defaultBgColor
+	ei.csi_param = make([]string, 0)
+	return ei
+}
+
+func (ei *escapeInterpreter) reset() {
+	ei.state = NONE
+	ei.curFgColor = ei.defaultFgColor
+	ei.curBgColor = ei.defaultBgColor
+	ei.csi_param = make([]string, 0)
+}
+
+var ErrorNotCSI = errors.New("Not a CSI escape sequence")
+var ErrorCSINotANumber = errors.New("CSI escape sequence was expecting a number or a ;")
+var ErrorCSIParseError = errors.New("CSI escape sequence parsing error")
+var ErrorCSITooLong = errors.New("CSI escape sequence is too long")
+
+//returns an attribute given a terminfo coloring
+func paramToColor(p int) Attribute {
+	switch p {
+	case 0:
+		return ColorBlack
+	case 1:
+		return ColorRed
+	case 2:
+		return ColorGreen
+	case 3:
+		return ColorYellow
+	case 4:
+		return ColorBlue
+	case 5:
+		return ColorMagenta
+	case 6:
+		return ColorCyan
+	case 7:
+		return ColorWhite
+	}
+	return ColorDefault
+}
+
+//Parses a rune, returns ERROR, IS_ESCAPE or IS_NOT_ESCAPE
+//In case of ERROR, an error is returned to specify the type of error
+//In case the return is IS_ESCAPE, it means that the rune is part of an
+// scape sequence, and as such should not be printed verbatim
+//In case the return is IS_NOT_ESCAPE, it means it's not an escape sequence
+func (ei *escapeInterpreter) parseOne(ch rune) (interpreterReturn, error) {
+	/* A couple of sanity checks, too make sure we're not parsing
+	something totally bogus */
+	if len(ei.csi_param) > 20 {
+		return ERROR, ErrorCSITooLong
+	}
+	if len(ei.csi_param) > 0 && len(ei.csi_param[len(ei.csi_param)-1]) > 255 {
+		return ERROR, ErrorCSITooLong
+	}
+	ei.curch = ch
+	switch ei.state {
+	case NONE:
+		if ch == 0x1b {
+			ei.state = ESCAPE
+			return IS_ESCAPE, nil
+		}
+		return IS_NOT_ESCAPE, nil
+	case ESCAPE:
+		if ch == '[' {
+			ei.state = CSI
+			return IS_ESCAPE, nil
+		}
+		return ERROR, ErrorNotCSI
+	case CSI:
+		if ch >= '0' && ch <= '9' {
+			ei.state = PARAMS
+			ei.csi_param = append(ei.csi_param, string(ch))
+			return IS_ESCAPE, nil
+		}
+		return ERROR, ErrorCSINotANumber
+	case PARAMS:
+		switch {
+		case ch >= '0' && ch <= '9':
+			ei.csi_param[len(ei.csi_param)-1] += string(ch)
+			return IS_ESCAPE, nil
+		case ch == ';':
+			ei.csi_param = append(ei.csi_param, "")
+			return IS_ESCAPE, nil
+		case ch == 'm':
+			if len(ei.csi_param) < 1 {
+				return ERROR, ErrorCSIParseError
+			}
+			for _, param := range ei.csi_param {
+				p, err := strconv.Atoi(param)
+				if err != nil {
+					return ERROR, ErrorCSIParseError
+				}
+				switch {
+				case p >= 30 && p <= 37:
+					ei.curFgColor = paramToColor(p - 30)
+				case p >= 40 && p <= 47:
+					ei.curBgColor = paramToColor(p - 40)
+				case p == 1:
+					ei.curFgColor |= AttrBold
+				case p == 4:
+					ei.curFgColor |= AttrUnderline
+				case p == 7:
+					ei.curFgColor |= AttrReverse
+				case p == 0 || p == 39:
+					ei.curFgColor = ei.defaultFgColor
+					ei.curBgColor = ei.defaultBgColor
+				}
+			}
+			ei.state = NONE
+			ei.csi_param = make([]string, 0)
+			return IS_ESCAPE, nil
+		}
+	}
+	return IS_NOT_ESCAPE, nil
+}
+
+//prints the runes in s, it parseEscape is true, we'll try to interpret
+//terminal escape sequences
+func printLine(v *View, s []rune, maxX, y int, ei *escapeInterpreter) error {
+	x := 0
+	for j, ch := range s {
+		var fgColor, bgColor Attribute
+		if j < v.ox {
+			continue
+		}
+		if x >= maxX {
+			break
+		}
+
+		if ei != nil {
+			ret, _ := ei.parseOne(ch)
+			switch ret {
+			case ERROR:
+				printLine(v, ei.runes(), maxX, y, nil)
+				ei.reset()
+			case IS_ESCAPE:
+				continue
+			}
+		}
+
+		if v.Highlight && y == v.cy {
+			fgColor = v.SelFgColor
+			bgColor = v.SelBgColor
+		} else {
+			fgColor = ei.curFgColor
+			bgColor = ei.curBgColor
+		}
+		if err := v.setRune(x, y, ch, fgColor, bgColor); err != nil {
+			return err
+		}
+		x++
+	}
+	return nil
+}
+
 // draw re-draws the view's contents.
 func (v *View) draw() error {
 	maxX, maxY := v.Size()
@@ -245,6 +443,8 @@ func (v *View) draw() error {
 		v.oy = len(v.viewLines) - maxY
 	}
 	y := 0
+
+	ei := NewEscapeInterpreter(v.FgColor, v.BgColor)
 	for i, vline := range v.viewLines {
 		if i < v.oy {
 			continue
@@ -252,19 +452,7 @@ func (v *View) draw() error {
 		if y >= maxY {
 			break
 		}
-		x := 0
-		for j, ch := range vline.line {
-			if j < v.ox {
-				continue
-			}
-			if x >= maxX {
-				break
-			}
-			if err := v.setRune(x, y, ch); err != nil {
-				return err
-			}
-			x++
-		}
+		printLine(v, vline.line, maxX, y, ei)
 		y++
 	}
 	return nil
