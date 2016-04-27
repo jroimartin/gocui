@@ -9,18 +9,6 @@ import (
 	"strconv"
 )
 
-type (
-	escapeState       int
-	interpreterReturn int
-)
-
-const (
-	stateNone escapeState = iota
-	stateEscape
-	stateCSI
-	stateParams
-)
-
 type escapeInterpreter struct {
 	state                          escapeState
 	curch                          rune
@@ -28,6 +16,15 @@ type escapeInterpreter struct {
 	curFgColor, curBgColor         Attribute
 	defaultFgColor, defaultBgColor Attribute
 }
+
+type escapeState int
+
+const (
+	stateNone escapeState = iota
+	stateEscape
+	stateCSI
+	stateParams
+)
 
 var (
 	errNotCSI        = errors.New("Not a CSI escape sequence")
