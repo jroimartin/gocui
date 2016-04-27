@@ -105,6 +105,12 @@ DefaultEditor can be taken as example to create your own custom Editor:
 		}
 	}
 
+Colored text:
+
+Views allow to add colored text using ANSI colors. For example:
+
+	fmt.Fprintln(v, "\x1b[0;31mHello world")
+
 For more information, see the examples in folder "_examples/".
 */
 package gocui
