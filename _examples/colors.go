@@ -31,19 +31,15 @@ func main() {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("hello", maxX/2-6, maxY/2-5, maxX/2+6, maxY/2+5); err != nil {
+	if v, err := g.SetView("colors", maxX/2-7, maxY/2-12, maxX/2+7, maxY/2+13); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		fmt.Fprintln(v, "\x1b[0;30;47mHello world")
-		fmt.Fprintln(v, "\x1b[0;31mHello world")
-		fmt.Fprintln(v, "\x1b[0;32mHello world")
-		fmt.Fprintln(v, "\x1b[0;33mHello world")
-		fmt.Fprintln(v, "\x1b[0;34mHello world")
-		fmt.Fprintln(v, "\x1b[0;35mHello world")
-		fmt.Fprintln(v, "\x1b[0;36mHello world")
-		fmt.Fprintln(v, "\x1b[0;37mHello world")
-		fmt.Fprintln(v, "\x1b[0;30;41mHello world")
+		for i := 0; i <= 7; i++ {
+			for _, j := range []int{1, 4, 7} {
+				fmt.Fprintf(v, "Hello \033[3%d;%dmcolors!\033[0m\n", i, j)
+			}
+		}
 	}
 	return nil
 }
