@@ -104,8 +104,23 @@ func (v *View) setRune(x, y int, ch rune) error {
 		return errors.New("invalid point")
 	}
 
+	var (
+		ry, rcy int
+		err     error
+	)
+	if v.Highlight {
+		_, ry, err = v.realPosition(x, y)
+		if err != nil {
+			return err
+		}
+		_, rcy, err = v.realPosition(v.cx, v.cy)
+		if err != nil {
+			return err
+		}
+	}
+
 	var fgColor, bgColor Attribute
-	if v.Highlight && y == v.cy {
+	if v.Highlight && ry == rcy {
 		fgColor = v.SelFgColor
 		bgColor = v.SelBgColor
 	} else {
