@@ -98,7 +98,7 @@ func paramToColor(p int) Attribute {
 }
 
 // parseOne parses a rune. If isEscape is true, it means that the rune is part
-// of an scape sequence, and as such should not be printed verbatim. Otherwise,
+// of an escape sequence, and as such should not be printed verbatim. Otherwise,
 // it's not an escape sequence.
 func (ei *escapeInterpreter) parseOne(ch rune) (isEscape bool, err error) {
 	// Sanity checks to make sure we're not parsing something totally bogus.
