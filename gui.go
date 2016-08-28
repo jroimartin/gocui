@@ -51,6 +51,10 @@ type Gui struct {
 	// If Mouse is true then mouse events will be enabled.
 	Mouse bool
 
+	// If InputEsc is true, when an ESC sequence in the buffer that doesn't
+	// match any known sequence, the ESC means KeyEsc.
+	InputEsc bool
+
 	// Editor allows to define the editor that manages the edition mode,
 	// including keybindings or cursor behaviour. DefaultEditor is used by
 	// default.
@@ -257,6 +261,9 @@ func (g *Gui) MainLoop() error {
 	}()
 
 	inputMode := termbox.InputAlt
+	if g.InputEsc {
+		inputMode = termbox.InputEsc
+	}
 	if g.Mouse {
 		inputMode |= termbox.InputMouse
 	}
