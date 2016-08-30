@@ -233,6 +233,33 @@ func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, h Ke
 	return nil
 }
 
+// DeleteKeybinding deletes a keybinding.
+func (g *Gui) DeleteKeybinding(viewname string, key interface{}, mod Modifier) error {
+	var (
+		k  Key
+		ch rune
+	)
+
+	switch t := key.(type) {
+	case Key:
+		k = t
+		ch = 0
+	case rune:
+		k = 0
+		ch = t
+	default:
+		return errors.New("unknown type")
+	}
+
+	for i, kb := range g.keybindings {
+		if kb.viewName == viewname && kb.ch == ch && kb.key == k && kb.mod == mod {
+			g.keybindings = append(g.keybindings[:i], g.keybindings[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("keybinding not found")
+}
+
 // Execute executes the given handler. This function can be called safely from
 // a goroutine in order to update the GUI. It is important to note that it
 // won't be executed immediately, instead it will be added to the user events
