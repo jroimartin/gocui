@@ -221,34 +221,20 @@ func (g *Gui) CurrentView() *View {
 func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, h KeybindingHandler) error {
 	var kb *keybinding
 
-	switch k := key.(type) {
-	case Key:
-		kb = newKeybinding(viewname, k, 0, mod, h)
-	case rune:
-		kb = newKeybinding(viewname, 0, k, mod, h)
-	default:
-		return errors.New("unknown type")
+	k, ch, err := getKey(key)
+	if err != nil {
+		return err
 	}
+	kb = newKeybinding(viewname, k, ch, mod, h)
 	g.keybindings = append(g.keybindings, kb)
 	return nil
 }
 
 // DeleteKeybinding deletes a keybinding.
 func (g *Gui) DeleteKeybinding(viewname string, key interface{}, mod Modifier) error {
-	var (
-		k  Key
-		ch rune
-	)
-
-	switch t := key.(type) {
-	case Key:
-		k = t
-		ch = 0
-	case rune:
-		k = 0
-		ch = t
-	default:
-		return errors.New("unknown type")
+	k, ch, err := getKey(key)
+	if err != nil {
+		return err
 	}
 
 	for i, kb := range g.keybindings {
@@ -258,6 +244,19 @@ func (g *Gui) DeleteKeybinding(viewname string, key interface{}, mod Modifier) e
 		}
 	}
 	return errors.New("keybinding not found")
+}
+
+// getKey takes an empty interface with a key and returns the corresponding
+// typed Key or rune.
+func getKey(key interface{}) (Key, rune, error) {
+	switch t := key.(type) {
+	case Key:
+		return t, 0, nil
+	case rune:
+		return 0, t, nil
+	default:
+		return 0, 0, errors.New("unknown type")
+	}
 }
 
 // Execute executes the given handler. This function can be called safely from
