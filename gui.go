@@ -51,8 +51,8 @@ type Gui struct {
 	// If Mouse is true then mouse events will be enabled.
 	Mouse bool
 
-	// If InputEsc is true, when an ESC sequence in the buffer that doesn't
-	// match any known sequence, the ESC means KeyEsc.
+	// If InputEsc is true, when ESC sequence is in the buffer and it doesn't
+	// match any known sequence, ESC means KeyEsc.
 	InputEsc bool
 
 	// Editor allows to define the editor that manages the edition mode,
