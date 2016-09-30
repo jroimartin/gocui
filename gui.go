@@ -247,10 +247,14 @@ func (g *Gui) DeleteKeybinding(viewname string, key interface{}, mod Modifier) e
 }
 
 // DeleteKeybindings deletes all keybindings of view
-func (g *Gui) DeleteKeybindings(viewname string){
-	for i, kb := range g.keybindings {
+func (g *Gui) DeleteKeybindings(viewname string) {
+	i := 0
+	for i < len(g.keybindings) {
+		kb := g.keybindings[i]
 		if kb.viewName == viewname {
 			g.keybindings = append(g.keybindings[:i], g.keybindings[i+1:]...)
+		} else {
+			i++
 		}
 	}
 }
