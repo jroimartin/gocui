@@ -10,11 +10,10 @@ import (
 )
 
 type escapeInterpreter struct {
-	state                          escapeState
-	curch                          rune
-	csiParam                       []string
-	curFgColor, curBgColor         Attribute
-	defaultFgColor, defaultBgColor Attribute
+	state                  escapeState
+	curch                  rune
+	csiParam               []string
+	curFgColor, curBgColor Attribute
 }
 
 type escapeState int
@@ -57,11 +56,9 @@ func (ei *escapeInterpreter) runes() []rune {
 // terminal escape sequences.
 func newEscapeInterpreter() *escapeInterpreter {
 	ei := &escapeInterpreter{
-		defaultFgColor: ColorWhite,
-		defaultBgColor: ColorBlack,
-		state:          stateNone,
-		curFgColor:     ColorWhite,
-		curBgColor:     ColorBlack,
+		state:      stateNone,
+		curFgColor: ColorDefault,
+		curBgColor: ColorDefault,
 	}
 	return ei
 }
@@ -69,8 +66,8 @@ func newEscapeInterpreter() *escapeInterpreter {
 // reset sets the escapeInterpreter in inital state.
 func (ei *escapeInterpreter) reset() {
 	ei.state = stateNone
-	ei.curFgColor = ei.defaultFgColor
-	ei.curBgColor = ei.defaultBgColor
+	ei.curFgColor = ColorDefault
+	ei.curBgColor = ColorDefault
 	ei.csiParam = nil
 }
 
@@ -158,8 +155,8 @@ func (ei *escapeInterpreter) parseOne(ch rune) (isEscape bool, err error) {
 				case p == 7:
 					ei.curFgColor |= AttrReverse
 				case p == 0 || p == 39:
-					ei.curFgColor = ei.defaultFgColor
-					ei.curBgColor = ei.defaultBgColor
+					ei.curFgColor = ColorDefault
+					ei.curBgColor = ColorDefault
 				}
 			}
 			ei.state = stateNone

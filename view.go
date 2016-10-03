@@ -230,11 +230,6 @@ func (v *View) Write(p []byte) (n int, err error) {
 func (v *View) parseInput(ch rune) []cell {
 	cells := []cell{}
 
-	// ei's default colors must be updated, because they could have been
-	// changed
-	v.ei.defaultFgColor = v.FgColor
-	v.ei.defaultBgColor = v.BgColor
-
 	isEscape, err := v.ei.parseOne(ch)
 	if err != nil {
 		for _, r := range v.ei.runes() {
@@ -343,7 +338,17 @@ func (v *View) draw() error {
 			if x >= maxX {
 				break
 			}
-			if err := v.setRune(x, y, c.chr, c.fgColor, c.bgColor); err != nil {
+
+			fgColor := c.fgColor
+			if fgColor == ColorDefault {
+				fgColor = v.FgColor
+			}
+			bgColor := c.bgColor
+			if bgColor == ColorDefault {
+				bgColor = v.BgColor
+			}
+
+			if err := v.setRune(x, y, c.chr, fgColor, bgColor); err != nil {
 				return err
 			}
 			x++
