@@ -246,16 +246,15 @@ func (g *Gui) DeleteKeybinding(viewname string, key interface{}, mod Modifier) e
 	return errors.New("keybinding not found")
 }
 
-// DeleteKeybindings deletes all keybindings of view
+// DeleteKeybindings deletes all keybindings of view.
 func (g *Gui) DeleteKeybindings(viewname string) {
-
-	var res []*keybinding
+	var s []*keybinding
 	for _, kb := range g.keybindings {
 		if kb.viewName != viewname {
-			res = append(res, kb)
+			s = append(s, kb)
 		}
 	}
-	g.keybindings = res
+	g.keybindings = s
 }
 
 // getKey takes an empty interface with a key and returns the corresponding
