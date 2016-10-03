@@ -28,7 +28,7 @@ $ go get github.com/jroimartin/gocui
 Execute:
 
 ```
-$ godoc github.com/jroimartin/gocui
+$ go doc github.com/jroimartin/gocui
 ```
 
 Or visit [godoc.org](https://godoc.org/github.com/jroimartin/gocui) to read it
