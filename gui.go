@@ -604,14 +604,14 @@ func horizontalRune(ch rune) bool {
 // a key-press or mouse event satisfies a configured keybinding. Furthermore,
 // currentView's internal buffer is modified if currentView.Editable is true.
 func (g *Gui) onKey(ev *termbox.Event) error {
-	var curView *View
-
 	switch ev.Type {
 	case termbox.EventKey:
+		if err := g.execKeybindings(g.currentView, ev); err != nil {
+			return err
+		}
 		if g.currentView != nil && g.currentView.Editable && g.Editor != nil {
 			g.Editor.Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
 		}
-		curView = g.currentView
 	case termbox.EventMouse:
 		mx, my := ev.MouseX, ev.MouseY
 		v, err := g.ViewByPosition(mx, my)
@@ -621,15 +621,25 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 		if err := v.SetCursor(mx-v.x0-1, my-v.y0-1); err != nil {
 			return err
 		}
-		curView = v
+		if err := g.execKeybindings(g.currentView, ev); err != nil {
+			return err
+		}
+	default:
+		return errors.New("unknown event type")
 	}
 
+	return nil
+}
+
+// execKeybindings executes the keybinding handlers that match the passed view
+// and event.
+func (g *Gui) execKeybindings(v *View, ev *termbox.Event) error {
 	for _, kb := range g.keybindings {
 		if kb.h == nil {
 			continue
 		}
-		if kb.matchKeypress(Key(ev.Key), ev.Ch, Modifier(ev.Mod)) && kb.matchView(curView) {
-			if err := kb.h(g, curView); err != nil {
+		if kb.matchKeypress(Key(ev.Key), ev.Ch, Modifier(ev.Mod)) && kb.matchView(v) {
+			if err := kb.h(g, v); err != nil {
 				return err
 			}
 		}
