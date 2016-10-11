@@ -624,8 +624,6 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 		if err := g.execKeybindings(v, ev); err != nil {
 			return err
 		}
-	default:
-		return errors.New("unknown event type")
 	}
 
 	return nil
