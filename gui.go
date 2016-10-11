@@ -621,7 +621,7 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 		if err := v.SetCursor(mx-v.x0-1, my-v.y0-1); err != nil {
 			return err
 		}
-		if err := g.execKeybindings(g.currentView, ev); err != nil {
+		if err := g.execKeybindings(v, ev); err != nil {
 			return err
 		}
 	default:
