@@ -137,7 +137,7 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 		}
 	} else {
 		if y >= 0 && y < len(v.viewLines) {
-			curLineWidth = len(v.viewLines[y].line) - 1
+			curLineWidth = len(v.viewLines[y].line)
 			if v.Wrap && curLineWidth >= maxX {
 				curLineWidth = maxX - 1
 			}
@@ -147,7 +147,7 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 	}
 	// get the width of the previous line
 	if y-1 >= 0 && y-1 < len(v.viewLines) {
-		prevLineWidth = len(v.viewLines[y-1].line) - 1
+		prevLineWidth = len(v.viewLines[y-1].line)
 	} else {
 		prevLineWidth = 0
 	}
