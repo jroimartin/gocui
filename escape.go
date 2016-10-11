@@ -63,7 +63,7 @@ func newEscapeInterpreter() *escapeInterpreter {
 	return ei
 }
 
-// reset sets the escapeInterpreter in inital state.
+// reset sets the escapeInterpreter in initial state.
 func (ei *escapeInterpreter) reset() {
 	ei.state = stateNone
 	ei.curFgColor = ColorDefault

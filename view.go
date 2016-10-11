@@ -244,14 +244,13 @@ func (v *View) parseInput(ch rune) []cell {
 	} else {
 		if isEscape {
 			return nil
-		} else {
-			c := cell{
-				fgColor: v.ei.curFgColor,
-				bgColor: v.ei.curBgColor,
-				chr:     ch,
-			}
-			cells = append(cells, c)
 		}
+		c := cell{
+			fgColor: v.ei.curFgColor,
+			bgColor: v.ei.curBgColor,
+			chr:     ch,
+		}
+		cells = append(cells, c)
 	}
 
 	return cells
