@@ -27,11 +27,11 @@ func nextView(g *gocui.Gui, v *gocui.View) error {
 	nextIndex := (active + 1) % len(viewArr)
 	name := viewArr[nextIndex]
 
-	v, err := g.View("v2")
+	out, err := g.View("v2")
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(v, "Going from view "+v.Name()+" to "+name)
+	fmt.Fprintln(out, "Going from view "+v.Name()+" to "+name)
 
 	if _, err := setCurrentViewOnTop(g, name); err != nil {
 		return err
