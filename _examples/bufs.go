@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/heppu/gocui"
+	"github.com/jroimartin/gocui"
 )
 
 var vbuf, buf string

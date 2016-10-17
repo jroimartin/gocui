@@ -9,7 +9,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/heppu/gocui"
+	"github.com/jroimartin/gocui"
 )
 
 func layout(g *gocui.Gui) error {

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/heppu/gocui"
+	"github.com/jroimartin/gocui"
 )
 
 const LEN = 4
