@@ -125,7 +125,7 @@ func newView(g *gocui.Gui) error {
 		v.Wrap = true
 		fmt.Fprintln(v, strings.Repeat(name+" ", 30))
 	}
-	if err := g.SetCurrentView(name); err != nil {
+	if _, err := g.SetCurrentView(name); err != nil {
 		return err
 	}
 	v.BgColor = gocui.ColorRed
@@ -167,7 +167,7 @@ func nextView(g *gocui.Gui, disableCurrent bool) error {
 	if err != nil {
 		return err
 	}
-	if err := g.SetCurrentView(views[next]); err != nil {
+	if _, err := g.SetCurrentView(views[next]); err != nil {
 		return err
 	}
 	nv.BgColor = gocui.ColorRed
