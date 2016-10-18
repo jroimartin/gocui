@@ -41,11 +41,12 @@ type Gui struct {
 	// colors of the GUI.
 	BgColor, FgColor Attribute
 
-	// SelBgColor and SelFgColor allow to configure the background and foreground
-	// colors of the current view.
+	// SelBgColor and SelFgColor allow to configure the background and
+	// foreground colors of the frame of the current view.
 	SelBgColor, SelFgColor Attribute
 
-	// If Highlight is true, Sel{Bg,Fg}Colors will be used for the current view.
+	// If Highlight is true, Sel{Bg,Fg}Colors will be used to draw the
+	// frame of the current view.
 	Highlight bool
 
 	// If Cursor is true then the cursor is enabled.
