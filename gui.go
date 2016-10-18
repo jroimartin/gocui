@@ -395,10 +395,10 @@ func (g *Gui) flush() error {
 				bgColor = g.BgColor
 			}
 
-			if err := g.drawFrame(v, fgColor, bgColor); err != nil {
+			if err := g.drawFrameEdges(v, fgColor, bgColor); err != nil {
 				return err
 			}
-			if err := g.drawCorners(v, fgColor, bgColor); err != nil {
+			if err := g.drawFrameCorners(v, fgColor, bgColor); err != nil {
 				return err
 			}
 			if v.Title != "" {
@@ -411,16 +411,12 @@ func (g *Gui) flush() error {
 			return err
 		}
 	}
-	if err := g.drawIntersections(); err != nil {
-		return err
-	}
 	termbox.Flush()
 	return nil
-
 }
 
-// drawFrame draws the horizontal and vertical edges of a view.
-func (g *Gui) drawFrame(v *View, fgColor, bgColor Attribute) error {
+// drawFrameEdges draws the horizontal and vertical edges of a view.
+func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 	for x := v.x0 + 1; x < v.x1 && x < g.maxX; x++ {
 		if x < 0 {
 			continue
@@ -454,8 +450,8 @@ func (g *Gui) drawFrame(v *View, fgColor, bgColor Attribute) error {
 	return nil
 }
 
-// drawCorners draws the corners of the view.
-func (g *Gui) drawCorners(v *View, fgColor, bgColor Attribute) error {
+// drawFrameCorners draws the corners of the view.
+func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
 	if v.x0 >= 0 && v.y0 >= 0 && v.x0 < g.maxX && v.y0 < g.maxY {
 		if err := g.SetRune(v.x0, v.y0, '┌', fgColor, bgColor); err != nil {
 			return err
@@ -532,97 +528,6 @@ func (g *Gui) draw(v *View) error {
 		return err
 	}
 	return nil
-}
-
-// drawIntersections draws the corners of each view, based on the type
-// of the edges that converge at these points.
-func (g *Gui) drawIntersections() error {
-	for _, v := range g.views {
-		if !v.Frame {
-			continue
-		}
-
-		var fgColor, bgColor Attribute
-		if g.Highlight && v == g.currentView {
-			fgColor = g.SelFgColor
-			bgColor = g.SelBgColor
-		} else {
-			fgColor = g.FgColor
-			bgColor = g.BgColor
-		}
-
-		if ch, ok := g.intersectionRune(v.x0, v.y0); ok {
-			if err := g.SetRune(v.x0, v.y0, ch, fgColor, bgColor); err != nil {
-				return err
-			}
-		}
-		if ch, ok := g.intersectionRune(v.x0, v.y1); ok {
-			if err := g.SetRune(v.x0, v.y1, ch, fgColor, bgColor); err != nil {
-				return err
-			}
-		}
-		if ch, ok := g.intersectionRune(v.x1, v.y0); ok {
-			if err := g.SetRune(v.x1, v.y0, ch, fgColor, bgColor); err != nil {
-				return err
-			}
-		}
-		if ch, ok := g.intersectionRune(v.x1, v.y1); ok {
-			if err := g.SetRune(v.x1, v.y1, ch, fgColor, bgColor); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// intersectionRune returns the correct intersection rune at a given
-// point.
-func (g *Gui) intersectionRune(x, y int) (rune, bool) {
-	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
-		return ' ', false
-	}
-
-	chTop, _ := g.Rune(x, y-1)
-	top := verticalRune(chTop)
-	chBottom, _ := g.Rune(x, y+1)
-	bottom := verticalRune(chBottom)
-	chLeft, _ := g.Rune(x-1, y)
-	left := horizontalRune(chLeft)
-	chRight, _ := g.Rune(x+1, y)
-	right := horizontalRune(chRight)
-
-	var ch rune
-	switch {
-	case top && bottom && left && right:
-		ch = '┼'
-	case top && bottom && !left && right:
-		ch = '├'
-	case top && bottom && left && !right:
-		ch = '┤'
-	case !top && bottom && left && right:
-		ch = '┬'
-	case top && !bottom && left && right:
-		ch = '┴'
-	default:
-		return ' ', false
-	}
-	return ch, true
-}
-
-// verticalRune returns if the given character is a vertical rune.
-func verticalRune(ch rune) bool {
-	if ch == '│' || ch == '┼' || ch == '├' || ch == '┤' {
-		return true
-	}
-	return false
-}
-
-// verticalRune returns if the given character is a horizontal rune.
-func horizontalRune(ch rune) bool {
-	if ch == '─' || ch == '┼' || ch == '┬' || ch == '┴' {
-		return true
-	}
-	return false
 }
 
 // onKey manages key-press events. A keybinding handler is called when
