@@ -65,7 +65,6 @@ func layout(g *gocui.Gui) error {
 		v.Title = "v2"
 		v.Wrap = true
 		v.Autoscroll = true
-		v.ActiveColor = gocui.ColorRed
 	}
 	if v, err := g.SetView("v3", 0, maxY/2-1, maxX/2-1, maxY-1); err != nil {
 		if err != gocui.ErrUnknownView {
@@ -74,7 +73,6 @@ func layout(g *gocui.Gui) error {
 		v.Title = "v3"
 		v.Wrap = true
 		v.Autoscroll = true
-		v.ActiveColor = gocui.ColorRed
 		fmt.Fprint(v, "Press TAB to change current view")
 	}
 	if v, err := g.SetView("v4", maxX/2, maxY/2, maxX-1, maxY-1); err != nil {
@@ -102,7 +100,7 @@ func main() {
 	}
 	defer g.Close()
 
-	g.ActiveColor = gocui.ColorGreen
+	g.SelFgColor = gocui.ColorGreen
 	g.SetLayout(layout)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {

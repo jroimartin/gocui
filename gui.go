@@ -41,11 +41,8 @@ type Gui struct {
 	// colors of the GUI.
 	BgColor, FgColor Attribute
 
-	// ActiveColor allows to configure the color of the current view.
-	ActiveColor Attribute
-
-	// SelBgColor and SelFgColor are used to configure the background and
-	// foreground colors of the selected line, when it is highlighted.
+	// SelBgColor and SelFgColor allow to configure the background and foreground
+	// colors of the current view.
 	SelBgColor, SelFgColor Attribute
 
 	// If Cursor is true then the cursor is enabled.
@@ -80,7 +77,6 @@ func (g *Gui) Init() error {
 	g.maxX, g.maxY = termbox.Size()
 	g.BgColor, g.FgColor = ColorBlack, ColorWhite
 	g.SelBgColor, g.SelFgColor = ColorBlack, ColorWhite
-	g.ActiveColor = ColorWhite
 	g.Editor = DefaultEditor
 	return nil
 }
@@ -141,7 +137,6 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 
 	v := newView(name, x0, y0, x1, y1)
 	v.BgColor, v.FgColor = g.BgColor, g.FgColor
-	v.ActiveColor = g.ActiveColor
 	v.SelBgColor, v.SelFgColor = g.SelBgColor, g.SelFgColor
 	g.views = append(g.views, v)
 	return v, ErrUnknownView
@@ -387,10 +382,13 @@ func (g *Gui) flush() error {
 	}
 	for _, v := range g.views {
 		if v.Frame {
-			bgColor := v.BgColor
-			fgColor := v.FgColor
-			if g.currentView != nil && v.name == g.currentView.name {
-				fgColor = v.ActiveColor
+			var fgColor, bgColor Attribute
+			if v == g.currentView {
+				fgColor = g.SelFgColor
+				bgColor = g.SelBgColor
+			} else {
+				fgColor = g.FgColor
+				bgColor = g.BgColor
 			}
 
 			if err := g.drawFrame(v, fgColor, bgColor); err != nil {
@@ -540,10 +538,13 @@ func (g *Gui) drawIntersections() error {
 			continue
 		}
 
-		bgColor := v.BgColor
-		fgColor := v.FgColor
-		if g.currentView != nil && v.name == g.currentView.name {
-			fgColor = v.ActiveColor
+		var fgColor, bgColor Attribute
+		if v == g.currentView {
+			fgColor = g.SelFgColor
+			bgColor = g.SelBgColor
+		} else {
+			fgColor = g.FgColor
+			bgColor = g.BgColor
 		}
 
 		if ch, ok := g.intersectionRune(v.x0, v.y0); ok {

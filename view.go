@@ -29,9 +29,6 @@ type View struct {
 
 	ei *escapeInterpreter // used to decode ESC sequences on Write
 
-	// ActiveColor allows to configure the color of the current view.
-	ActiveColor Attribute
-
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the View.
 	BgColor, FgColor Attribute

@@ -164,6 +164,8 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 		v.Highlight = true
+		v.SelBgColor = gocui.ColorGreen
+		v.SelFgColor = gocui.ColorBlack
 		fmt.Fprintln(v, "Item 1")
 		fmt.Fprintln(v, "Item 2")
 		fmt.Fprintln(v, "Item 3")
@@ -199,8 +201,6 @@ func main() {
 	if err := keybindings(g); err != nil {
 		log.Panicln(err)
 	}
-	g.SelBgColor = gocui.ColorGreen
-	g.SelFgColor = gocui.ColorBlack
 	g.Cursor = true
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
