@@ -49,7 +49,7 @@ func layout(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		if err := g.SetCurrentView("stdin"); err != nil {
+		if _, err := g.SetCurrentView("stdin"); err != nil {
 			return err
 		}
 		dumper := hex.Dumper(v)

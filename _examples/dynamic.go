@@ -28,6 +28,8 @@ func main() {
 	defer g.Close()
 
 	g.SetLayout(layout)
+	g.ActiveColor = gocui.ColorRed
+
 	if err := initKeybindings(g); err != nil {
 		log.Panicln(err)
 	}
@@ -125,17 +127,8 @@ func newView(g *gocui.Gui) error {
 		v.Wrap = true
 		fmt.Fprintln(v, strings.Repeat(name+" ", 30))
 	}
-	if err := g.SetCurrentView(name); err != nil {
+	if _, err := g.SetCurrentView(name); err != nil {
 		return err
-	}
-	v.BgColor = gocui.ColorRed
-
-	if curView >= 0 {
-		cv, err := g.View(views[curView])
-		if err != nil {
-			return err
-		}
-		cv.BgColor = g.BgColor
 	}
 
 	views = append(views, name)
@@ -163,21 +156,8 @@ func nextView(g *gocui.Gui, disableCurrent bool) error {
 		next = 0
 	}
 
-	nv, err := g.View(views[next])
-	if err != nil {
+	if _, err := g.SetCurrentView(views[next]); err != nil {
 		return err
-	}
-	if err := g.SetCurrentView(views[next]); err != nil {
-		return err
-	}
-	nv.BgColor = gocui.ColorRed
-
-	if disableCurrent && len(views) > 1 {
-		cv, err := g.View(views[curView])
-		if err != nil {
-			return err
-		}
-		cv.BgColor = g.BgColor
 	}
 
 	curView = next

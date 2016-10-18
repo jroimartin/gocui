@@ -76,7 +76,7 @@ func showMsg(g *gocui.Gui, v *gocui.View) error {
 	var l string
 	var err error
 
-	if err := g.SetCurrentView(v.Name()); err != nil {
+	if _, err := g.SetCurrentView(v.Name()); err != nil {
 		return err
 	}
 
