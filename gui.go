@@ -41,7 +41,7 @@ type Gui struct {
 	// colors of the GUI.
 	BgColor, FgColor Attribute
 
-	// ActiveColor allow to configure color of currentWiew frame.
+	// ActiveColor allows to configure the color of the current view.
 	ActiveColor Attribute
 
 	// SelBgColor and SelFgColor are used to configure the background and
@@ -78,8 +78,8 @@ func (g *Gui) Init() error {
 	g.tbEvents = make(chan termbox.Event, 20)
 	g.userEvents = make(chan userEvent, 20)
 	g.maxX, g.maxY = termbox.Size()
-	g.BgColor = ColorBlack
-	g.FgColor = ColorWhite
+	g.BgColor, g.FgColor = ColorBlack, ColorWhite
+	g.SelBgColor, g.SelFgColor = ColorBlack, ColorWhite
 	g.ActiveColor = ColorWhite
 	g.Editor = DefaultEditor
 	return nil
@@ -98,23 +98,12 @@ func (g *Gui) Size() (x, y int) {
 
 // SetRune writes a rune at the given point, relative to the top-left
 // corner of the terminal. It checks if the position is valid and applies
-// the gui's colors.
-func (g *Gui) SetRune(x, y int, ch rune) error {
+// the given colors.
+func (g *Gui) SetRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return errors.New("invalid point")
 	}
-	termbox.SetCell(x, y, ch, termbox.Attribute(g.FgColor), termbox.Attribute(g.BgColor))
-	return nil
-}
-
-// SetRuneWithColor writes a rune at the given point, relative to the top-left
-// corner of the terminal with given colors. It checks if the position is
-// valid and applies the colors.
-func (g *Gui) SetRuneWithColor(x, y int, ch rune, fg, bg Attribute) error {
-	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
-		return errors.New("invalid point")
-	}
-	termbox.SetCell(x, y, ch, termbox.Attribute(fg), termbox.Attribute(bg))
+	termbox.SetCell(x, y, ch, termbox.Attribute(fgColor), termbox.Attribute(bgColor))
 	return nil
 }
 
@@ -215,28 +204,14 @@ func (g *Gui) DeleteView(name string) error {
 }
 
 // SetCurrentView gives the focus to a given view.
-func (g *Gui) SetCurrentView(name string) error {
+func (g *Gui) SetCurrentView(name string) (*View, error) {
 	for _, v := range g.views {
 		if v.name == name {
 			g.currentView = v
-			return nil
+			return v, nil
 		}
 	}
-	return ErrUnknownView
-}
-
-// SetCurrentViewOnTop gives the focus to a given view and puts it on top
-// of existing views.
-func (g *Gui) SetCurrentViewOnTop(name string) error {
-	for i, v := range g.views {
-		if v.name == name {
-			s := append(g.views[:i], g.views[i+1:]...)
-			g.views = append(s, v)
-			g.currentView = v
-			return nil
-		}
-	}
-	return ErrUnknownView
+	return nil, ErrUnknownView
 }
 
 // CurrentView returns the currently focused view, or nil if no view
@@ -412,26 +387,24 @@ func (g *Gui) flush() error {
 	}
 	for _, v := range g.views {
 		if v.Frame {
-			// Read colors here to new variables so that frame
-			// will be always drawn fully with same color
-			bg := v.BgColor
-			fg := v.FgColor
-			if v.name == g.currentView.name {
-				fg = v.ActiveColor
+			bgColor := v.BgColor
+			fgColor := v.FgColor
+			if g.currentView != nil && v.name == g.currentView.name {
+				fgColor = v.ActiveColor
 			}
-			if err := g.drawFrame(v, fg, bg); err != nil {
+
+			if err := g.drawFrame(v, fgColor, bgColor); err != nil {
 				return err
 			}
-			if err := g.drawCorners(v, fg, bg); err != nil {
+			if err := g.drawCorners(v, fgColor, bgColor); err != nil {
 				return err
 			}
 			if v.Title != "" {
-				if err := g.drawTitle(v, fg, bg); err != nil {
+				if err := g.drawTitle(v, fgColor, bgColor); err != nil {
 					return err
 				}
 			}
 		}
-
 		if err := g.draw(v); err != nil {
 			return err
 		}
@@ -445,18 +418,18 @@ func (g *Gui) flush() error {
 }
 
 // drawFrame draws the horizontal and vertical edges of a view.
-func (g *Gui) drawFrame(v *View, fg, bg Attribute) error {
+func (g *Gui) drawFrame(v *View, fgColor, bgColor Attribute) error {
 	for x := v.x0 + 1; x < v.x1 && x < g.maxX; x++ {
 		if x < 0 {
 			continue
 		}
 		if v.y0 > -1 && v.y0 < g.maxY {
-			if err := g.SetRuneWithColor(x, v.y0, '─', fg, bg); err != nil {
+			if err := g.SetRune(x, v.y0, '─', fgColor, bgColor); err != nil {
 				return err
 			}
 		}
 		if v.y1 > -1 && v.y1 < g.maxY {
-			if err := g.SetRuneWithColor(x, v.y1, '─', fg, bg); err != nil {
+			if err := g.SetRune(x, v.y1, '─', fgColor, bgColor); err != nil {
 				return err
 			}
 		}
@@ -466,12 +439,12 @@ func (g *Gui) drawFrame(v *View, fg, bg Attribute) error {
 			continue
 		}
 		if v.x0 > -1 && v.x0 < g.maxX {
-			if err := g.SetRuneWithColor(v.x0, y, '│', fg, bg); err != nil {
+			if err := g.SetRune(v.x0, y, '│', fgColor, bgColor); err != nil {
 				return err
 			}
 		}
 		if v.x1 > -1 && v.x1 < g.maxX {
-			if err := g.SetRuneWithColor(v.x1, y, '│', fg, bg); err != nil {
+			if err := g.SetRune(v.x1, y, '│', fgColor, bgColor); err != nil {
 				return err
 			}
 		}
@@ -480,24 +453,24 @@ func (g *Gui) drawFrame(v *View, fg, bg Attribute) error {
 }
 
 // drawCorners draws the corners of the view.
-func (g *Gui) drawCorners(v *View, fg, bg Attribute) error {
+func (g *Gui) drawCorners(v *View, fgColor, bgColor Attribute) error {
 	if v.x0 >= 0 && v.y0 >= 0 && v.x0 < g.maxX && v.y0 < g.maxY {
-		if err := g.SetRuneWithColor(v.x0, v.y0, '┌', fg, bg); err != nil {
+		if err := g.SetRune(v.x0, v.y0, '┌', fgColor, bgColor); err != nil {
 			return err
 		}
 	}
 	if v.x1 >= 0 && v.y0 >= 0 && v.x1 < g.maxX && v.y0 < g.maxY {
-		if err := g.SetRuneWithColor(v.x1, v.y0, '┐', fg, bg); err != nil {
+		if err := g.SetRune(v.x1, v.y0, '┐', fgColor, bgColor); err != nil {
 			return err
 		}
 	}
 	if v.x0 >= 0 && v.y1 >= 0 && v.x0 < g.maxX && v.y1 < g.maxY {
-		if err := g.SetRuneWithColor(v.x0, v.y1, '└', fg, bg); err != nil {
+		if err := g.SetRune(v.x0, v.y1, '└', fgColor, bgColor); err != nil {
 			return err
 		}
 	}
 	if v.x1 >= 0 && v.y1 >= 0 && v.x1 < g.maxX && v.y1 < g.maxY {
-		if err := g.SetRuneWithColor(v.x1, v.y1, '┘', fg, bg); err != nil {
+		if err := g.SetRune(v.x1, v.y1, '┘', fgColor, bgColor); err != nil {
 			return err
 		}
 	}
@@ -505,7 +478,7 @@ func (g *Gui) drawCorners(v *View, fg, bg Attribute) error {
 }
 
 // drawTitle draws the title of the view.
-func (g *Gui) drawTitle(v *View, fg, bg Attribute) error {
+func (g *Gui) drawTitle(v *View, fgColor, bgColor Attribute) error {
 	if v.y0 < 0 || v.y0 >= g.maxY {
 		return nil
 	}
@@ -517,7 +490,7 @@ func (g *Gui) drawTitle(v *View, fg, bg Attribute) error {
 		} else if x > v.x1-2 || x >= g.maxX {
 			break
 		}
-		if err := g.SetRuneWithColor(x, v.y0, ch, fg, bg); err != nil {
+		if err := g.SetRune(x, v.y0, ch, fgColor, bgColor); err != nil {
 			return err
 		}
 	}
@@ -563,30 +536,33 @@ func (g *Gui) draw(v *View) error {
 // of the edges that converge at these points.
 func (g *Gui) drawIntersections() error {
 	for _, v := range g.views {
-		// Use same active view frame coloring as tmux uses.
-		// If intersection rune is part of currentView use ActiveColor.
-		bg := v.BgColor
-		fg := v.FgColor
-		if v.name == g.currentView.name {
-			fg = v.ActiveColor
+		if !v.Frame {
+			continue
 		}
+
+		bgColor := v.BgColor
+		fgColor := v.FgColor
+		if g.currentView != nil && v.name == g.currentView.name {
+			fgColor = v.ActiveColor
+		}
+
 		if ch, ok := g.intersectionRune(v.x0, v.y0); ok {
-			if err := g.SetRuneWithColor(v.x0, v.y0, ch, fg, bg); err != nil {
+			if err := g.SetRune(v.x0, v.y0, ch, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
 		if ch, ok := g.intersectionRune(v.x0, v.y1); ok {
-			if err := g.SetRuneWithColor(v.x0, v.y1, ch, fg, bg); err != nil {
+			if err := g.SetRune(v.x0, v.y1, ch, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
 		if ch, ok := g.intersectionRune(v.x1, v.y0); ok {
-			if err := g.SetRuneWithColor(v.x1, v.y0, ch, fg, bg); err != nil {
+			if err := g.SetRune(v.x1, v.y0, ch, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
 		if ch, ok := g.intersectionRune(v.x1, v.y1); ok {
-			if err := g.SetRuneWithColor(v.x1, v.y1, ch, fg, bg); err != nil {
+			if err := g.SetRune(v.x1, v.y1, ch, fgColor, bgColor); err != nil {
 				return err
 			}
 		}

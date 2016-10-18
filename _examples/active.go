@@ -11,21 +11,29 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-const LEN = 4
-
 var (
-	viewArr = [LEN]string{"v1", "v2", "v3", "v4"}
+	viewArr = []string{"v1", "v2", "v3", "v4"}
 	active  = 0
 )
 
+func setCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.View, error) {
+	if _, err := g.SetCurrentView(name); err != nil {
+		return nil, err
+	}
+	return g.SetViewOnTop(name)
+}
+
 func nextView(g *gocui.Gui, v *gocui.View) error {
-	nextIndex := (active + 1) % LEN
+	nextIndex := (active + 1) % len(viewArr)
 	name := viewArr[nextIndex]
-	out, _ := g.View("v2")
+
+	out, err := g.View("v2")
+	if err != nil {
+		return err
+	}
 	fmt.Fprintln(out, "Going from view "+v.Name()+" to "+name)
 
-	if err := g.SetCurrentViewOnTop(name); err != nil {
-		fmt.Fprintln(out, err)
+	if _, err := setCurrentViewOnTop(g, name); err != nil {
 		return err
 	}
 
@@ -55,7 +63,6 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 		v.Title = "v2"
-		v.Editable = false
 		v.Wrap = true
 		v.Autoscroll = true
 		v.ActiveColor = gocui.ColorRed
@@ -65,11 +72,10 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 		v.Title = "v3"
-		v.Write([]byte("Press TAB to change current view"))
 		v.Wrap = true
-		v.Editable = false
 		v.Autoscroll = true
 		v.ActiveColor = gocui.ColorRed
+		fmt.Fprint(v, "Press TAB to change current view")
 	}
 	if v, err := g.SetView("v4", maxX/2, maxY/2, maxX-1, maxY-1); err != nil {
 		if err != gocui.ErrUnknownView {
@@ -78,7 +84,7 @@ func layout(g *gocui.Gui) error {
 		v.Title = "v4 (editable)"
 		v.Editable = true
 
-		if err = g.SetCurrentViewOnTop("v1"); err != nil {
+		if _, err = setCurrentViewOnTop(g, "v1"); err != nil {
 			return err
 		}
 	}
