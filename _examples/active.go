@@ -100,6 +100,7 @@ func main() {
 	}
 	defer g.Close()
 
+	g.Highlight = true
 	g.SelFgColor = gocui.ColorGreen
 	g.SetLayout(layout)
 

@@ -28,6 +28,7 @@ func main() {
 	defer g.Close()
 
 	g.SetLayout(layout)
+	g.Highlight = true
 	g.SelFgColor = gocui.ColorRed
 
 	if err := initKeybindings(g); err != nil {

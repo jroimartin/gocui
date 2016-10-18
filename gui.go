@@ -45,6 +45,9 @@ type Gui struct {
 	// colors of the current view.
 	SelBgColor, SelFgColor Attribute
 
+	// If Highlight is true, Sel{Bg,Fg}Colors will be used for the current view.
+	Highlight bool
+
 	// If Cursor is true then the cursor is enabled.
 	Cursor bool
 
@@ -383,7 +386,7 @@ func (g *Gui) flush() error {
 	for _, v := range g.views {
 		if v.Frame {
 			var fgColor, bgColor Attribute
-			if v == g.currentView {
+			if g.Highlight && v == g.currentView {
 				fgColor = g.SelFgColor
 				bgColor = g.SelBgColor
 			} else {
@@ -539,7 +542,7 @@ func (g *Gui) drawIntersections() error {
 		}
 
 		var fgColor, bgColor Attribute
-		if v == g.currentView {
+		if g.Highlight && v == g.currentView {
 			fgColor = g.SelFgColor
 			bgColor = g.SelBgColor
 		} else {
