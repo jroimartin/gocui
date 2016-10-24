@@ -13,7 +13,7 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-const delta = 0.1
+const delta = 0.2
 
 type HelpWidget struct {
 	name string
@@ -52,22 +52,22 @@ type StatusbarWidget struct {
 	name string
 	x, y int
 	w    int
-	val  float32
+	val  float64
 }
 
 func NewStatusbarWidget(name string, x, y, w int) *StatusbarWidget {
 	return &StatusbarWidget{name: name, x: x, y: y, w: w}
 }
 
-func (w *StatusbarWidget) SetVal(val float32) error {
-	if val < 0 || val > 1+delta/2 {
+func (w *StatusbarWidget) SetVal(val float64) error {
+	if val < 0 || val > 1 {
 		return errors.New("invalid value")
 	}
 	w.val = val
 	return nil
 }
 
-func (w *StatusbarWidget) Val() float32 {
+func (w *StatusbarWidget) Val() float64 {
 	return w.val
 }
 
@@ -77,8 +77,9 @@ func (w *StatusbarWidget) Layout(g *gocui.Gui) error {
 		return err
 	}
 	v.Clear()
-	val := int(w.val * float32(w.w-1))
-	fmt.Fprint(v, strings.Repeat("▒", val))
+
+	rep := int(w.val * float64(w.w-1))
+	fmt.Fprint(v, strings.Repeat("▒", rep))
 	return nil
 }
 
@@ -145,7 +146,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 
 func toggleButton(g *gocui.Gui, v *gocui.View) error {
 	nextview := "butdown"
-	if v == nil || v.Name() == "butdown" {
+	if v != nil && v.Name() == "butdown" {
 		nextview = "butup"
 	}
 	_, err := g.SetCurrentView(nextview)
@@ -164,9 +165,9 @@ func statusDown(status *StatusbarWidget) func(g *gocui.Gui, v *gocui.View) error
 	}
 }
 
-func statusSet(sw *StatusbarWidget, inc float32) error {
+func statusSet(sw *StatusbarWidget, inc float64) error {
 	val := sw.Val() + inc
-	if val < 0 || val > 1+delta/2 {
+	if val < 0 || val > 1 {
 		return nil
 	}
 	return sw.SetVal(val)
