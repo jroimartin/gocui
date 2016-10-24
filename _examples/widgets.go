@@ -122,9 +122,9 @@ func main() {
 	g.SelFgColor = gocui.ColorRed
 
 	help := NewHelpWidget("help", 1, 1, helpText)
-	status := NewStatusbarWidget("status", 1, 6, 50)
-	butdown := NewButtonWidget("butdown", 52, 6, "DOWN", statusDown(status))
-	butup := NewButtonWidget("butup", 58, 6, "UP", statusUp(status))
+	status := NewStatusbarWidget("status", 1, 7, 50)
+	butdown := NewButtonWidget("butdown", 52, 7, "DOWN", statusDown(status))
+	butup := NewButtonWidget("butup", 58, 7, "UP", statusUp(status))
 	g.SetManager(help, status, butdown, butup)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
@@ -174,4 +174,5 @@ func statusSet(sw *StatusbarWidget, inc float32) error {
 
 const helpText = `KEYBINDINGS
 Tab: Move between buttons
+Enter: Push button
 ^C: Exit`
