@@ -73,10 +73,8 @@ func (w *StatusbarWidget) Val() float32 {
 
 func (w *StatusbarWidget) Layout(g *gocui.Gui) error {
 	v, err := g.SetView(w.name, w.x, w.y, w.x+w.w, w.y+2)
-	if err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
+	if err != nil && err != gocui.ErrUnknownView {
+		return err
 	}
 	v.Clear()
 	val := int(w.val * float32(w.w-1))
