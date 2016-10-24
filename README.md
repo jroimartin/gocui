@@ -47,8 +47,8 @@ import (
 )
 
 func main() {
-	g := gocui.NewGui()
-	if err := g.Init(); err != nil {
+	g, err := gocui.NewGui()
+	if err != nil {
 		log.Panicln(err)
 	}
 	defer g.Close()
