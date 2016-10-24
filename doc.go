@@ -13,22 +13,23 @@ Create a new GUI:
 	}
 	defer g.Close()
 
-	// Set layout and key bindings
+	// Set GUI managers and key bindings
 	// ...
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		// handle error
 	}
 
-Set the layout function:
+Set GUI managers:
 
-	g.SetLayout(fcn)
+	g.SetManager(mgr1, mgr2)
 
-On each iteration of the GUI's main loop, the "layout function" is executed.
-These layout functions can be used to set-up and update the application's main
-views, being possible to freely switch between them. Also, it is important to
-mention that a main loop iteration is executed on each reported event
-(key-press, mouse event, window resize, etc).
+Managers are in charge of GUI's layout and can be used to build widgets. On
+each iteration of the GUI's main loop, the Layout function of each configured
+manager is executed. Managers are used to set-up and update the application's
+main views, being possible to freely change them during execution. Also, it is
+important to mention that a main loop iteration is executed on each reported
+event (key-press, mouse event, window resize, etc).
 
 GUIs are composed by Views, you can think of it as buffers. Views implement the
 io.ReadWriter interface, so you can just write to them if you want to modify

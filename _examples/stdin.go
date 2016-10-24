@@ -21,7 +21,7 @@ func main() {
 	}
 	defer g.Close()
 
-	g.SetLayout(layout)
+	g.SetManagerFunc(layout)
 	if err := initKeybindings(g); err != nil {
 		log.Fatalln(err)
 	}

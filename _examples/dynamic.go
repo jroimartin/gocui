@@ -27,7 +27,7 @@ func main() {
 	}
 	defer g.Close()
 
-	g.SetLayout(layout)
+	g.SetManagerFunc(layout)
 	g.Highlight = true
 	g.SelFgColor = gocui.ColorRed
 

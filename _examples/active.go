@@ -102,7 +102,7 @@ func main() {
 
 	g.Highlight = true
 	g.SelFgColor = gocui.ColorGreen
-	g.SetLayout(layout)
+	g.SetManagerFunc(layout)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
