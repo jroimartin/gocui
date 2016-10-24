@@ -462,24 +462,16 @@ func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 
 // drawFrameCorners draws the corners of the view.
 func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
-	if v.x0 >= 0 && v.y0 >= 0 && v.x0 < g.maxX && v.y0 < g.maxY {
-		if err := g.SetRune(v.x0, v.y0, '┌', fgColor, bgColor); err != nil {
-			return err
-		}
-	}
-	if v.x1 >= 0 && v.y0 >= 0 && v.x1 < g.maxX && v.y0 < g.maxY {
-		if err := g.SetRune(v.x1, v.y0, '┐', fgColor, bgColor); err != nil {
-			return err
-		}
-	}
-	if v.x0 >= 0 && v.y1 >= 0 && v.x0 < g.maxX && v.y1 < g.maxY {
-		if err := g.SetRune(v.x0, v.y1, '└', fgColor, bgColor); err != nil {
-			return err
-		}
-	}
-	if v.x1 >= 0 && v.y1 >= 0 && v.x1 < g.maxX && v.y1 < g.maxY {
-		if err := g.SetRune(v.x1, v.y1, '┘', fgColor, bgColor); err != nil {
-			return err
+	corners := []struct {
+		x, y int
+		ch   rune
+	}{{v.x0, v.y0, '┌'}, {v.x1, v.y0, '┐'}, {v.x0, v.y1, '└'}, {v.x1, v.y1, '┘'}}
+
+	for _, c := range corners {
+		if c.x >= 0 && c.y >= 0 && c.x < g.maxX && c.y < g.maxY {
+			if err := g.SetRune(c.x, c.y, c.ch, fgColor, bgColor); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -508,21 +500,21 @@ func (g *Gui) drawTitle(v *View, fgColor, bgColor Attribute) error {
 // draw manages the cursor and calls the draw function of a view.
 func (g *Gui) draw(v *View) error {
 	if g.Cursor {
-		if v := g.currentView; v != nil {
-			vMaxX, vMaxY := v.Size()
-			if v.cx < 0 {
-				v.cx = 0
-			} else if v.cx >= vMaxX {
-				v.cx = vMaxX - 1
+		if curview := g.currentView; curview != nil {
+			vMaxX, vMaxY := curview.Size()
+			if curview.cx < 0 {
+				curview.cx = 0
+			} else if curview.cx >= vMaxX {
+				curview.cx = vMaxX - 1
 			}
-			if v.cy < 0 {
-				v.cy = 0
-			} else if v.cy >= vMaxY {
-				v.cy = vMaxY - 1
+			if curview.cy < 0 {
+				curview.cy = 0
+			} else if curview.cy >= vMaxY {
+				curview.cy = vMaxY - 1
 			}
 
 			gMaxX, gMaxY := g.Size()
-			cx, cy := v.x0+v.cx+1, v.y0+v.cy+1
+			cx, cy := curview.x0+curview.cx+1, curview.y0+curview.cy+1
 			if cx >= 0 && cx < gMaxX && cy >= 0 && cy < gMaxY {
 				termbox.SetCursor(cx, cy)
 			} else {
