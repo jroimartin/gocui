@@ -66,23 +66,18 @@ type Gui struct {
 }
 
 // NewGui returns a new Gui object.
-func NewGui() *Gui {
-	return &Gui{}
-}
-
-// Init initializes the library. This function must be called before
-// any other functions.
-func (g *Gui) Init() error {
+func NewGui() (*Gui, error) {
 	if err := termbox.Init(); err != nil {
-		return err
+		return nil, err
 	}
+	g := &Gui{}
 	g.tbEvents = make(chan termbox.Event, 20)
 	g.userEvents = make(chan userEvent, 20)
 	g.maxX, g.maxY = termbox.Size()
 	g.BgColor, g.FgColor = ColorBlack, ColorWhite
 	g.SelBgColor, g.SelFgColor = ColorBlack, ColorWhite
 	g.Editor = DefaultEditor
-	return nil
+	return g, nil
 }
 
 // Close finalizes the library. It should be called after a successful
