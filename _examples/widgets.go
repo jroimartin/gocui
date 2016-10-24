@@ -127,7 +127,7 @@ func main() {
 	status := NewStatusbarWidget("status", 1, 6, 50)
 	butdown := NewButtonWidget("butdown", 52, 6, "DOWN", statusDown(status))
 	butup := NewButtonWidget("butup", 58, 6, "UP", statusUp(status))
-	g.SetManager(help, butdown, butup, status)
+	g.SetManager(help, status, butdown, butup)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
