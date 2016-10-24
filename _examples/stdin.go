@@ -35,7 +35,7 @@ func main() {
 func layout(g *gocui.Gui) error {
 	maxX, _ := g.Size()
 
-	if v, err := g.SetView("legend", maxX-23, 0, maxX-1, 5); err != nil {
+	if v, err := g.SetView("help", maxX-23, 0, maxX-1, 5); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
