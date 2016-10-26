@@ -85,7 +85,7 @@ use *Gui.Execute(). For example:
 	})
 
 By default, gocui provides a basic edition mode. This mode can be extended
-and customized creating a new Editor and assigning it to *Gui.Editor:
+and customized creating a new Editor and assigning it to *View.Editor:
 
 	type Editor interface {
 		Edit(v *View, key Key, ch rune, mod Modifier)

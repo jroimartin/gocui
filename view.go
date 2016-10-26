@@ -41,6 +41,11 @@ type View struct {
 	// buffer at the cursor position.
 	Editable bool
 
+	// Editor allows to define the editor that manages the edition mode,
+	// including keybindings or cursor behaviour. DefaultEditor is used by
+	// default.
+	Editor Editor
+
 	// Overwrite enables or disables the overwrite mode of the view.
 	Overwrite bool
 
@@ -98,6 +103,7 @@ func newView(name string, x0, y0, x1, y1 int) *View {
 		x1:      x1,
 		y1:      y1,
 		Frame:   true,
+		Editor:  DefaultEditor,
 		tainted: true,
 		ei:      newEscapeInterpreter(),
 	}

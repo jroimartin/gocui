@@ -50,11 +50,6 @@ type Gui struct {
 	// If InputEsc is true, when ESC sequence is in the buffer and it doesn't
 	// match any known sequence, ESC means KeyEsc.
 	InputEsc bool
-
-	// Editor allows to define the editor that manages the edition mode,
-	// including keybindings or cursor behaviour. DefaultEditor is used by
-	// default.
-	Editor Editor
 }
 
 // NewGui returns a new Gui object.
@@ -68,7 +63,6 @@ func NewGui() (*Gui, error) {
 	g.maxX, g.maxY = termbox.Size()
 	g.BgColor, g.FgColor = ColorBlack, ColorWhite
 	g.SelBgColor, g.SelFgColor = ColorBlack, ColorWhite
-	g.Editor = DefaultEditor
 	return g, nil
 }
 
@@ -545,8 +539,8 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 		if matched {
 			break
 		}
-		if g.currentView != nil && g.currentView.Editable && g.Editor != nil {
-			g.Editor.Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
+		if g.currentView != nil && g.currentView.Editable && g.currentView.Editor != nil {
+			g.currentView.Editor.Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
 		}
 	case termbox.EventMouse:
 		mx, my := ev.MouseX, ev.MouseY
