@@ -538,8 +538,12 @@ func (g *Gui) draw(v *View) error {
 func (g *Gui) onKey(ev *termbox.Event) error {
 	switch ev.Type {
 	case termbox.EventKey:
-		if err := g.execKeybindings(g.currentView, ev); err != nil {
+		matched, err := g.execKeybindings(g.currentView, ev)
+		if err != nil {
 			return err
+		}
+		if matched {
+			break
 		}
 		if g.currentView != nil && g.currentView.Editable && g.Editor != nil {
 			g.Editor.Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
@@ -553,7 +557,7 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 		if err := v.SetCursor(mx-v.x0-1, my-v.y0-1); err != nil {
 			return err
 		}
-		if err := g.execKeybindings(v, ev); err != nil {
+		if _, err := g.execKeybindings(v, ev); err != nil {
 			return err
 		}
 	}
@@ -562,17 +566,19 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 }
 
 // execKeybindings executes the keybinding handlers that match the passed view
-// and event.
-func (g *Gui) execKeybindings(v *View, ev *termbox.Event) error {
+// and event. The value of matched is true if there is a match and no errors.
+func (g *Gui) execKeybindings(v *View, ev *termbox.Event) (matched bool, err error) {
+	matched = false
 	for _, kb := range g.keybindings {
 		if kb.handler == nil {
 			continue
 		}
 		if kb.matchKeypress(Key(ev.Key), ev.Ch, Modifier(ev.Mod)) && kb.matchView(v) {
 			if err := kb.handler(g, v); err != nil {
-				return err
+				return false, err
 			}
+			matched = true
 		}
 	}
-	return nil
+	return matched, nil
 }
