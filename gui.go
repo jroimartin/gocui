@@ -139,6 +139,11 @@ func (g *Gui) SetViewOnTop(name string) (*View, error) {
 	return nil, ErrUnknownView
 }
 
+// Views returns all the views in the GUI.
+func (g *Gui) Views() []*View {
+	return g.views
+}
+
 // View returns a pointer to the view with the given name, or error
 // ErrUnknownView if a view with that name does not exist.
 func (g *Gui) View(name string) (*View, error) {
