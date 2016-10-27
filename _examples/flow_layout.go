@@ -44,13 +44,7 @@ func (w *Label) Layout(g *gocui.Gui) error {
 	return nil
 }
 
-type FlowLayout struct{}
-
-func NewFlowLayout() *FlowLayout {
-	return &FlowLayout{}
-}
-
-func (gl *FlowLayout) Layout(g *gocui.Gui) error {
+func flowLayout(g *gocui.Gui) error {
 	views := g.Views()
 	x := 0
 	for _, v := range views {
@@ -76,8 +70,8 @@ func main() {
 	l3 := NewLabel("l3", "a")
 	l4 := NewLabel("l4", "flow\nlayout")
 	l5 := NewLabel("l5", "!")
-	gl := NewFlowLayout()
-	g.SetManager(l1, l2, l3, l4, l5, gl)
+	fl := gocui.ManagerFunc(flowLayout)
+	g.SetManager(l1, l2, l3, l4, l5, fl)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
