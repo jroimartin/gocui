@@ -18,6 +18,7 @@ func main() {
 	defer g.Close()
 
 	g.SetManagerFunc(layout)
+
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}

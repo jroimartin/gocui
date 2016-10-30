@@ -21,11 +21,13 @@ func main() {
 	}
 	defer g.Close()
 
+	g.Cursor = true
+
 	g.SetManagerFunc(layout)
+
 	if err := initKeybindings(g); err != nil {
 		log.Fatalln(err)
 	}
-	g.Cursor = true
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Fatalln(err)
@@ -41,7 +43,7 @@ func layout(g *gocui.Gui) error {
 		}
 		fmt.Fprintln(v, "KEYBINDINGS")
 		fmt.Fprintln(v, "↑ ↓: Seek input")
-		fmt.Fprintln(v, "A: Enable autoscroll")
+		fmt.Fprintln(v, "a: Enable autoscroll")
 		fmt.Fprintln(v, "^C: Exit")
 	}
 

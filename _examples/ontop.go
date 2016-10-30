@@ -19,6 +19,7 @@ func main() {
 	defer g.Close()
 
 	g.SetManagerFunc(layout)
+
 	if err := keybindings(g); err != nil {
 		log.Panicln(err)
 	}

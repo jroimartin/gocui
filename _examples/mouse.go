@@ -18,12 +18,14 @@ func main() {
 	}
 	defer g.Close()
 
+	g.Cursor = true
+	g.Mouse = true
+
 	g.SetManagerFunc(layout)
+
 	if err := keybindings(g); err != nil {
 		log.Panicln(err)
 	}
-	g.Cursor = true
-	g.Mouse = true
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)

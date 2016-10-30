@@ -290,15 +290,19 @@ func (f ManagerFunc) Layout(g *Gui) error {
 	return f(g)
 }
 
-// SetManager sets the given GUI managers.
+// SetManager sets the given GUI managers. It deletes all views and
+// keybindings.
 func (g *Gui) SetManager(managers ...Manager) {
 	g.managers = managers
 	g.currentView = nil
 	g.views = nil
+	g.keybindings = nil
+
 	go func() { g.tbEvents <- termbox.Event{Type: termbox.EventResize} }()
 }
 
-// SetManagerFunc sets the given manager function.
+// SetManagerFunc sets the given manager function. It deletes all views and
+// keybindings.
 func (g *Gui) SetManagerFunc(manager func(v *Gui) error) {
 	g.SetManager(ManagerFunc(manager))
 }
