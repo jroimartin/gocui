@@ -301,6 +301,11 @@ func (g *Gui) SetManager(managers ...Manager) {
 	go func() { g.tbEvents <- termbox.Event{Type: termbox.EventResize} }()
 }
 
+// GetManager gets the current GUI managers.
+func (g *Gui) GetManager() []Manager {
+	return g.managers
+}
+
 // SetManagerFunc sets the given manager function. It deletes all views and
 // keybindings.
 func (g *Gui) SetManagerFunc(manager func(v *Gui) error) {
