@@ -18,6 +18,17 @@ var (
 	ErrUnknownView = errors.New("unknown view")
 )
 
+// OutputMode represents the terminal's output mode (8 or 256 colors).
+type OutputMode termbox.OutputMode
+
+const (
+	// OutputNormal provides 8-colors terminal mode
+	OutputNormal = OutputMode(termbox.OutputNormal)
+
+	// Output256 provides 256-colors terminal mode
+	Output256 = OutputMode(termbox.Output256)
+)
+
 // Gui represents the whole User Interface, including the views, layouts
 // and keybindings.
 type Gui struct {
@@ -28,6 +39,7 @@ type Gui struct {
 	managers    []Manager
 	keybindings []*keybinding
 	maxX, maxY  int
+	outputMode  OutputMode
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the GUI.
@@ -52,17 +64,25 @@ type Gui struct {
 	InputEsc bool
 }
 
-// NewGui returns a new Gui object.
-func NewGui() (*Gui, error) {
+// NewGui returns a new Gui object with a given output mode.
+func NewGui(mode OutputMode) (*Gui, error) {
 	if err := termbox.Init(); err != nil {
 		return nil, err
 	}
+
 	g := &Gui{}
+
+	g.outputMode = mode
+	termbox.SetOutputMode(termbox.OutputMode(mode))
+
 	g.tbEvents = make(chan termbox.Event, 20)
 	g.userEvents = make(chan userEvent, 20)
+
 	g.maxX, g.maxY = termbox.Size()
+
 	g.BgColor, g.FgColor = ColorBlack, ColorWhite
 	g.SelBgColor, g.SelFgColor = ColorBlack, ColorWhite
+
 	return g, nil
 }
 
@@ -120,7 +140,7 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 		return v, nil
 	}
 
-	v := newView(name, x0, y0, x1, y1)
+	v := newView(name, x0, y0, x1, y1, g.outputMode)
 	v.BgColor, v.FgColor = g.BgColor, g.FgColor
 	v.SelBgColor, v.SelFgColor = g.SelBgColor, g.SelFgColor
 	g.views = append(g.views, v)

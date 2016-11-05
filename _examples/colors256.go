@@ -12,7 +12,8 @@ import (
 )
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.Output256)
+
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -31,14 +32,25 @@ func main() {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("colors", maxX/2-7, maxY/2-12, maxX/2+7, maxY/2+13); err != nil {
+	if v, err := g.SetView("colors", -1, -1, maxX, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		for i := 0; i <= 7; i++ {
-			for _, j := range []int{1, 4, 7} {
-				fmt.Fprintf(v, "Hello \033[3%d;%dmcolors!\033[0m\n", i, j)
+
+		var count int
+		for i := 1; i <= 255; i++ {
+			count++
+
+			block := fmt.Sprintf("\x1b[48;5;%dm%3s\x1b[0m", i, "  ")
+			str := fmt.Sprintf("\x1b[38;5;%dm%3d %s\x1b[0m\t", i, i, block)
+
+			if count == 10 {
+				str += "\n\n"
+				count = 0
 			}
+
+			fmt.Fprint(v, str)
+
 		}
 	}
 	return nil
