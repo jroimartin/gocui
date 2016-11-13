@@ -22,10 +22,10 @@ var (
 type OutputMode termbox.OutputMode
 
 const (
-	// OutputNormal provides 8-colors terminal mode
+	// OutputNormal provides 8-colors terminal mode.
 	OutputNormal = OutputMode(termbox.OutputNormal)
 
-	// Output256 provides 256-colors terminal mode
+	// Output256 provides 256-colors terminal mode.
 	Output256 = OutputMode(termbox.Output256)
 )
 

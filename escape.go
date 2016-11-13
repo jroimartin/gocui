@@ -126,7 +126,6 @@ func (ei *escapeInterpreter) parseOne(ch rune) (isEscape bool, err error) {
 			case OutputMode(Output256):
 				err = ei.output256()
 			}
-
 			if err != nil {
 				return false, errCSIParseError
 			}
@@ -139,13 +138,11 @@ func (ei *escapeInterpreter) parseOne(ch rune) (isEscape bool, err error) {
 	return false, nil
 }
 
-// outputNormal  provides 8 different colors:
-// black, red, green, yellow, blue, magenta, cyan, white
+// outputNormal provides 8 different colors:
+//   black, red, green, yellow, blue, magenta, cyan, white
 func (ei *escapeInterpreter) outputNormal() error {
-
 	for _, param := range ei.csiParam {
 		p, err := strconv.Atoi(param)
-
 		if err != nil {
 			return errCSIParseError
 		}
@@ -170,45 +167,40 @@ func (ei *escapeInterpreter) outputNormal() error {
 	return nil
 }
 
-// output256 allows you to leverage the 256 terminal mode
-//    0x01 - 0x08: the 8 colors as in OutputNormal
-//    0x09 - 0x10: Color* | AttrBold
-//    0x11 - 0xe8: 216 different colors
-//    0xe9 - 0x1ff: 24 different shades of grey
+// output256 allows you to leverage the 256-colors terminal mode:
+//   0x01 - 0x08: the 8 colors as in OutputNormal
+//   0x09 - 0x10: Color* | AttrBold
+//   0x11 - 0xe8: 216 different colors
+//   0xe9 - 0x1ff: 24 different shades of grey
 func (ei *escapeInterpreter) output256() error {
-
 	if len(ei.csiParam) < 3 {
 		return ei.outputNormal()
 	}
 
 	fgbgParam, err := strconv.Atoi(ei.csiParam[0])
-
 	if err != nil {
 		return errCSIParseError
 	}
 
 	fgbgType, err := strconv.Atoi(ei.csiParam[1])
-
 	if err != nil {
 		return errCSIParseError
 	}
-
 	if fgbgType != 5 {
 		return ei.outputNormal()
 	}
 
 	fgbgColor, err := strconv.Atoi(ei.csiParam[2])
-
 	if err != nil {
 		return errCSIParseError
 	}
 
-	if fgbgParam == 38 {
+	switch fgbgParam {
+	case 38:
 		ei.curFgColor = Attribute(fgbgColor + 1)
 
 		for _, param := range ei.csiParam[3:] {
 			p, err := strconv.Atoi(param)
-
 			if err != nil {
 				return errCSIParseError
 			}
@@ -222,10 +214,9 @@ func (ei *escapeInterpreter) output256() error {
 				ei.curFgColor |= AttrReverse
 			}
 		}
-
-	} else if fgbgParam == 48 {
+	case 48:
 		ei.curBgColor = Attribute(fgbgColor + 1)
-	} else {
+	default:
 		return errCSIParseError
 	}
 
