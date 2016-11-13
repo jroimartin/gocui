@@ -71,7 +71,7 @@ Mouse events are handled like any other keybinding:
 IMPORTANT: Views can only be created, destroyed or updated in three ways: from
 the Layout function within managers, from keybinding callbacks or via
 *Gui.Execute(). The reason for this is that it allows gocui to be
-conccurent-safe. So, if you want to update your GUI from a goroutine, you must
+concurent-safe. So, if you want to update your GUI from a goroutine, you must
 use *Gui.Execute(). For example:
 
 	g.Execute(func(g *gocui.Gui) error {
