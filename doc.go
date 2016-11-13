@@ -7,7 +7,7 @@ Package gocui allows to create console user interfaces.
 
 Create a new GUI:
 
-	g, err := gocui.NewGui()
+	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
 		// handle error
 	}
