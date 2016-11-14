@@ -150,15 +150,19 @@ func (ei *escapeInterpreter) outputNormal() error {
 		switch {
 		case p >= 30 && p <= 37:
 			ei.curFgColor = Attribute(p - 30 + 1)
+		case p == 39:
+			ei.curFgColor = ColorDefault
 		case p >= 40 && p <= 47:
 			ei.curBgColor = Attribute(p - 40 + 1)
+		case p == 49:
+			ei.curBgColor = ColorDefault
 		case p == 1:
 			ei.curFgColor |= AttrBold
 		case p == 4:
 			ei.curFgColor |= AttrUnderline
 		case p == 7:
 			ei.curFgColor |= AttrReverse
-		case p == 0 || p == 39:
+		case p == 0:
 			ei.curFgColor = ColorDefault
 			ei.curBgColor = ColorDefault
 		}
@@ -177,27 +181,26 @@ func (ei *escapeInterpreter) output256() error {
 		return ei.outputNormal()
 	}
 
-	fgbgParam, err := strconv.Atoi(ei.csiParam[0])
+	mode, err := strconv.Atoi(ei.csiParam[1])
 	if err != nil {
 		return errCSIParseError
 	}
-
-	fgbgType, err := strconv.Atoi(ei.csiParam[1])
-	if err != nil {
-		return errCSIParseError
-	}
-	if fgbgType != 5 {
+	if mode != 5 {
 		return ei.outputNormal()
 	}
 
-	fgbgColor, err := strconv.Atoi(ei.csiParam[2])
+	fgbg, err := strconv.Atoi(ei.csiParam[0])
+	if err != nil {
+		return errCSIParseError
+	}
+	color, err := strconv.Atoi(ei.csiParam[2])
 	if err != nil {
 		return errCSIParseError
 	}
 
-	switch fgbgParam {
+	switch fgbg {
 	case 38:
-		ei.curFgColor = Attribute(fgbgColor + 1)
+		ei.curFgColor = Attribute(color + 1)
 
 		for _, param := range ei.csiParam[3:] {
 			p, err := strconv.Atoi(param)
@@ -215,7 +218,7 @@ func (ei *escapeInterpreter) output256() error {
 			}
 		}
 	case 48:
-		ei.curBgColor = Attribute(fgbgColor + 1)
+		ei.curBgColor = Attribute(color + 1)
 	default:
 		return errCSIParseError
 	}
