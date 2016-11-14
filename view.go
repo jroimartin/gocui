@@ -395,6 +395,7 @@ func (v *View) Clear() {
 	v.tainted = true
 
 	v.lines = nil
+	v.readOffset = 0
 	v.clearRunes()
 }
 
