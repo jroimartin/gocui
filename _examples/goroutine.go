@@ -16,7 +16,7 @@ import (
 const NumGoroutines = 10
 
 var (
-	done = make(chan bool)
+	done = make(chan struct{})
 	wg   sync.WaitGroup
 
 	mu  sync.Mutex // protects ctr
@@ -66,9 +66,7 @@ func keybindings(g *gocui.Gui) error {
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
-	for i := 0; i < NumGoroutines; i++ {
-		done <- true
-	}
+	close(done)
 	return gocui.ErrQuit
 }
 
