@@ -62,6 +62,10 @@ type Gui struct {
 	// If InputEsc is true, when ESC sequence is in the buffer and it doesn't
 	// match any known sequence, ESC means KeyEsc.
 	InputEsc bool
+
+	// If Ascii is true then use ASCII instead of unicode to draw the
+	// interface. Using ASCII is more portable.
+	Ascii bool
 }
 
 // NewGui returns a new Gui object with a given output mode.
@@ -450,17 +454,22 @@ func (g *Gui) flush() error {
 
 // drawFrameEdges draws the horizontal and vertical edges of a view.
 func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
+	runeH, runeV := '─', '│'
+	if g.Ascii {
+		runeH, runeV = '-', '|'
+	}
+
 	for x := v.x0 + 1; x < v.x1 && x < g.maxX; x++ {
 		if x < 0 {
 			continue
 		}
 		if v.y0 > -1 && v.y0 < g.maxY {
-			if err := g.SetRune(x, v.y0, '─', fgColor, bgColor); err != nil {
+			if err := g.SetRune(x, v.y0, runeH, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
 		if v.y1 > -1 && v.y1 < g.maxY {
-			if err := g.SetRune(x, v.y1, '─', fgColor, bgColor); err != nil {
+			if err := g.SetRune(x, v.y1, runeH, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
@@ -470,12 +479,12 @@ func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 			continue
 		}
 		if v.x0 > -1 && v.x0 < g.maxX {
-			if err := g.SetRune(v.x0, y, '│', fgColor, bgColor); err != nil {
+			if err := g.SetRune(v.x0, y, runeV, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
 		if v.x1 > -1 && v.x1 < g.maxX {
-			if err := g.SetRune(v.x1, y, '│', fgColor, bgColor); err != nil {
+			if err := g.SetRune(v.x1, y, runeV, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
@@ -485,10 +494,15 @@ func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 
 // drawFrameCorners draws the corners of the view.
 func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
+	runeTL, runeTR, runeBL, runeBR := '┌', '┐', '└', '┘'
+	if g.Ascii {
+		runeTL, runeTR, runeBL, runeBR = '+', '+', '+', '+'
+	}
+
 	corners := []struct {
 		x, y int
 		ch   rune
-	}{{v.x0, v.y0, '┌'}, {v.x1, v.y0, '┐'}, {v.x0, v.y1, '└'}, {v.x1, v.y1, '┘'}}
+	}{{v.x0, v.y0, runeTL}, {v.x1, v.y0, runeTR}, {v.x0, v.y1, runeBL}, {v.x1, v.y1, runeBR}}
 
 	for _, c := range corners {
 		if c.x >= 0 && c.y >= 0 && c.x < g.maxX && c.y < g.maxY {
