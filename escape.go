@@ -28,7 +28,6 @@ const (
 
 var (
 	errNotCSI        = errors.New("Not a CSI escape sequence")
-	errCSINotANumber = errors.New("CSI escape sequence was expecting a number or a ;")
 	errCSIParseError = errors.New("CSI escape sequence parsing error")
 	errCSITooLong    = errors.New("CSI escape sequence is too long")
 )
@@ -99,12 +98,16 @@ func (ei *escapeInterpreter) parseOne(ch rune) (isEscape bool, err error) {
 		}
 		return false, errNotCSI
 	case stateCSI:
-		if ch >= '0' && ch <= '9' {
-			ei.state = stateParams
-			ei.csiParam = append(ei.csiParam, string(ch))
-			return true, nil
+		switch {
+		case ch >= '0' && ch <= '9':
+			ei.csiParam = append(ei.csiParam, "")
+		case ch == 'm':
+			ei.csiParam = append(ei.csiParam, "0")
+		default:
+			return false, errCSIParseError
 		}
-		return false, errCSINotANumber
+		ei.state = stateParams
+		fallthrough
 	case stateParams:
 		switch {
 		case ch >= '0' && ch <= '9':
