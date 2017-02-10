@@ -7,6 +7,7 @@ package gocui
 import (
 	"errors"
 
+	"github.com/mattn/go-runewidth"
 	"github.com/nsf/termbox-go"
 )
 
@@ -16,6 +17,13 @@ var (
 
 	// ErrUnknownView allows to assert if a View must be initialized.
 	ErrUnknownView = errors.New("unknown view")
+
+	borderTL = '┌'
+	borderTR = '┐'
+	borderBL = '└'
+	borderBR = '┘'
+	borderHB = '│'
+	borderVB = '─'
 )
 
 // OutputMode represents the terminal's output mode (8 or 256 colors).
@@ -62,6 +70,17 @@ type Gui struct {
 	// If InputEsc is true, when ESC sequence is in the buffer and it doesn't
 	// match any known sequence, ESC means KeyEsc.
 	InputEsc bool
+}
+
+func init() {
+	if runewidth.IsEastAsian() {
+		borderTL = '+'
+		borderTR = '+'
+		borderBL = '+'
+		borderBR = '+'
+		borderHB = '|'
+		borderVB = '-'
+	}
 }
 
 // NewGui returns a new Gui object with a given output mode.
@@ -455,12 +474,12 @@ func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 			continue
 		}
 		if v.y0 > -1 && v.y0 < g.maxY {
-			if err := g.SetRune(x, v.y0, '─', fgColor, bgColor); err != nil {
+			if err := g.SetRune(x, v.y0, borderVB, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
 		if v.y1 > -1 && v.y1 < g.maxY {
-			if err := g.SetRune(x, v.y1, '─', fgColor, bgColor); err != nil {
+			if err := g.SetRune(x, v.y1, borderVB, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
@@ -470,12 +489,12 @@ func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 			continue
 		}
 		if v.x0 > -1 && v.x0 < g.maxX {
-			if err := g.SetRune(v.x0, y, '│', fgColor, bgColor); err != nil {
+			if err := g.SetRune(v.x0, y, borderHB, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
 		if v.x1 > -1 && v.x1 < g.maxX {
-			if err := g.SetRune(v.x1, y, '│', fgColor, bgColor); err != nil {
+			if err := g.SetRune(v.x1, y, borderHB, fgColor, bgColor); err != nil {
 				return err
 			}
 		}
@@ -488,7 +507,7 @@ func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
 	corners := []struct {
 		x, y int
 		ch   rune
-	}{{v.x0, v.y0, '┌'}, {v.x1, v.y0, '┐'}, {v.x0, v.y1, '└'}, {v.x1, v.y1, '┘'}}
+	}{{v.x0, v.y0, borderTL}, {v.x1, v.y0, borderTR}, {v.x0, v.y1, borderBL}, {v.x1, v.y1, borderBR}}
 
 	for _, c := range corners {
 		if c.x >= 0 && c.y >= 0 && c.x < g.maxX && c.y < g.maxY {
