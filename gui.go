@@ -63,9 +63,9 @@ type Gui struct {
 	// match any known sequence, ESC means KeyEsc.
 	InputEsc bool
 
-	// If Ascii is true then use ASCII instead of unicode to draw the
+	// If ASCII is true then use ASCII instead of unicode to draw the
 	// interface. Using ASCII is more portable.
-	Ascii bool
+	ASCII bool
 }
 
 // NewGui returns a new Gui object with a given output mode.
@@ -455,7 +455,7 @@ func (g *Gui) flush() error {
 // drawFrameEdges draws the horizontal and vertical edges of a view.
 func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 	runeH, runeV := '─', '│'
-	if g.Ascii {
+	if g.ASCII {
 		runeH, runeV = '-', '|'
 	}
 
@@ -495,7 +495,7 @@ func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 // drawFrameCorners draws the corners of the view.
 func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
 	runeTL, runeTR, runeBL, runeBR := '┌', '┐', '└', '┘'
-	if g.Ascii {
+	if g.ASCII {
 		runeTL, runeTR, runeBL, runeBR = '+', '+', '+', '+'
 	}
 
