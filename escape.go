@@ -133,6 +133,8 @@ func (ei *escapeInterpreter) parseOne(ch rune) (isEscape bool, err error) {
 			ei.state = stateNone
 			ei.csiParam = nil
 			return true, nil
+		default:
+			return false, errCSIParseError
 		}
 	}
 	return false, nil
