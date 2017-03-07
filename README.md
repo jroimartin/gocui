@@ -95,5 +95,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 * [Vuls](https://github.com/future-architect/vuls): Agentless vulnerability scanner for Linux/FreeBSD.
 * [SumoLogic sumoshell](https://github.com/SumoLogic/sumoshell): Terminal-only version of Sumo.
 * [wuzz](https://github.com/asciimoo/wuzz): Interactive cli tool for HTTP inspection.
+* [httplab](https://github.com/gchaincl/httplab): Interactive web server.
+* [domainr](https://github.com/MichaelThessel/domainr): Tool that checks the availability of domains based on keywords.
 
 Note: if your project is not listed here, let us know! :)
