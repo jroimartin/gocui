@@ -71,6 +71,9 @@ type View struct {
 	// If Mask is true, the View will display the mask instead of the real
 	// content
 	Mask rune
+
+	// If MaxLines > 0, only the last MaxLines lines in the buffer are preseved.
+	MaxLines int
 }
 
 type viewLine struct {
@@ -227,7 +230,24 @@ func (v *View) Write(p []byte) (n int, err error) {
 			}
 		}
 	}
+	v.removeOldLines()
 	return len(p), nil
+}
+
+// removeOldLines removed old lines from the buffer
+func (v *View) removeOldLines() {
+	nl := len(v.lines)
+	if v.MaxLines <= 0 || nl <= v.MaxLines {
+		return
+	}
+	numRemoved := nl - v.MaxLines
+	v.lines = v.lines[numRemoved:]
+	if v.oy > 0 {
+		v.oy--
+	}
+	if v.cy > 0 {
+		v.cy--
+	}
 }
 
 // parseInput parses char by char the input written to the View. It returns nil

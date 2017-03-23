@@ -267,6 +267,7 @@ func (v *View) writeRune(x, y int, ch rune) error {
 	}
 	c.chr = ch
 	v.lines[y][x] = c
+	v.removeOldLines()
 	return nil
 }
 
@@ -337,5 +338,6 @@ func (v *View) breakLine(x, y int) error {
 	copy(lines, v.lines[:y])
 	copy(lines[y+2:], v.lines[y+1:])
 	v.lines = lines
+	v.removeOldLines()
 	return nil
 }
