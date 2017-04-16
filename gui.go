@@ -194,7 +194,10 @@ func (g *Gui) View(name string) (*View, error) {
 // ViewByPosition returns a pointer to a view matching the given position, or
 // error ErrUnknownView if a view in that position does not exist.
 func (g *Gui) ViewByPosition(x, y int) (*View, error) {
-	for _, v := range g.views {
+
+	// traverse views in reverse order checking top views first
+	for i := len(g.views); i > 0; i-- {
+		v := g.views[i-1]
 		if x > v.x0 && x < v.x1 && y > v.y0 && y < v.y1 {
 			return v, nil
 		}
