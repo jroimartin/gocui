@@ -184,8 +184,8 @@ func (g *Gui) View(name string) (*View, error) {
 func (g *Gui) ViewByPosition(x, y int) (*View, error) {
 
 	// traverse views in reverse order checking top views first
-	for i := len(g.views) - 1; i > 0; i-- {
-		v := g.views[i]
+	for i := len(g.views); i > 0; i-- {
+		v := g.views[i-1]
 		if x > v.x0 && x < v.x1 && y > v.y0 && y < v.y1 {
 			return v, nil
 		}
