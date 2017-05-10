@@ -219,14 +219,14 @@ func (v *View) Write(p []byte) (n int, err error) {
 			if cells == nil {
 				continue
 			}
-			
+
 			// 中文输出
 			// 不明原因会吞掉每个中文字符之后的一个字符，所以补一个无意义的字符
-			rex := regexp.MustCompile("^[\u4e00-\u9fa5【】，。；“”？！]$")
+			rex := regexp.MustCompile("^[\u4e00-\u9fa5【】，。；“”？！（）]$")
 			if rex.MatchString(string(ch)) {
-				cells = append(cells, v.parseInput([]rune("2")[0])...)
+				cells = append(cells, v.parseInput(rune('2'))...)
 			}
-			
+
 			nl := len(v.lines)
 			if nl > 0 {
 				v.lines[nl-1] = append(v.lines[nl-1], cells...)
