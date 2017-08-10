@@ -4,7 +4,9 @@
 
 package gocui
 
-import "errors"
+import (
+	"errors"
+)
 
 const maxInt = int(^uint(0) >> 1)
 
@@ -185,7 +187,8 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 		}
 	} else if cx < 0 {
 		if !v.Wrap && v.ox > 0 { // move origin to the left
-			v.ox--
+			v.ox += cx
+			v.cx = 0
 		} else { // move to previous line
 			if prevLineWidth > 0 {
 				if !v.Wrap { // set origin so the EOL is visible
@@ -210,7 +213,8 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 			v.cx = cx
 		} else {
 			if cx >= maxX {
-				v.ox++
+				v.ox += cx - maxX + 1
+				v.cx = maxX
 			} else {
 				v.cx = cx
 			}
