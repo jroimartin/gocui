@@ -168,7 +168,7 @@ func (g *Gui) SetViewOnBottom(name string) (*View, error) {
 	var bufferViews []*View
 	var selView *View
 
-	// Remove view form buffer
+	// Remove view from buffer
 	for i, v := range g.views {
 		if v.name == name {
 			selView = g.views[i]
