@@ -163,6 +163,29 @@ func (g *Gui) SetViewOnTop(name string) (*View, error) {
 	return nil, ErrUnknownView
 }
 
+// SetViewOnBottom sets the given view on bottom of the existing ones.
+func (g *Gui) SetViewOnBottom(name string) (*View, error) {
+	var bufferViews []*View
+	var selView *View
+
+	// Remove view from buffer
+	for i, v := range g.views {
+		if v.name == name {
+			selView = g.views[i]
+			bufferViews = append(g.views[:i], g.views[i+1:]...)
+		}
+	}
+
+	// Add view to buffer
+	if selView != nil {
+		g.views = append([]*View{selView}, bufferViews...)
+
+		return selView, nil
+	}
+
+	return nil, ErrUnknownView
+}
+
 // Views returns all the views in the GUI.
 func (g *Gui) Views() []*View {
 	return g.views
