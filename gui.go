@@ -84,8 +84,8 @@ func NewGui(mode OutputMode) (*Gui, error) {
 
 	g.maxX, g.maxY = termbox.Size()
 
-	g.BgColor, g.FgColor = ColorBlack, ColorWhite
-	g.SelBgColor, g.SelFgColor = ColorBlack, ColorWhite
+	g.BgColor, g.FgColor = ColorDefault, ColorDefault
+	g.SelBgColor, g.SelFgColor = ColorDefault, ColorDefault
 
 	return g, nil
 }
