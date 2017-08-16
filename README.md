@@ -97,5 +97,6 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 * [httplab](https://github.com/gchaincl/httplab): Interactive web server.
 * [domainr](https://github.com/MichaelThessel/domainr): Tool that checks the availability of domains based on keywords.
 * [gotime](https://github.com/nanohard/gotime): Time tracker for projects and tasks.
+* [claws](https://github.com/thehowl/claws): Interactive command line client for testing websockets.
 
 Note: if your project is not listed here, let us know! :)
