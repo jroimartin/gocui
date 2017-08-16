@@ -252,23 +252,20 @@ func (v *View) writeRune(x, y int, ch rune) error {
 		v.lines = append(v.lines, s...)
 	}
 
-	olen := len(v.lines[y])
 	if x >= len(v.lines[y]) {
 		s := make([]cell, x-len(v.lines[y])+1)
 		v.lines[y] = append(v.lines[y], s...)
-	}
-
-	c := cell{
-		fgColor: v.FgColor,
-		bgColor: v.BgColor,
-	}
-	if !v.Overwrite || (v.Overwrite && x >= olen-1) {
-		c.chr = '\x00'
-		v.lines[y] = append(v.lines[y], c)
+	} else if !v.Overwrite {
+		v.lines[y] = append(v.lines[y], cell{})
 		copy(v.lines[y][x+1:], v.lines[y][x:])
 	}
-	c.chr = ch
-	v.lines[y][x] = c
+
+	v.lines[y][x] = cell{
+		fgColor: v.FgColor,
+		bgColor: v.BgColor,
+		chr:     ch,
+	}
+
 	return nil
 }
 
