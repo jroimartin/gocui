@@ -298,22 +298,19 @@ func (v *View) draw() error {
 		v.viewLines = nil
 		for i, line := range v.lines {
 			if v.Wrap {
-				if len(line) <= maxX {
+				if len(line) < maxX {
 					vline := viewLine{linesX: 0, linesY: i, line: line}
 					v.viewLines = append(v.viewLines, vline)
 					continue
 				} else {
-					vline := viewLine{linesX: 0, linesY: i, line: line[:maxX]}
-					v.viewLines = append(v.viewLines, vline)
-				}
-				// Append remaining lines
-				for n := maxX; n < len(line); n += maxX {
-					if len(line[n:]) <= maxX {
-						vline := viewLine{linesX: n, linesY: i, line: line[n:]}
-						v.viewLines = append(v.viewLines, vline)
-					} else {
-						vline := viewLine{linesX: n, linesY: i, line: line[n : n+maxX]}
-						v.viewLines = append(v.viewLines, vline)
+					for n := 0; n <= len(line); n += maxX {
+						if len(line[n:]) <= maxX {
+							vline := viewLine{linesX: n, linesY: i, line: line[n:]}
+							v.viewLines = append(v.viewLines, vline)
+						} else {
+							vline := viewLine{linesX: n, linesY: i, line: line[n : n+maxX]}
+							v.viewLines = append(v.viewLines, vline)
+						}
 					}
 				}
 			} else {

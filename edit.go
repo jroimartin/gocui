@@ -108,16 +108,9 @@ func (v *View) EditDelete(back bool) {
 // EditNewLine inserts a new line under the cursor.
 func (v *View) EditNewLine() {
 	v.breakLine(v.cx, v.cy)
-
-	y := v.oy + v.cy
-	if y >= len(v.viewLines) || (y >= 0 && y < len(v.viewLines) &&
-		!(v.Wrap && v.cx == 0 && v.viewLines[y].linesX > 0)) {
-		// new line at the end of the buffer or
-		// cursor is not at the beginning of a wrapped line
-		v.ox = 0
-		v.cx = 0
-		v.MoveCursor(0, 1, true)
-	}
+	v.ox = 0
+	v.cx = 0
+	v.MoveCursor(0, 1, true)
 }
 
 // MoveCursor moves the cursor taking into account the width of the line/view,
@@ -252,23 +245,26 @@ func (v *View) writeRune(x, y int, ch rune) error {
 		v.lines = append(v.lines, s...)
 	}
 
-	olen := len(v.lines[y])
-	if x >= len(v.lines[y]) {
-		s := make([]cell, x-len(v.lines[y])+1)
-		v.lines[y] = append(v.lines[y], s...)
-	}
-
 	c := cell{
 		fgColor: v.FgColor,
 		bgColor: v.BgColor,
+		chr:     ch,
 	}
-	if !v.Overwrite || (v.Overwrite && x >= olen-1) {
-		c.chr = '\x00'
+
+	olen := len(v.lines[y])
+
+	if x >= len(v.lines[y]) {
+		s := make([]cell, x-len(v.lines[y])+1)
+		v.lines[y] = append(v.lines[y], s...)
+	} else if !v.Overwrite {
 		v.lines[y] = append(v.lines[y], c)
+	}
+
+	if !v.Overwrite || (v.Overwrite && x >= olen-1) {
 		copy(v.lines[y][x+1:], v.lines[y][x:])
 	}
-	c.chr = ch
 	v.lines[y][x] = c
+
 	return nil
 }
 
