@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// WARNING: tricky code just for testing purposes, do not use as example.
+// WARNING: tricky code just for testing purposes, do not use as reference.
 
 package main
 
