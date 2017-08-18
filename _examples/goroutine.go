@@ -83,7 +83,7 @@ func counter(g *gocui.Gui) {
 			ctr++
 			mu.Unlock()
 
-			g.Execute(func(g *gocui.Gui) error {
+			g.Update(func(g *gocui.Gui) error {
 				v, err := g.View("ctr")
 				if err != nil {
 					return err

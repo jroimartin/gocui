@@ -303,11 +303,12 @@ type userEvent struct {
 	f func(*Gui) error
 }
 
-// Execute executes the given function. This function can be called safely from
-// a goroutine in order to update the GUI. It is important to note that it
-// won't be executed immediately, instead it will be added to the user events
-// queue.
-func (g *Gui) Execute(f func(*Gui) error) {
+// Update executes the passed function. This method can be called safely from a
+// goroutine in order to update the GUI. It is important to note that the
+// passed function won't be executed immediately, instead it will be added to
+// the user events queue. Given that Update spawns a goroutine, the order in
+// which the user events will be handled is not guaranteed.
+func (g *Gui) Update(f func(*Gui) error) {
 	go func() { g.userEvents <- userEvent{f: f} }()
 }
 
