@@ -148,11 +148,13 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 	// adjust cursor's x position and view's x origin
 	if x > curLineWidth { // move to next line
 		if dx > 0 { // horizontal movement
-			if !v.Wrap {
-				v.ox = 0
-			}
-			v.cx = 0
 			cy++
+			if writeMode || v.oy+cy < len(v.viewLines) {
+				if !v.Wrap {
+					v.ox = 0
+				}
+				v.cx = 0
+			}
 		} else { // vertical movement
 			if curLineWidth > 0 { // move cursor to the EOL
 				if v.Wrap {
@@ -170,10 +172,12 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 					}
 				}
 			} else {
-				if !v.Wrap {
-					v.ox = 0
+				if writeMode || v.oy+cy < len(v.viewLines) {
+					if !v.Wrap {
+						v.ox = 0
+					}
+					v.cx = 0
 				}
-				v.cx = 0
 			}
 		}
 	} else if cx < 0 {
@@ -181,6 +185,7 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 			v.ox += cx
 			v.cx = 0
 		} else { // move to previous line
+			cy--
 			if prevLineWidth > 0 {
 				if !v.Wrap { // set origin so the EOL is visible
 					nox := prevLineWidth - maxX + 1
@@ -197,7 +202,6 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 				}
 				v.cx = 0
 			}
-			cy--
 		}
 	} else { // stay on the same line
 		if v.Wrap {
@@ -213,14 +217,16 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 	}
 
 	// adjust cursor's y position and view's y origin
-	if cy >= maxY {
-		v.oy++
-	} else if cy < 0 {
+	if cy < 0 {
 		if v.oy > 0 {
 			v.oy--
 		}
-	} else {
-		v.cy = cy
+	} else if writeMode || v.oy+cy < len(v.viewLines) {
+		if cy >= maxY {
+			v.oy++
+		} else {
+			v.cy = cy
+		}
 	}
 }
 
