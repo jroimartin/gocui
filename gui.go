@@ -322,7 +322,7 @@ type Manager interface {
 // The ManagerFunc type is an adapter to allow the use of ordinary functions as
 // Managers. If f is a function with the appropriate signature, ManagerFunc(f)
 // is an Manager object that calls f.
-type ManagerFunc func(v *Gui) error
+type ManagerFunc func(g *Gui) error
 
 // Layout calls f(g)
 func (f ManagerFunc) Layout(g *Gui) error {
@@ -342,7 +342,7 @@ func (g *Gui) SetManager(managers ...Manager) {
 
 // SetManagerFunc sets the given manager function. It deletes all views and
 // keybindings.
-func (g *Gui) SetManagerFunc(manager func(v *Gui) error) {
+func (g *Gui) SetManagerFunc(manager func(g *Gui) error) {
 	g.SetManager(ManagerFunc(manager))
 }
 
