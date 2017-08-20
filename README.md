@@ -99,5 +99,6 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 * [gotime](https://github.com/nanohard/gotime): Time tracker for projects and tasks.
 * [claws](https://github.com/thehowl/claws): Interactive command line client for testing websockets.
 * [terminews](http://github.com/antavelos/terminews): Terminal based RSS reader.
+* [diagram](https://github.com/esimov/diagram): Tool to convert ascii arts into hand drawn diagrams.
 
 Note: if your project is not listed here, let us know! :)
