@@ -10,6 +10,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/mattn/go-runewidth"
 	"github.com/nsf/termbox-go"
 )
 
@@ -353,7 +354,12 @@ func (v *View) draw() error {
 			if err := v.setRune(x, y, c.chr, fgColor, bgColor); err != nil {
 				return err
 			}
-			x++
+			// x++
+			w := runewidth.RuneWidth(c.chr)
+			if w == 0 || (w == 2 && runewidth.IsAmbiguousWidth(c.chr)) {
+				w = 1
+			}
+			x += w
 		}
 		y++
 	}
