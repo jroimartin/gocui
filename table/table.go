@@ -2,10 +2,11 @@ package table
 
 import (
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 
-	"github.com/mickep76/gocui-form/align"
+	"github.com/jroimartin/gocui/align"
 )
 
 type Table struct {
@@ -148,7 +149,7 @@ func (t *Table) Format() *Table {
 	return t
 }
 
-func (t *Table) Print() {
+func (t *Table) Fprint(w io.Writer) {
 	for _, c := range t.cols {
 		if c.hide {
 			continue
@@ -164,18 +165,18 @@ func (t *Table) Print() {
 			s = align.Center(c.name+" ", c.width)
 		}
 
-		fmt.Printf("%s", s)
+		fmt.Fprintf(w, "%s", s)
 	}
-	fmt.Printf("\n")
+	fmt.Fprintf(w, "\n")
 
 	for _, c := range t.cols {
 		if c.hide {
 			continue
 		}
 
-		fmt.Printf(strings.Repeat("─", c.width))
+		fmt.Fprintf(w, strings.Repeat("─", c.width))
 	}
-	fmt.Printf("\n")
+	fmt.Fprintf(w, "\n")
 
 	for _, r := range t.rows {
 		for i, v := range r.strValues {
@@ -195,8 +196,8 @@ func (t *Table) Print() {
 				s = align.Center(v, c.width)
 			}
 
-			fmt.Printf("%s", s)
+			fmt.Fprintf(w, "%s", s)
 		}
-		fmt.Printf("\n")
+		fmt.Fprintf(w, "\n")
 	}
 }
