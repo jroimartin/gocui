@@ -10,5 +10,5 @@ const (
 
 type SortBy struct {
 	index int
-	desc  bool
+	order SortOrder
 }

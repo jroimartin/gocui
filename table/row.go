@@ -25,7 +25,7 @@ func (r Rows) Less(i, j int) bool {
 	var k int
 	for k = 0; k < len(sortOrder)-1; k++ {
 		s := sortOrder[k]
-		if s.desc {
+		if s.order == SortDesc {
 			if gt(r[i].values[s.index], r[j].values[s.index]) {
 				return true
 			}
@@ -43,7 +43,7 @@ func (r Rows) Less(i, j int) bool {
 	}
 
 	s := sortOrder[k]
-	if s.desc {
+	if s.order == SortDesc {
 		return gt(r[i].values[s.index], r[j].values[s.index])
 	}
 	return lt(r[i].values[s.index], r[j].values[s.index])
