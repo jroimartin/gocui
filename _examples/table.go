@@ -13,6 +13,10 @@ func fmtTime(v interface{}) string {
 	return t.Format("2006-01-02 15:04:05")
 }
 
+func ltTime(a interface{}, b interface{}) bool {
+	return a.(time.Time).Before(b.(time.Time))
+}
+
 func main() {
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -58,13 +62,16 @@ func layout(g *gocui.Gui) error {
 		t.AddCol("Age").AlignRight()
 		t.AddCol("City").SetWidthPerc(50)
 
-		t.AddRow(time.Now(), "Peter", 23, "Chicago")
-		t.AddRow(time.Now(), "Sara", 15, "San Francisco")
-		t.AddRow(time.Now(), "Sara", 45, "New York")
-		t.AddRow(time.Now(), "John", 23, "Newark")
+		t.AddRow(time.Now().Add(4*time.Minute), "Peter", 23, "Chicago")
+		t.AddRow(time.Now().Add(3*time.Minute), "Sara", 15, "San Francisco")
+		t.AddRow(time.Now().Add(2*time.Minute), "Sara", 45, "New York")
+		t.AddRow(time.Now().Add(1*time.Minute), "John", 23, "Newark")
 		t.AddRow(time.Now(), "Ariana", 34, "Los Angeles")
 
 		t.SortAsc("Name").SortDesc("Age").Sort().Format().Fprint(v)
+
+		// Sort by time
+		// t.SortAscFn("Created", ltTime).Sort().Format().Fprint(v)
 	}
 	return nil
 }

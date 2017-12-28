@@ -10,7 +10,7 @@ const (
 )
 
 type SortBy struct {
-	index int
-	order SortOrder
-	fn    SortFn
+	index  int
+	order  SortOrder
+	sortFn SortFn
 }

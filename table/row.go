@@ -22,17 +22,17 @@ func (r Rows) Less(i, j int) bool {
 	for k = 0; k < len(sortOrder)-1; k++ {
 		s := sortOrder[k]
 		if s.order == SortDesc {
-			if gt(r[i].values[s.index], r[j].values[s.index], s.fn) {
+			if gt(r[i].values[s.index], r[j].values[s.index], s.sortFn) {
 				return true
 			}
-			if gt(r[j].values[s.index], r[i].values[s.index], s.fn) {
+			if gt(r[j].values[s.index], r[i].values[s.index], s.sortFn) {
 				return false
 			}
 		} else {
-			if lt(r[i].values[s.index], r[j].values[s.index], s.fn) {
+			if lt(r[i].values[s.index], r[j].values[s.index], s.sortFn) {
 				return true
 			}
-			if lt(r[j].values[s.index], r[i].values[s.index], s.fn) {
+			if lt(r[j].values[s.index], r[i].values[s.index], s.sortFn) {
 				return false
 			}
 		}
@@ -40,9 +40,9 @@ func (r Rows) Less(i, j int) bool {
 
 	s := sortOrder[k]
 	if s.order == SortDesc {
-		return gt(r[i].values[s.index], r[j].values[s.index], s.fn)
+		return gt(r[i].values[s.index], r[j].values[s.index], s.sortFn)
 	}
-	return lt(r[i].values[s.index], r[j].values[s.index], s.fn)
+	return lt(r[i].values[s.index], r[j].values[s.index], s.sortFn)
 }
 
 func gt(a interface{}, b interface{}, fn SortFn) bool {
