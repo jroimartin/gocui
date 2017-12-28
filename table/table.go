@@ -37,7 +37,18 @@ func (t *Table) AddRow(v ...interface{}) *Row {
 	return r
 }
 
+func (t *Table) SortAscFn(n string, fn SortFn) *Table {
+	i := t.cols.Index(n)
+	s := SortBy{index: i, order: SortDesc}
+	t.sort = append(t.sort, s)
+	return t
+}
+
 func (t *Table) SortAsc(n string) *Table {
+	return t.SortAscFn(n, nil)
+}
+
+func (t *Table) SortDescFn(n string, fn SortFn) *Table {
 	i := t.cols.Index(n)
 	s := SortBy{index: i, order: SortDesc}
 	t.sort = append(t.sort, s)
@@ -45,10 +56,7 @@ func (t *Table) SortAsc(n string) *Table {
 }
 
 func (t *Table) SortDesc(n string) *Table {
-	i := t.cols.Index(n)
-	s := SortBy{index: i, order: SortDesc}
-	t.sort = append(t.sort, s)
-	return t
+	return t.SortDescFn(n, nil)
 }
 
 func (t *Table) Sort() *Table {

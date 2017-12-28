@@ -1,6 +1,7 @@
 package table
 
 type SortOrder int
+type SortFn func(interface{}, interface{}) bool
 
 const (
 	SortNone SortOrder = iota
@@ -11,4 +12,5 @@ const (
 type SortBy struct {
 	index int
 	order SortOrder
+	fn    SortFn
 }

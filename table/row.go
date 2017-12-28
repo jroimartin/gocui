@@ -1,9 +1,5 @@
 package table
 
-import (
-	"log"
-)
-
 type Row struct {
 	table     *Table
 	values    []interface{}
@@ -26,17 +22,17 @@ func (r Rows) Less(i, j int) bool {
 	for k = 0; k < len(sortOrder)-1; k++ {
 		s := sortOrder[k]
 		if s.order == SortDesc {
-			if gt(r[i].values[s.index], r[j].values[s.index]) {
+			if gt(r[i].values[s.index], r[j].values[s.index], s.fn) {
 				return true
 			}
-			if gt(r[j].values[s.index], r[i].values[s.index]) {
+			if gt(r[j].values[s.index], r[i].values[s.index], s.fn) {
 				return false
 			}
 		} else {
-			if lt(r[i].values[s.index], r[j].values[s.index]) {
+			if lt(r[i].values[s.index], r[j].values[s.index], s.fn) {
 				return true
 			}
-			if lt(r[j].values[s.index], r[i].values[s.index]) {
+			if lt(r[j].values[s.index], r[i].values[s.index], s.fn) {
 				return false
 			}
 		}
@@ -44,23 +40,25 @@ func (r Rows) Less(i, j int) bool {
 
 	s := sortOrder[k]
 	if s.order == SortDesc {
-		return gt(r[i].values[s.index], r[j].values[s.index])
+		return gt(r[i].values[s.index], r[j].values[s.index], s.fn)
 	}
-	return lt(r[i].values[s.index], r[j].values[s.index])
+	return lt(r[i].values[s.index], r[j].values[s.index], s.fn)
 }
 
-func gt(a interface{}, b interface{}) bool {
-	return lt(b, a)
+func gt(a interface{}, b interface{}, fn SortFn) bool {
+	return lt(b, a, fn)
 }
 
-func lt(a interface{}, b interface{}) bool {
-	switch v := a.(type) {
-	case int:
-		return a.(int) < b.(int)
-	case string:
-		return a.(string) < b.(string)
-	default:
-		log.Fatalf("unknown type: %T", v)
+func lt(a interface{}, b interface{}, fn SortFn) bool {
+	if fn != nil {
+		return fn(a, b)
+	} else {
+		switch a.(type) {
+		case int:
+			return a.(int) < b.(int)
+		case string:
+			return a.(string) < b.(string)
+		}
 	}
 	return false
 }
