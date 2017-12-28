@@ -12,7 +12,7 @@ import (
 type Table struct {
 	cols  Cols
 	rows  Rows
-	sort  SortOrders
+	sort  []SortBy
 	width int
 }
 
@@ -39,14 +39,14 @@ func (t *Table) AddRow(v ...interface{}) *Row {
 
 func (t *Table) SortAsc(n string) *Table {
 	i := t.cols.Index(n)
-	s := &SortOrder{index: i, desc: false}
+	s := SortBy{index: i, desc: false}
 	t.sort = append(t.sort, s)
 	return t
 }
 
 func (t *Table) SortDesc(n string) *Table {
 	i := t.cols.Index(n)
-	s := &SortOrder{index: i, desc: true}
+	s := SortBy{index: i, desc: true}
 	t.sort = append(t.sort, s)
 	return t
 }
@@ -158,11 +158,11 @@ func (t *Table) Fprint(w io.Writer) {
 		var s string
 		switch c.align {
 		case AlignLeft:
-			s = align.Left(c.name+" ", c.width)
+			s = align.AlignLeft(c.name+" ", c.width)
 		case AlignRight:
-			s = align.Right(c.name+" ", c.width)
+			s = align.AlignRight(c.name+" ", c.width)
 		case AlignCenter:
-			s = align.Center(c.name+" ", c.width)
+			s = align.AlignCenter(c.name+" ", c.width)
 		}
 
 		fmt.Fprintf(w, "%s", s)
@@ -189,11 +189,11 @@ func (t *Table) Fprint(w io.Writer) {
 			var s string
 			switch c.align {
 			case AlignLeft:
-				s = align.Left(v, c.width)
+				s = align.AlignLeft(v, c.width)
 			case AlignRight:
-				s = align.Right(v, c.width)
+				s = align.AlignRight(v, c.width)
 			case AlignCenter:
-				s = align.Center(v, c.width)
+				s = align.AlignCenter(v, c.width)
 			}
 
 			fmt.Fprintf(w, "%s", s)

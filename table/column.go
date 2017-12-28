@@ -1,13 +1,5 @@
 package table
 
-type Align uint8
-
-const (
-	AlignLeft = Align(iota)
-	AlignRight
-	AlignCenter
-)
-
 type FormatFn func(interface{}) string
 
 type Col struct {
@@ -23,13 +15,6 @@ type Col struct {
 }
 
 type Cols []*Col
-
-type SortOrder struct {
-	index int
-	desc  bool
-}
-
-type SortOrders []*SortOrder
 
 func (c *Col) Hide() *Col {
 	c.hide = true
