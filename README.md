@@ -103,5 +103,6 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 * [pody](https://github.com/JulienBreux/pody): CLI app to manage Pods in a Kubernetes cluster.
 * [kubexp](https://github.com/alitari/kubexp): Kubernetes client.
 * [kcli](https://github.com/cswank/kcli): Tool for inspecting kafka topics/partitions/messages.
+* [fac](https://github.com/mkchoi212/fac): git merge conflict resolver
 
 Note: if your project is not listed here, let us know! :)
