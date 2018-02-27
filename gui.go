@@ -454,7 +454,7 @@ func (g *Gui) flush() error {
 				return err
 			}
 			if v.Title != "" {
-				if err := g.drawTitle(v, fgColor, bgColor); err != nil {
+				if err := g.drawTitle(v, v.TitleFgColor, v.TitleBgColor); err != nil {
 					return err
 				}
 			}
