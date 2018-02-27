@@ -32,6 +32,10 @@ type View struct {
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the View.
 	BgColor, FgColor Attribute
+	
+	// TitleBgColor and TitleFgColor allow to configure the background and
+	// foreground colors of the title of the view.
+	TitleBgColor, TitleFgColor Attribute
 
 	// SelBgColor and SelFgColor are used to configure the background and
 	// foreground colors of the selected line, when it is highlighted.
