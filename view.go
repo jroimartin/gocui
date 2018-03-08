@@ -477,3 +477,8 @@ func (v *View) Word(x, y int) (string, error) {
 func indexFunc(r rune) bool {
 	return r == ' ' || r == 0
 }
+
+// NumLines returns the number of lines in the view's buffer.
+func (v *View) NumLines() int {
+	return len(v.lines)
+}
