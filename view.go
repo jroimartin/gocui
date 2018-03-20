@@ -71,6 +71,10 @@ type View struct {
 	// If Mask is true, the View will display the mask instead of the real
 	// content
 	Mask rune
+
+	// If CarriageReturn is true, then '\r' characters will reset the
+	// prior line.
+	CarriageReturn bool
 }
 
 type viewLine struct {
@@ -207,11 +211,13 @@ func (v *View) Write(p []byte) (n int, err error) {
 		case '\n':
 			v.lines = append(v.lines, nil)
 		case '\r':
-			nl := len(v.lines)
-			if nl > 0 {
-				v.lines[nl-1] = nil
-			} else {
-				v.lines = make([][]cell, 1)
+			if v.CarriageReturn {
+				nl := len(v.lines)
+				if nl > 0 {
+					v.lines[nl-1] = nil
+				} else {
+					v.lines = make([][]cell, 1)
+				}
 			}
 		default:
 			cells := v.parseInput(ch)
