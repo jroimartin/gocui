@@ -104,5 +104,6 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 * [kubexp](https://github.com/alitari/kubexp): Kubernetes client.
 * [kcli](https://github.com/cswank/kcli): Tool for inspecting kafka topics/partitions/messages.
 * [fac](https://github.com/mkchoi212/fac): git merge conflict resolver
+* [jsonui](https://github.com/gulyasm/jsonui): Interactive JSON explorer for your terminal.
 
 Note: if your project is not listed here, let us know! :)
