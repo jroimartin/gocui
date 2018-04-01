@@ -408,6 +408,18 @@ func (v *View) clearRunes() {
 	}
 }
 
+// BufferLines returns the lines in the view's internal
+// buffer.
+func (v *View) BufferLines() []string {
+	lines := make([]string, len(v.lines))
+	for i, l := range v.lines {
+		str := lineType(l).String()
+		str = strings.Replace(str, "\x00", " ", -1)
+		lines[i] = str
+	}
+	return lines
+}
+
 // Buffer returns a string with the contents of the view's internal
 // buffer.
 func (v *View) Buffer() string {
