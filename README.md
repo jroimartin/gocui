@@ -101,5 +101,6 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 * [terminews](http://github.com/antavelos/terminews): Terminal based RSS reader.
 * [diagram](https://github.com/esimov/diagram): Tool to convert ascii arts into hand drawn diagrams.
 * [pody](https://github.com/JulienBreux/pody): CLI app to manage Pods in a Kubernetes cluster.
+* [cointop](https://github.com/miguelmota/cointop): Interactive terminal UI application for tracking cryptocurrencies.
 
 Note: if your project is not listed here, let us know! :)
