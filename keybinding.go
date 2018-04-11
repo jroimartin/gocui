@@ -135,3 +135,106 @@ const (
 	ModNone Modifier = Modifier(0)
 	ModAlt           = Modifier(termbox.ModAlt)
 )
+
+// DescribeKey generates a human-readable description of a key combo.
+func DescribeKey(key interface{}, mod Modifier) string {
+
+	var k string
+
+	switch mod {
+	case ModNone:
+	case ModAlt:
+		k = "Alt+"
+	default:
+		k = "<unknown modifier>+"
+	}
+	
+	switch t := key.(type) {
+	case Key:
+		s,ok := keysymbols[t]
+		if !ok {
+			k += "<unknown key>"
+		} else {
+			k += s
+		}
+	case rune:
+		k += string(t)
+	default:
+		k += "<unknown key type>"
+	}
+
+	return k
+
+}
+
+var keysymbols = map[Key]string{
+	// Entries commented out duplicate codes with a more prominent combo.
+	KeyF1: "F1",
+	KeyF2: "F2",
+	KeyF3: "F3",
+	KeyF4: "F4",
+	KeyF5: "F5",
+	KeyF6: "F6",
+	KeyF7: "F7",
+	KeyF8: "F8",
+	KeyF9: "F9",
+	KeyF10: "F10",
+	KeyF11: "F11",
+	KeyF12: "F12",
+	KeyInsert: "Insert",
+	KeyDelete: "Delete",
+	KeyHome: "Home",
+	KeyEnd: "End",
+	KeyPgup: "PgUp",
+	KeyPgdn: "PgDn",
+	KeyArrowUp: "Up",
+	KeyArrowDown: "Down",
+	KeyArrowLeft: "Left",
+	KeyArrowRight: "Right",
+//	KeyCtrlTilde: "Ctrl+~",
+//	KeyCtrl2: "Ctrl+2",
+	KeyCtrlSpace: "Ctrl+Space",
+	KeyCtrlA: "Ctrl+a",
+	KeyCtrlB: "Ctrl+b",
+	KeyCtrlC: "Ctrl+c",
+	KeyCtrlD: "Ctrl+d",
+	KeyCtrlE: "Ctrl+e",
+	KeyCtrlF: "Ctrl+f",
+	KeyCtrlG: "Ctrl+g",
+	KeyBackspace: "Backspace",
+//	KeyCtrlH: "Ctrl+h",
+	KeyTab: "Ctrl+Tab",
+//	KeyCtrlI: "Ctrl+i",
+	KeyCtrlJ: "Ctrl+j",
+	KeyCtrlK: "Ctrl+k",
+	KeyCtrlL: "Ctrl+l",
+	KeyEnter: "Ctrl+Enter",
+//	KeyCtrlM: "Ctrl+m",
+	KeyCtrlN: "Ctrl+n",
+	KeyCtrlO: "Ctrl+o",
+	KeyCtrlP: "Ctrl+p",
+	KeyCtrlQ: "Ctrl+q",
+	KeyCtrlR: "Ctrl+r",
+	KeyCtrlS: "Ctrl+s",
+	KeyCtrlT: "Ctrl+t",
+	KeyCtrlU: "Ctrl+u",
+	KeyCtrlV: "Ctrl+v",
+	KeyCtrlW: "Ctrl+w",
+	KeyCtrlX: "Ctrl+x",
+	KeyCtrlY: "Ctrl+y",
+	KeyCtrlZ: "Ctrl+z",
+	KeyEsc: "Esc",
+//	KeyCtrlLsqBracket: "Ctrl+[",
+//	KeyCtrl3: "Ctrl+3",
+//	KeyCtrl4: "Ctrl+4",
+	KeyCtrlBackslash: "Ctrl+\\",
+//	KeyCtrl5: "Ctrl+5",
+	KeyCtrlRsqBracket: "Ctrl+]",
+	KeyCtrl6: "Ctrl+6",
+//	KeyCtrl7: "Ctrl+7",
+	KeyCtrlSlash: "Ctrl+/",
+//	KeyCtrlUnderscore: "Ctrl+_",
+	KeySpace: "Ctrl+Space",
+	KeyBackspace2: "Ctrl+Backspace",
+//	KeyCtrl8: "Ctrl+8",
+}
