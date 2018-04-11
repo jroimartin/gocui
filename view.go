@@ -190,6 +190,16 @@ func (v *View) SetOrigin(x, y int) error {
 	return nil
 }
 
+// Position returns the upperleft point for the view.
+func (v *View) Position() (x, y int) {
+	return v.x0, v.y0
+}
+
+// Bounding returns the width and height for the view.
+func (v *View) Bounding() (w, h int) {
+	return v.x1 - v.x0, v.y1 - v.y0
+}
+
 // Origin returns the origin position of the view.
 func (v *View) Origin() (x, y int) {
 	return v.ox, v.oy
