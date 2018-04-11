@@ -91,6 +91,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 
 ## Projects using gocui
 
+* [fac](https://github.com/mkchoi212/fac): git merge conflict resolver
 * [komanda-cli](https://github.com/mephux/komanda-cli): IRC Client For Developers.
 * [vuls](https://github.com/future-architect/vuls): Agentless vulnerability scanner for Linux/FreeBSD.
 * [wuzz](https://github.com/asciimoo/wuzz): Interactive cli tool for HTTP inspection.
