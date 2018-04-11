@@ -430,6 +430,18 @@ func (v *View) Buffer() string {
 	return strings.Replace(str, "\x00", " ", -1)
 }
 
+// ViewBufferLines returns the lines in the view's internal
+// buffer that is shown to the user.
+func (v *View) ViewBufferLines() []string {
+	lines := make([]string, len(v.viewLines))
+	for i, l := range v.viewLines {
+		str := lineType(l.line).String()
+		str = strings.Replace(str, "\x00", " ", -1)
+		lines[i] = str
+	}
+	return lines
+}
+
 // ViewBuffer returns a string with the contents of the view's buffer that is
 // shown to the user.
 func (v *View) ViewBuffer() string {
