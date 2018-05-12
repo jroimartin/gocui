@@ -19,6 +19,7 @@ func main() {
 	defer g.Close()
 
 	g.SetManagerFunc(layout)
+	g.SetResizeFunc(onresize)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
@@ -31,12 +32,23 @@ func main() {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	v, err := g.SetView("size", maxX/2-7, maxY/2, maxX/2+7, maxY/2+2)
+	_, err := g.SetView("size", maxX/2-7, maxY/2, maxX/2+7, maxY/2+2)
 	if err != nil && err != gocui.ErrUnknownView {
 		return err
 	}
+	return nil
+}
+
+func onresize(g *gocui.Gui, x, y int) error {
+	v, err := g.View("size")
+	if err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		return nil
+	}
 	v.Clear()
-	fmt.Fprintf(v, "%d, %d", maxX, maxY)
+	fmt.Fprintf(v, "%d, %d", x, y)
 	return nil
 }
 
