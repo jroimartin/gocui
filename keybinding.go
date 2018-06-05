@@ -34,6 +34,10 @@ func (kb *keybinding) matchKeypress(key Key, ch rune, mod Modifier) bool {
 
 // matchView returns if the keybinding matches the current view.
 func (kb *keybinding) matchView(v *View) bool {
+	// if the user is typing in a field, ignore char keys
+	if v.Editable == true && kb.ch != 0 {
+		return false
+	}
 	if kb.viewName == "" {
 		return true
 	}
