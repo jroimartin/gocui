@@ -356,7 +356,7 @@ func (g *Gui) MainLoop() error {
 	}()
 
 	inputMode := termbox.InputAlt
-	if g.InputEsc {
+	if true { // previously g.InputEsc, but didn't seem to work
 		inputMode = termbox.InputEsc
 	}
 	if g.Mouse {
