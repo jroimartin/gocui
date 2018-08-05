@@ -16,6 +16,10 @@ var (
 
 	// ErrUnknownView allows to assert if a View must be initialized.
 	ErrUnknownView = errors.New("unknown view")
+
+	// SupportOverlaps is true when we allow for view edges to overlap with other
+	// view edges
+	SupportOverlaps = true
 )
 
 // OutputMode represents the terminal's output mode (8 or 256 colors).
@@ -27,6 +31,12 @@ const (
 
 	// Output256 provides 256-colors terminal mode.
 	Output256 = OutputMode(termbox.Output256)
+
+	// OutputGrayScale provides greyscale terminal mode.
+	OutputGrayScale = OutputMode(termbox.OutputGrayscale)
+
+	// Output216 provides greyscale terminal mode.
+	Output216 = OutputMode(termbox.Output216)
 )
 
 // Gui represents the whole User Interface, including the views, layouts
@@ -127,7 +137,7 @@ func (g *Gui) Rune(x, y int) (rune, error) {
 // already exists, its dimensions are updated; otherwise, the error
 // ErrUnknownView is returned, which allows to assert if the View must
 // be initialized. It checks if the position is valid.
-func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
+func (g *Gui) SetView(name string, x0, y0, x1, y1 int, overlaps byte) (*View, error) {
 	if x0 >= x1 || y0 >= y1 {
 		return nil, errors.New("invalid dimensions")
 	}
@@ -147,6 +157,7 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int) (*View, error) {
 	v := newView(name, x0, y0, x1, y1, g.outputMode)
 	v.BgColor, v.FgColor = g.BgColor, g.FgColor
 	v.SelBgColor, v.SelFgColor = g.SelBgColor, g.SelFgColor
+	v.Overlaps = overlaps
 	g.views = append(g.views, v)
 	return v, ErrUnknownView
 }
@@ -507,9 +518,24 @@ func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 	return nil
 }
 
+func cornerRune(index byte) rune {
+	return []rune{' ', '│', '│', '│', '─', '┘', '┐', '┤', '─', '└', '┌', '┢', '├', '┴', '┬', '┼'}[index]
+}
+
+func corner(v *View, directions byte) rune {
+	index := v.Overlaps | directions
+	return cornerRune(index)
+}
+
 // drawFrameCorners draws the corners of the view.
 func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
 	runeTL, runeTR, runeBL, runeBR := '┌', '┐', '└', '┘'
+	if SupportOverlaps {
+		runeTL = corner(v, BOTTOM|RIGHT)
+		runeTR = corner(v, BOTTOM|LEFT)
+		runeBL = corner(v, TOP|RIGHT)
+		runeBR = corner(v, TOP|LEFT)
+	}
 	if g.ASCII {
 		runeTL, runeTR, runeBL, runeBR = '+', '+', '+', '+'
 	}
