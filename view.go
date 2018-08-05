@@ -13,6 +13,14 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+// Constants for overlapping edges
+const (
+	TOP    = 1 // view is overlapping at top edge
+	BOTTOM = 2 // view is overlapping at bottom edge
+	LEFT   = 4 // view is overlapping at left edge
+	RIGHT  = 8 // view is overlapping at right edge
+)
+
 // A View is a window. It maintains its own internal buffer and cursor
 // position.
 type View struct {
@@ -71,6 +79,9 @@ type View struct {
 	// If Mask is true, the View will display the mask instead of the real
 	// content
 	Mask rune
+
+	// Overlaps describes which edges are overlapping with another view's edges
+	Overlaps byte
 }
 
 type viewLine struct {
