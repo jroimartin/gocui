@@ -19,7 +19,7 @@ var (
 
 	// SupportOverlaps is true when we allow for view edges to overlap with other
 	// view edges
-	SupportOverlaps = true
+	SupportOverlaps = false
 )
 
 // OutputMode represents the terminal's output mode (8 or 256 colors).
