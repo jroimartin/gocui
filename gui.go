@@ -519,7 +519,7 @@ func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 }
 
 func cornerRune(index byte) rune {
-	return []rune{' ', '│', '│', '│', '─', '┘', '┐', '┤', '─', '└', '┌', '┢', '├', '┴', '┬', '┼'}[index]
+	return []rune{' ', '│', '│', '│', '─', '┘', '┐', '┤', '─', '└', '┌', '├', '├', '┴', '┬', '┼'}[index]
 }
 
 func corner(v *View, directions byte) rune {
