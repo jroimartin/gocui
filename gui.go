@@ -16,10 +16,6 @@ var (
 
 	// ErrUnknownView allows to assert if a View must be initialized.
 	ErrUnknownView = errors.New("unknown view")
-
-	// SupportOverlaps is true when we allow for view edges to overlap with other
-	// view edges
-	SupportOverlaps = false
 )
 
 // OutputMode represents the terminal's output mode (8 or 256 colors).
@@ -76,10 +72,14 @@ type Gui struct {
 	// If ASCII is true then use ASCII instead of unicode to draw the
 	// interface. Using ASCII is more portable.
 	ASCII bool
+
+	// SupportOverlaps is true when we allow for view edges to overlap with other
+	// view edges
+	SupportOverlaps bool
 }
 
 // NewGui returns a new Gui object with a given output mode.
-func NewGui(mode OutputMode) (*Gui, error) {
+func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	if err := termbox.Init(); err != nil {
 		return nil, err
 	}
@@ -96,6 +96,10 @@ func NewGui(mode OutputMode) (*Gui, error) {
 
 	g.BgColor, g.FgColor = ColorDefault, ColorDefault
 	g.SelBgColor, g.SelFgColor = ColorDefault, ColorDefault
+
+	// SupportOverlaps is true when we allow for view edges to overlap with other
+	// view edges
+	g.SupportOverlaps = supportOverlaps
 
 	return g, nil
 }
@@ -530,7 +534,7 @@ func corner(v *View, directions byte) rune {
 // drawFrameCorners draws the corners of the view.
 func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
 	runeTL, runeTR, runeBL, runeBR := '┌', '┐', '└', '┘'
-	if SupportOverlaps {
+	if g.SupportOverlaps {
 		runeTL = corner(v, BOTTOM|RIGHT)
 		runeTR = corner(v, BOTTOM|LEFT)
 		runeBL = corner(v, TOP|RIGHT)
