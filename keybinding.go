@@ -34,8 +34,9 @@ func (kb *keybinding) matchKeypress(key Key, ch rune, mod Modifier) bool {
 
 // matchView returns if the keybinding matches the current view.
 func (kb *keybinding) matchView(v *View) bool {
-	if kb.viewName == "" {
-		return true
+	// if the user is typing in a field, ignore char keys
+	if v.Editable == true && kb.ch != 0 {
+		return false
 	}
 	return v != nil && kb.viewName == v.name
 }
@@ -68,9 +69,12 @@ const (
 	KeyArrowLeft      = Key(termbox.KeyArrowLeft)
 	KeyArrowRight     = Key(termbox.KeyArrowRight)
 
-	MouseLeft   = Key(termbox.MouseLeft)
-	MouseMiddle = Key(termbox.MouseMiddle)
-	MouseRight  = Key(termbox.MouseRight)
+	MouseLeft      = Key(termbox.MouseLeft)
+	MouseMiddle    = Key(termbox.MouseMiddle)
+	MouseRight     = Key(termbox.MouseRight)
+	MouseRelease   = Key(termbox.MouseRelease)
+	MouseWheelUp   = Key(termbox.MouseWheelUp)
+	MouseWheelDown = Key(termbox.MouseWheelDown)
 )
 
 // Keys combinations.

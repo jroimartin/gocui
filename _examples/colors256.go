@@ -12,7 +12,8 @@ import (
 )
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.Output256)
+
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -31,13 +32,37 @@ func main() {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("colors", maxX/2-7, maxY/2-12, maxX/2+7, maxY/2+13); err != nil {
+	if v, err := g.SetView("colors", -1, -1, maxX, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
+
+		// 256-colors escape codes
+		for i := 0; i < 256; i++ {
+			str := fmt.Sprintf("\x1b[48;5;%dm\x1b[30m%3d\x1b[0m ", i, i)
+			str += fmt.Sprintf("\x1b[38;5;%dm%3d\x1b[0m ", i, i)
+
+			if (i+1)%10 == 0 {
+				str += "\n"
+			}
+
+			fmt.Fprint(v, str)
+		}
+
+		fmt.Fprint(v, "\n\n")
+
+		// 8-colors escape codes
+		ctr := 0
 		for i := 0; i <= 7; i++ {
 			for _, j := range []int{1, 4, 7} {
-				fmt.Fprintf(v, "Hello \033[3%d;%dmcolors!\033[0m\n", i, j)
+				str := fmt.Sprintf("\x1b[3%d;%dm%d:%d\x1b[0m ", i, j, i, j)
+				if (ctr+1)%20 == 0 {
+					str += "\n"
+				}
+
+				fmt.Fprint(v, str)
+
+				ctr++
 			}
 		}
 	}

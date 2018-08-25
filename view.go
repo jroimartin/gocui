@@ -14,6 +14,14 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+// Constants for overlapping edges
+const (
+	TOP    = 1 // view is overlapping at top edge
+	BOTTOM = 2 // view is overlapping at bottom edge
+	LEFT   = 4 // view is overlapping at left edge
+	RIGHT  = 8 // view is overlapping at right edge
+)
+
 // A View is a window. It maintains its own internal buffer and cursor
 // position.
 type View struct {
@@ -72,6 +80,9 @@ type View struct {
 	// If Mask is true, the View will display the mask instead of the real
 	// content
 	Mask rune
+
+	// Overlaps describes which edges are overlapping with another view's edges
+	Overlaps byte
 }
 
 type viewLine struct {
@@ -96,7 +107,7 @@ func (l lineType) String() string {
 }
 
 // newView returns a new View object.
-func newView(name string, x0, y0, x1, y1 int) *View {
+func newView(name string, x0, y0, x1, y1 int, mode OutputMode) *View {
 	v := &View{
 		name:    name,
 		x0:      x0,
@@ -106,9 +117,14 @@ func newView(name string, x0, y0, x1, y1 int) *View {
 		Frame:   true,
 		Editor:  DefaultEditor,
 		tainted: true,
-		ei:      newEscapeInterpreter(),
+		ei:      newEscapeInterpreter(mode),
 	}
 	return v
+}
+
+// Dimensions returns the dimensions of the View
+func (v *View) Dimensions() (int, int, int, int) {
+	return v.x0, v.y0, v.x1, v.y1
 }
 
 // Size returns the number of visible columns and rows in the View.
@@ -150,8 +166,7 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 		bgColor = v.BgColor
 		ch = v.Mask
 	} else if v.Highlight && ry == rcy {
-		fgColor = v.SelFgColor
-		bgColor = v.SelBgColor
+		fgColor = fgColor | AttrBold
 	}
 
 	termbox.SetCell(v.x0+x+1, v.y0+y+1, ch,
@@ -383,6 +398,8 @@ func (v *View) Clear() {
 	v.tainted = true
 
 	v.lines = nil
+	v.viewLines = nil
+	v.readOffset = 0
 	v.clearRunes()
 }
 
@@ -397,10 +414,34 @@ func (v *View) clearRunes() {
 	}
 }
 
+// BufferLines returns the lines in the view's internal
+// buffer.
+func (v *View) BufferLines() []string {
+	lines := make([]string, len(v.lines))
+	for i, l := range v.lines {
+		str := lineType(l).String()
+		str = strings.Replace(str, "\x00", " ", -1)
+		lines[i] = str
+	}
+	return lines
+}
+
 // Buffer returns a string with the contents of the view's internal
 // buffer.
 func (v *View) Buffer() string {
 	return linesToString(v.lines)
+}
+
+// ViewBufferLines returns the lines in the view's internal
+// buffer that is shown to the user.
+func (v *View) ViewBufferLines() []string {
+	lines := make([]string, len(v.viewLines))
+	for i, l := range v.viewLines {
+		str := lineType(l.line).String()
+		str = strings.Replace(str, "\x00", " ", -1)
+		lines[i] = str
+	}
+	return lines
 }
 
 // ViewBuffer returns a string with the contents of the view's buffer that is
