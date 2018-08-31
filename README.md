@@ -4,6 +4,13 @@
 
 Minimalist Go package aimed at creating Console User Interfaces.
 
+## 关于本fork的说明（About this fork）
+
+Add CJK support, both edit.go and view.go. 
+修正了中文显示功能，为此我修改了`edit.go`和`view.go`。
+因为该补丁还没有被原作者采用，使用时需要用用本代码覆盖 `github.com/jroimartin/gocui` 的代码。
+2018-8-31 增加 `（* view）ReadEditor()`，能够正确过滤输入的中文，删除自动添加的占位符。
+
 ## Features
 
 * Minimalist API.
