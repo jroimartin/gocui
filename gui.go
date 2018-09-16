@@ -8,6 +8,7 @@ import (
 	"errors"
 
 	"github.com/nsf/termbox-go"
+	"time"
 )
 
 var (
@@ -349,12 +350,6 @@ func (g *Gui) SetManagerFunc(manager func(*Gui) error) {
 // MainLoop runs the main loop until an error is returned. A successful
 // finish should return ErrQuit.
 func (g *Gui) MainLoop() error {
-	go func() {
-		for {
-			g.tbEvents <- termbox.PollEvent()
-		}
-	}()
-
 	inputMode := termbox.InputAlt
 	if g.InputEsc {
 		inputMode = termbox.InputEsc
@@ -377,15 +372,15 @@ func (g *Gui) MainLoop() error {
 			if err := ev.f(g); err != nil {
 				return err
 			}
-		}
-		if err := g.consumeevents(); err != nil {
-			return err
-		}
-		if err := g.flush(); err != nil {
-			return err
+		case <- time.After(17 * time.Millisecond): //60fps
+			if err := g.flush(); err != nil {
+				return err
+			}
+			g.tbEvents <- termbox.PollEvent()
 		}
 	}
 }
+
 
 // consumeevents handles the remaining events in the events pool.
 func (g *Gui) consumeevents() error {
