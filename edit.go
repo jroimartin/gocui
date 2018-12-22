@@ -208,7 +208,12 @@ func (v *View) MoveCursor(dx, dy int, writeMode bool) {
 			v.cx = cx
 		} else {
 			if cx >= maxX {
-				v.ox += cx - maxX + 1
+				v.ox += cx - maxX
+				// if we're not editing, move the origin one extra space to facilitate
+				// scrolling to the right
+				if !writeMode {
+					v.ox++
+				}
 				v.cx = maxX
 			} else {
 				v.cx = cx
