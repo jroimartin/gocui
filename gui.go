@@ -7,7 +7,7 @@ package gocui
 import (
 	"errors"
 
-	"github.com/nsf/termbox-go"
+	termbox "github.com/nsf/termbox-go"
 )
 
 var (
@@ -401,6 +401,9 @@ func (g *Gui) consumeevents() error {
 			}
 		default:
 			return nil
+		}
+		if err := g.flush(); err != nil {
+			return err
 		}
 	}
 }
