@@ -5,7 +5,7 @@
 package main
 
 import (
-	"errors"
+	"github.com/go-errors/errors"
 	"fmt"
 	"log"
 	"strings"
