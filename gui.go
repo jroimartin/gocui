@@ -367,6 +367,7 @@ func (g *Gui) SetManagerFunc(manager func(*Gui) error) {
 // MainLoop runs the main loop until an error is returned. A successful
 // finish should return ErrQuit.
 func (g *Gui) MainLoop() error {
+	g.loaderTick()
 	if err := g.flush(); err != nil {
 		return err
 	}
@@ -707,4 +708,17 @@ func (g *Gui) execKeybinding(v *View, kb *keybinding) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func (g *Gui) loaderTick() {
+	go func() {
+		for range time.Tick(time.Millisecond) {
+			for _, view := range g.Views() {
+				if view.HasLoader {
+					g.userEvents <- userEvent{func(g *Gui) error { return nil }}
+					break
+				}
+			}
+		}
+	}()
 }
