@@ -71,6 +71,8 @@ type View struct {
 	// If Mask is true, the View will display the mask instead of the real
 	// content
 	Mask rune
+
+	HideCursor bool
 }
 
 type viewLine struct {
@@ -354,6 +356,14 @@ func (v *View) draw() error {
 				return err
 			}
 			x++
+		}
+		//highlight rest of the line
+		if v.Highlight {
+			for i := len(vline.line); i < maxX; i++ {
+				if err := v.setRune(i, y, ' ', v.FgColor, v.BgColor); err != nil {
+					return err
+				}
+			}
 		}
 		y++
 	}

@@ -570,7 +570,7 @@ func (g *Gui) draw(v *View) error {
 
 			gMaxX, gMaxY := g.Size()
 			cx, cy := curview.x0+curview.cx+1, curview.y0+curview.cy+1
-			if cx >= 0 && cx < gMaxX && cy >= 0 && cy < gMaxY {
+			if cx >= 0 && cx < gMaxX && cy >= 0 && cy < gMaxY && !curview.HideCursor {
 				termbox.SetCursor(cx, cy)
 			} else {
 				termbox.HideCursor()
