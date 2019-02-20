@@ -197,6 +197,11 @@ func (v *View) Origin() (x, y int) {
 	return v.ox, v.oy
 }
 
+//Coordinates returns view co-ordintaes
+func (v *View) Coordinates() (int, int, int, int) {
+	return v.x0, v.y0, v.x1, v.y1
+}
+
 // Write appends a byte slice into the view's internal buffer. Because
 // View implements the io.Writer interface, it can be passed as parameter
 // of functions like fmt.Fprintf, fmt.Fprintln, io.Copy, etc. Clear must
