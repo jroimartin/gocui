@@ -1,6 +1,6 @@
 # GOCUI - Go Console User Interface
 
-[![GoDoc](https://godoc.org/github.com/jroimartin/gocui?status.svg)](https://godoc.org/github.com/jroimartin/gocui)
+[![GoDoc](https://godoc.org/github.com/awesome-gocui/gocui?status.svg)](https://godoc.org/github.com/awesome-gocui/gocui)
 
 Minimalist Go package aimed at creating Console User Interfaces.
 
@@ -21,7 +21,7 @@ Minimalist Go package aimed at creating Console User Interfaces.
 Execute:
 
 ```
-$ go get github.com/jroimartin/gocui
+$ go get github.com/awesome-gocui/gocui
 ```
 
 ## Documentation
@@ -29,10 +29,10 @@ $ go get github.com/jroimartin/gocui
 Execute:
 
 ```
-$ go doc github.com/jroimartin/gocui
+$ go doc github.com/awesome-gocui/gocui
 ```
 
-Or visit [godoc.org](https://godoc.org/github.com/jroimartin/gocui) to read it
+Or visit [godoc.org](https://godoc.org/github.com/awesome-gocui/gocui) to read it
 online.
 
 ## Example
@@ -44,7 +44,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
 )
 
 func main() {
