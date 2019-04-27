@@ -4,7 +4,7 @@
 
 package gocui
 
-import "github.com/jesseduffield/termbox-go"
+import "github.com/awesome-gocui/termbox-go"
 
 // Keybidings are used to link a given key-press event with a handler.
 type keybinding struct {

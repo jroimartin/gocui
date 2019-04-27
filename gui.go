@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-errors/errors"
 
-	"github.com/jesseduffield/termbox-go"
+	"github.com/awesome-gocui/termbox-go"
 )
 
 var (
