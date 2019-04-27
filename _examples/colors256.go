@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	g, err := gocui.NewGui(gocui.Output256)
+	g, err := gocui.NewGui(gocui.Output256, true)
 
 	if err != nil {
 		log.Panicln(err)
@@ -32,7 +32,7 @@ func main() {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("colors", -1, -1, maxX, maxY); err != nil {
+	if v, err := g.SetView("colors", -1, -1, maxX, maxY, 0); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}

@@ -49,7 +49,7 @@ func nextView(g *gocui.Gui, v *gocui.View) error {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("v1", 0, 0, maxX/2-1, maxY/2-1); err != nil {
+	if v, err := g.SetView("v1", 0, 0, maxX/2-1, maxY/2-1, 0); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -62,7 +62,7 @@ func layout(g *gocui.Gui) error {
 		}
 	}
 
-	if v, err := g.SetView("v2", maxX/2-1, 0, maxX-1, maxY/2-1); err != nil {
+	if v, err := g.SetView("v2", maxX/2-1, 0, maxX-1, maxY/2-1, 0); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -70,7 +70,7 @@ func layout(g *gocui.Gui) error {
 		v.Wrap = true
 		v.Autoscroll = true
 	}
-	if v, err := g.SetView("v3", 0, maxY/2-1, maxX/2-1, maxY-1); err != nil {
+	if v, err := g.SetView("v3", 0, maxY/2-1, maxX/2-1, maxY-1, 0); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -79,7 +79,7 @@ func layout(g *gocui.Gui) error {
 		v.Autoscroll = true
 		fmt.Fprint(v, "Press TAB to change current view")
 	}
-	if v, err := g.SetView("v4", maxX/2, maxY/2, maxX-1, maxY-1); err != nil {
+	if v, err := g.SetView("v4", maxX/2, maxY/2, maxX-1, maxY-1, 0); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -94,7 +94,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		log.Panicln(err)
 	}

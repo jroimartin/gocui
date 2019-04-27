@@ -21,7 +21,7 @@ var (
 )
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -46,7 +46,7 @@ func main() {
 
 func layout(g *gocui.Gui) error {
 	maxX, _ := g.Size()
-	v, err := g.SetView("help", maxX-25, 0, maxX-1, 9)
+	v, err := g.SetView("help", maxX-25, 0, maxX-1, 9, 0)
 	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -132,7 +132,7 @@ func initKeybindings(g *gocui.Gui) error {
 func newView(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	name := fmt.Sprintf("v%v", idxView)
-	v, err := g.SetView(name, maxX/2-5, maxY/2-5, maxX/2+5, maxY/2+5)
+	v, err := g.SetView(name, maxX/2-5, maxY/2-5, maxX/2+5, maxY/2+5, 0)
 	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -183,7 +183,7 @@ func moveView(g *gocui.Gui, v *gocui.View, dx, dy int) error {
 	if err != nil {
 		return err
 	}
-	if _, err := g.SetView(name, x0+dx, y0+dy, x1+dx, y1+dy); err != nil {
+	if _, err := g.SetView(name, x0+dx, y0+dy, x1+dx, y1+dy, 0); err != nil {
 		return err
 	}
 	return nil

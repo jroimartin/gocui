@@ -28,7 +28,7 @@ func overwrite(g *gocui.Gui, v *gocui.View) error {
 
 func layout(g *gocui.Gui) error {
 	_, maxY := g.Size()
-	if v, err := g.SetView("main", 0, 0, 20, maxY-1); err != nil {
+	if v, err := g.SetView("main", 0, 0, 20, maxY-1, 0); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -42,7 +42,7 @@ func layout(g *gocui.Gui) error {
 }
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		log.Panicln(err)
 	}

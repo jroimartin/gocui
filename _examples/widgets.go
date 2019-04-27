@@ -5,10 +5,11 @@
 package main
 
 import (
-	"github.com/go-errors/errors"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/go-errors/errors"
 
 	"github.com/awesome-gocui/gocui"
 )
@@ -38,7 +39,7 @@ func NewHelpWidget(name string, x, y int, body string) *HelpWidget {
 }
 
 func (w *HelpWidget) Layout(g *gocui.Gui) error {
-	v, err := g.SetView(w.name, w.x, w.y, w.x+w.w, w.y+w.h)
+	v, err := g.SetView(w.name, w.x, w.y, w.x+w.w, w.y+w.h, 0)
 	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -72,7 +73,7 @@ func (w *StatusbarWidget) Val() float64 {
 }
 
 func (w *StatusbarWidget) Layout(g *gocui.Gui) error {
-	v, err := g.SetView(w.name, w.x, w.y, w.x+w.w, w.y+2)
+	v, err := g.SetView(w.name, w.x, w.y, w.x+w.w, w.y+2, 0)
 	if err != nil && err != gocui.ErrUnknownView {
 		return err
 	}
@@ -96,7 +97,7 @@ func NewButtonWidget(name string, x, y int, label string, handler func(g *gocui.
 }
 
 func (w *ButtonWidget) Layout(g *gocui.Gui) error {
-	v, err := g.SetView(w.name, w.x, w.y, w.x+w.w, w.y+2)
+	v, err := g.SetView(w.name, w.x, w.y, w.x+w.w, w.y+2, 0)
 	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -113,7 +114,7 @@ func (w *ButtonWidget) Layout(g *gocui.Gui) error {
 }
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		log.Panicln(err)
 	}
