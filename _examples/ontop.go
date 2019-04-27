@@ -31,19 +31,19 @@ func main() {
 
 func layout(g *gocui.Gui) error {
 	if v, err := g.SetView("v1", 10, 2, 30, 6, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		fmt.Fprintln(v, "View #1")
 	}
 	if v, err := g.SetView("v2", 20, 4, 40, 8, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		fmt.Fprintln(v, "View #2")
 	}
 	if v, err := g.SetView("v3", 30, 6, 50, 10, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		fmt.Fprintln(v, "View #3")

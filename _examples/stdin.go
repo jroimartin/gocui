@@ -38,7 +38,7 @@ func layout(g *gocui.Gui) error {
 	maxX, _ := g.Size()
 
 	if v, err := g.SetView("help", maxX-23, 0, maxX-1, 5, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		fmt.Fprintln(v, "KEYBINDINGS")
@@ -48,7 +48,7 @@ func layout(g *gocui.Gui) error {
 	}
 
 	if v, err := g.SetView("stdin", 0, 0, 80, 35, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		if _, err := g.SetCurrentView("stdin"); err != nil {

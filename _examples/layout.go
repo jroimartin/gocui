@@ -13,15 +13,15 @@ import (
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	if _, err := g.SetView("side", -1, -1, int(0.2*float32(maxX)), maxY-5, 0); err != nil &&
-		err != gocui.ErrUnknownView {
+		err.Error() != "unknown view" {
 		return err
 	}
 	if _, err := g.SetView("main", int(0.2*float32(maxX)), -1, maxX, maxY-5, 0); err != nil &&
-		err != gocui.ErrUnknownView {
+		err.Error() != "unknown view" {
 		return err
 	}
 	if _, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY, 0); err != nil &&
-		err != gocui.ErrUnknownView {
+		err.Error() != "unknown view" {
 		return err
 	}
 	return nil

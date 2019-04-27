@@ -50,7 +50,7 @@ func nextView(g *gocui.Gui, v *gocui.View) error {
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	if v, err := g.SetView("v1", 0, 0, maxX/2-1, maxY/2-1, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		v.Title = "v1 (editable)"
@@ -63,7 +63,7 @@ func layout(g *gocui.Gui) error {
 	}
 
 	if v, err := g.SetView("v2", maxX/2-1, 0, maxX-1, maxY/2-1, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		v.Title = "v2"
@@ -71,7 +71,7 @@ func layout(g *gocui.Gui) error {
 		v.Autoscroll = true
 	}
 	if v, err := g.SetView("v3", 0, maxY/2-1, maxX/2-1, maxY-1, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		v.Title = "v3"
@@ -80,7 +80,7 @@ func layout(g *gocui.Gui) error {
 		fmt.Fprint(v, "Press TAB to change current view")
 	}
 	if v, err := g.SetView("v4", maxX/2, maxY/2, maxX-1, maxY-1, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		v.Title = "v4 (editable)"

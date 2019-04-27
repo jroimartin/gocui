@@ -35,7 +35,7 @@ func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 
 	if v, err := g.SetView("help", maxX-23, 0, maxX-1, 3, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		v.Title = "Keybindings"
@@ -44,7 +44,7 @@ func layout(g *gocui.Gui) error {
 	}
 
 	if v, err := g.SetView("input", 0, 0, maxX-24, maxY-1, 0); err != nil {
-		if err != gocui.ErrUnknownView {
+		if err.Error() != "unknown view" {
 			return err
 		}
 		if _, err := g.SetCurrentView("input"); err != nil {
