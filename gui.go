@@ -8,6 +8,7 @@ import (
 	standardErrors "errors"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"unsafe"
 
@@ -102,9 +103,13 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	g.tbEvents = make(chan termbox.Event, 20)
 	g.userEvents = make(chan userEvent, 20)
 
-	g.maxX, g.maxY, err = g.getTermSize()
-	if err != nil {
-		return nil, err
+	if runtime.GOOS != "windows" {
+		g.maxX, g.maxY, err = g.getTermWindowSize()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		g.maxX, g.maxY = termbox.Size()
 	}
 
 	g.BgColor, g.FgColor = ColorDefault, ColorDefault
@@ -749,7 +754,9 @@ func IsQuit(err error) bool {
 	return err.Error() == ErrQuit.Error()
 }
 
-func (g *Gui) getTermSize() (int, int, error) {
+// getTermWindowSize is get terminal window size on linux or unix.
+// When gocui run inside the docker contaienr need to check and get the window size.
+func (g *Gui) getTermWindowSize() (int, int, error) {
 	var sz struct {
 		rows uint16
 		cols uint16
