@@ -65,7 +65,9 @@ func layout(g *gocui.Gui) error {
 				ctr++
 			}
 		}
-		g.SetCurrentView("colors")
+		if _, err := g.SetCurrentView("colors"); err != nil {
+			return err
+		}
 	}
 	return nil
 }

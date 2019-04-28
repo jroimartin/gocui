@@ -13,6 +13,9 @@ import (
 	"github.com/awesome-gocui/termbox-go"
 )
 
+// OutputMode represents the terminal's output mode (8 or 256 colors).
+type OutputMode termbox.OutputMode
+
 var (
 	// ErrQuit is used to decide if the MainLoop finished successfully.
 	ErrQuit = standardErrors.New("quit")
@@ -20,9 +23,6 @@ var (
 	// ErrUnknownView allows to assert if a View must be initialized.
 	ErrUnknownView = standardErrors.New("unknown view")
 )
-
-// OutputMode represents the terminal's output mode (8 or 256 colors).
-type OutputMode termbox.OutputMode
 
 const (
 	// OutputNormal provides 8-colors terminal mode.
@@ -743,4 +743,14 @@ func (g *Gui) loaderTick() {
 			}
 		}
 	}()
+}
+
+// IsUnknownView return true if the contents of an error is "unknown view"
+func IsUnknownView(err error) bool {
+	return err.Error() == "unknown view"
+}
+
+// IsQuit return true if the contents of an error is "quit"
+func IsQuit(err error) bool {
+	return err.Error() == "quit"
 }
