@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// This example doesn't work when running `go run stdin.go`, you are suposed to pipe someting to this like: `/bin/ls | go run stdin.go`
+
 package main
 
 import (
@@ -53,8 +55,6 @@ func layout(g *gocui.Gui) error {
 		}
 		v.Wrap = true
 
-		// TODO: Fix the program breaking at this point
-		// If this line is uncommented the program runs as it is suposed to do althow with no functionality
 		if _, err := io.Copy(hex.Dumper(v), os.Stdin); err != nil {
 			return err
 		}
