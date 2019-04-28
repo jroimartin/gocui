@@ -25,7 +25,7 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Panicln(err)
 	}
 }
@@ -33,7 +33,7 @@ func main() {
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	if v, err := g.SetView("colors", -1, -1, maxX, maxY, 0); err != nil {
-		if err.Error() != "unknown view" {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 
@@ -65,6 +65,7 @@ func layout(g *gocui.Gui) error {
 				ctr++
 			}
 		}
+		g.SetCurrentView("colors")
 	}
 	return nil
 }

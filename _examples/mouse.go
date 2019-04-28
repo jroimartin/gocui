@@ -27,14 +27,14 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Panicln(err)
 	}
 }
 
 func layout(g *gocui.Gui) error {
 	if v, err := g.SetView("but1", 2, 2, 22, 7, 0); err != nil {
-		if err.Error() != "unknown view" {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Highlight = true
@@ -44,9 +44,12 @@ func layout(g *gocui.Gui) error {
 		fmt.Fprintln(v, "Button 1 - line 2")
 		fmt.Fprintln(v, "Button 1 - line 3")
 		fmt.Fprintln(v, "Button 1 - line 4")
+		if _, err := g.SetCurrentView("but1"); err != nil {
+			return err
+		}
 	}
 	if v, err := g.SetView("but2", 24, 2, 44, 4, 0); err != nil {
-		if err.Error() != "unknown view" {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Highlight = true
@@ -91,7 +94,7 @@ func showMsg(g *gocui.Gui, v *gocui.View) error {
 
 	maxX, maxY := g.Size()
 	if v, err := g.SetView("msg", maxX/2-10, maxY/2, maxX/2+10, maxY/2+2, 0); err != nil {
-		if err.Error() != "unknown view" {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		fmt.Fprintln(v, l)

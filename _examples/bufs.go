@@ -29,7 +29,7 @@ func overwrite(g *gocui.Gui, v *gocui.View) error {
 func layout(g *gocui.Gui) error {
 	_, maxY := g.Size()
 	if v, err := g.SetView("main", 0, 0, 20, maxY-1, 0); err != nil {
-		if err.Error() != "unknown view" {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Editable = true
@@ -59,7 +59,7 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Panicln(err)
 	}
 

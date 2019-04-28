@@ -24,29 +24,32 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Panicln(err)
 	}
 }
 
 func layout(g *gocui.Gui) error {
 	if v, err := g.SetView("v1", 10, 2, 30, 6, 0); err != nil {
-		if err.Error() != "unknown view" {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		fmt.Fprintln(v, "View #1")
 	}
 	if v, err := g.SetView("v2", 20, 4, 40, 8, 0); err != nil {
-		if err.Error() != "unknown view" {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		fmt.Fprintln(v, "View #2")
 	}
 	if v, err := g.SetView("v3", 30, 6, 50, 10, 0); err != nil {
-		if err.Error() != "unknown view" {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		fmt.Fprintln(v, "View #3")
+		if _, err := g.SetCurrentView("v3"); err != nil {
+			return err
+		}
 	}
 
 	return nil

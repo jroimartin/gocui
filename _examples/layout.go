@@ -12,18 +12,20 @@ import (
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if _, err := g.SetView("side", -1, -1, int(0.2*float32(maxX)), maxY-5, 0); err != nil &&
-		err.Error() != "unknown view" {
+	if _, err := g.SetView("side", -1, -1, int(0.2*float32(maxX)), maxY-5, 0); err != nil && !gocui.IsUnknownView(err) {
 		return err
 	}
-	if _, err := g.SetView("main", int(0.2*float32(maxX)), -1, maxX, maxY-5, 0); err != nil &&
-		err.Error() != "unknown view" {
+	if _, err := g.SetView("main", int(0.2*float32(maxX)), -1, maxX, maxY-5, 0); err != nil {
+		if !gocui.IsUnknownView(err) {
+			return err
+		}
+
+		g.SetCurrentView("main")
+	}
+	if _, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY, 0); err != nil && !gocui.IsUnknownView(err) {
 		return err
 	}
-	if _, err := g.SetView("cmdline", -1, maxY-5, maxX, maxY, 0); err != nil &&
-		err.Error() != "unknown view" {
-		return err
-	}
+
 	return nil
 }
 
@@ -44,7 +46,7 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Panicln(err)
 	}
 }
