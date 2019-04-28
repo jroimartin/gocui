@@ -6,6 +6,10 @@ package gocui
 
 import (
 	standardErrors "errors"
+	"os"
+	"os/signal"
+	"syscall"
+	"unsafe"
 
 	"github.com/go-errors/errors"
 
@@ -83,7 +87,8 @@ type Gui struct {
 
 // NewGui returns a new Gui object with a given output mode.
 func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
-	if err := termbox.Init(); err != nil {
+	err := termbox.Init()
+	if err != nil {
 		return nil, err
 	}
 
@@ -97,7 +102,10 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	g.tbEvents = make(chan termbox.Event, 20)
 	g.userEvents = make(chan userEvent, 20)
 
-	g.maxX, g.maxY = termbox.Size()
+	g.maxX, g.maxY, err = g.getTermSize()
+	if err != nil {
+		return nil, err
+	}
 
 	g.BgColor, g.FgColor = ColorDefault, ColorDefault
 	g.SelBgColor, g.SelFgColor = ColorDefault, ColorDefault
@@ -739,4 +747,45 @@ func IsUnknownView(err error) bool {
 // IsQuit return true if the contents of an error is "quit"
 func IsQuit(err error) bool {
 	return err.Error() == ErrQuit.Error()
+}
+
+func (g *Gui) getTermSize() (int, int, error) {
+	var sz struct {
+		rows uint16
+		cols uint16
+	}
+
+	var termw, termh int
+
+	out, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer out.Close()
+
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGWINCH, syscall.SIGINT)
+
+	for {
+		_, _, _ = syscall.Syscall(syscall.SYS_IOCTL,
+			out.Fd(), uintptr(syscall.TIOCGWINSZ), uintptr(unsafe.Pointer(&sz)))
+
+		// check terminal window size
+		termw, termh = int(sz.cols), int(sz.rows)
+		if termw > 0 && termh > 0 {
+			return termw, termh, nil
+		}
+
+		select {
+		case signal := <-signalCh:
+			switch signal {
+			// when the terminal window size is changed
+			case syscall.SIGWINCH:
+				continue
+			// ctrl + c to cancel
+			case syscall.SIGINT:
+				return 0, 0, errors.New("stop to get term window size")
+			}
+		}
+	}
 }
