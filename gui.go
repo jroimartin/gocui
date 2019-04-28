@@ -93,7 +93,7 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	g.outputMode = mode
 	termbox.SetOutputMode(termbox.OutputMode(mode))
 
-	g.stop = make(chan struct{}, 0)
+	g.stop = make(chan struct{})
 
 	g.tbEvents = make(chan termbox.Event, 20)
 	g.userEvents = make(chan userEvent, 20)

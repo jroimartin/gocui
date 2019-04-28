@@ -51,14 +51,17 @@ func layout(g *gocui.Gui) error {
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
+		v.Wrap = true
+
+		// TODO: Fix the program breaking at this point
+		// If this line is uncommented the program runs as it is suposed to do althow with no functionality
+		if _, err := io.Copy(hex.Dumper(v), os.Stdin); err != nil {
+			return err
+		}
+
 		if _, err := g.SetCurrentView("stdin"); err != nil {
 			return err
 		}
-		dumper := hex.Dumper(v)
-		if _, err := io.Copy(dumper, os.Stdin); err != nil {
-			return err
-		}
-		v.Wrap = true
 	}
 
 	return nil

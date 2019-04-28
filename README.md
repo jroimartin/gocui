@@ -36,6 +36,7 @@ Or visit [godoc.org](https://godoc.org/github.com/awesome-gocui/gocui) to read i
 online.
 
 ## Example
+See the [_example](./_example/) folder for more examples
 
 ```go
 package main
@@ -72,6 +73,9 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 		fmt.Fprintln(v, "Hello world!")
+		if _, err := g.SetCurrentView("hello"); err != nil {
+			return err
+		}
 	}
 	return nil
 }
