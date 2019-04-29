@@ -3,6 +3,7 @@ module github.com/glvr182/gocui
 go 1.12
 
 require (
-	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/nsf/termbox-go v0.0.0-20190325093121-288510b9734e
+	github.com/awesome-gocui/termbox-go v0.0.0-20190427202837-c0aef3d18bcc
+	github.com/go-errors/errors v1.0.1
+	github.com/mattn/go-runewidth v0.0.4
 )
