@@ -6,7 +6,6 @@ package gocui
 
 import (
 	standardErrors "errors"
-	"time"
 
 	"github.com/go-errors/errors"
 
@@ -732,25 +731,12 @@ func (g *Gui) execKeybinding(v *View, kb *keybinding) (bool, error) {
 	return true, nil
 }
 
-func (g *Gui) loaderTick() {
-	go func() {
-		for range time.Tick(time.Millisecond * 50) {
-			for _, view := range g.Views() {
-				if view.HasLoader {
-					g.userEvents <- userEvent{func(g *Gui) error { return nil }}
-					break
-				}
-			}
-		}
-	}()
-}
-
 // IsUnknownView return true if the contents of an error is "unknown view"
 func IsUnknownView(err error) bool {
-	return err.Error() == "unknown view"
+	return err.Error() == ErrUnknownView.Error()
 }
 
 // IsQuit return true if the contents of an error is "quit"
 func IsQuit(err error) bool {
-	return err.Error() == "quit"
+	return err.Error() == ErrQuit.Error()
 }
