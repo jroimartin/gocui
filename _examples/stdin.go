@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// This example doesn't work when running `go run stdin.go`, you are suposed to pipe someting to this like: `/bin/ls | go run stdin.go`
+
 package main
 
 import (
@@ -15,7 +17,7 @@ import (
 )
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -29,7 +31,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Fatalln(err)
 	}
 }
@@ -37,8 +39,8 @@ func main() {
 func layout(g *gocui.Gui) error {
 	maxX, _ := g.Size()
 
-	if v, err := g.SetView("help", maxX-23, 0, maxX-1, 5); err != nil {
-		if err != gocui.ErrUnknownView {
+	if v, err := g.SetView("help", maxX-23, 0, maxX-1, 5, 0); err != nil {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		fmt.Fprintln(v, "KEYBINDINGS")
@@ -47,18 +49,19 @@ func layout(g *gocui.Gui) error {
 		fmt.Fprintln(v, "^C: Exit")
 	}
 
-	if v, err := g.SetView("stdin", 0, 0, 80, 35); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		if _, err := g.SetCurrentView("stdin"); err != nil {
-			return err
-		}
-		dumper := hex.Dumper(v)
-		if _, err := io.Copy(dumper, os.Stdin); err != nil {
+	if v, err := g.SetView("stdin", 0, 0, 80, 35, 0); err != nil {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Wrap = true
+
+		if _, err := io.Copy(hex.Dumper(v), os.Stdin); err != nil {
+			return err
+		}
+
+		if _, err := g.SetCurrentView("stdin"); err != nil {
+			return err
+		}
 	}
 
 	return nil

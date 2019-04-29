@@ -24,7 +24,7 @@ var (
 )
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -41,7 +41,7 @@ func main() {
 		go counter(g)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Panicln(err)
 	}
 
@@ -49,11 +49,14 @@ func main() {
 }
 
 func layout(g *gocui.Gui) error {
-	if v, err := g.SetView("ctr", 2, 2, 12, 4); err != nil {
-		if err != gocui.ErrUnknownView {
+	if v, err := g.SetView("ctr", 2, 2, 12, 4, 0); err != nil {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		fmt.Fprintln(v, "0")
+		if _, err := g.SetCurrentView("ctr"); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -24,16 +24,21 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Panicln(err)
 	}
 }
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	v, err := g.SetView("size", maxX/2-7, maxY/2, maxX/2+7, maxY/2+2)
-	if err != nil && err != gocui.ErrUnknownView {
-		return err
+	v, err := g.SetView("size", maxX/2-7, maxY/2, maxX/2+7, maxY/2+2, 0)
+	if err != nil {
+		if !gocui.IsUnknownView(err) {
+			return err
+		}
+		if _, err := g.SetCurrentView("size"); err != nil {
+			return err
+		}
 	}
 	v.Clear()
 	fmt.Fprintf(v, "%d, %d", maxX, maxY)
