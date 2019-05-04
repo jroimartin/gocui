@@ -561,6 +561,14 @@ func corner(v *View, directions byte) rune {
 // drawFrameCorners draws the corners of the view.
 func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
 	if v.y0 == v.y1 {
+		if !g.SupportOverlaps {
+			if err := g.SetRune(v.x0, v.y0, '╶', fgColor, bgColor); err != nil {
+				return err
+			}
+			if err := g.SetRune(v.x1, v.y0, '╴', fgColor, bgColor); err != nil {
+				return err
+			}
+		}
 		return nil
 	}
 
