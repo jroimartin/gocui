@@ -228,6 +228,7 @@ func (v *View) Origin() (x, y int) {
 func (v *View) Write(p []byte) (n int, err error) {
 	v.tainted = true
 	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
 
 	for _, ch := range bytes.Runes(p) {
 		switch ch {
@@ -254,7 +255,7 @@ func (v *View) Write(p []byte) (n int, err error) {
 			}
 		}
 	}
-	v.writeMutex.Unlock()
+
 	return len(p), nil
 }
 
