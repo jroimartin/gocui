@@ -1,4 +1,4 @@
-module github.com/glvr182/gocui
+module github.com/awesome-gocui/gocui
 
 go 1.12
 

@@ -1,6 +1,10 @@
 # GOCUI - Go Console User Interface
-
+[![CircleCI](https://circleci.com/gh/awesome-gocui/gocui/tree/master.svg?style=svg)](https://circleci.com/gh/awesome-gocui/gocui/tree/master)
+[![CodeCov](https://codecov.io/gh/awesome-gocui/gocui/branch/master/graph/badge.svg)](https://codecov.io/gh/awesome-gocui/gocui)
+[![Go Report Card](https://goreportcard.com/badge/github.com/awesome-gocui/gocui)](https://goreportcard.com/report/github.com/awesome-gocui/gocui)
+[![GolangCI](https://golangci.com/badges/github.com/awesome-gocui/gocui.svg)](https://golangci.com/badges/github.com/awesome-gocui/gocui.svg)
 [![GoDoc](https://godoc.org/github.com/awesome-gocui/gocui?status.svg)](https://godoc.org/github.com/awesome-gocui/gocui)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/awesome-gocui/gocui.svg)
 
 Minimalist Go package aimed at creating Console User Interfaces.
 
