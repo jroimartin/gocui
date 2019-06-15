@@ -349,12 +349,22 @@ func (g *Gui) SetManagerFunc(manager func(*Gui) error) {
 // MainLoop runs the main loop until an error is returned. A successful
 // finish should return ErrQuit.
 func (g *Gui) MainLoop() error {
+	g.MainLoopInit()
+	return g.MainLoopEventHandler()
+}
+
+// MainLoopInit initializes the MainLoop Event poller
+func (g *Gui) MainLoopInit() {
 	go func() {
 		for {
 			g.tbEvents <- termbox.PollEvent()
 		}
 	}()
+}
 
+// MainLoopEventHandler runs the main loop until an error is returned.
+// A successful finish should return ErrQuit.
+func (g *Gui) MainLoopEventHandler() error {
 	inputMode := termbox.InputAlt
 	if g.InputEsc {
 		inputMode = termbox.InputEsc
@@ -367,6 +377,7 @@ func (g *Gui) MainLoop() error {
 	if err := g.flush(); err != nil {
 		return err
 	}
+
 	for {
 		select {
 		case ev := <-g.tbEvents:
