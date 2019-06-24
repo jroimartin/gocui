@@ -49,7 +49,7 @@ type View struct {
 	ei *escapeInterpreter // used to decode ESC sequences on Write
 
 	// Visible specifies whether the view is visible.
-	Visible   bool
+	Visible bool
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the View.

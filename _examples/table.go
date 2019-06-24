@@ -71,16 +71,16 @@ func main() {
 
 	table := NewTable("t", 1, 2, 80, 10)
 	table.Columns = []Column{
-		Column{"Column1", 0.25},
-		Column{"Column2", 0.25},
-		Column{"Column3", 0.25},
-		Column{"Column4", 0.25},
+		{"Column1", 0.25},
+		{"Column2", 0.25},
+		{"Column3", 0.25},
+		{"Column4", 0.25},
 	}
 	table.Data = [][]string{
-		[]string{"00", "01", "02", "03"},
-		[]string{"10", "11", "12", "13"},
-		[]string{"20", "21", "22", "23"},
-		[]string{"30", "31", "32", "33"},
+		{"00", "01", "02", "03"},
+		{"10", "11", "12", "13"},
+		{"20", "21", "22", "23"},
+		{"30", "31", "32", "33"},
 	}
 	g.SetManager(table)
 
