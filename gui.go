@@ -57,11 +57,11 @@ type Gui struct {
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the GUI.
-	BgColor, FgColor Attribute
+	BgColor, FgColor, FrameColor Attribute
 
 	// SelBgColor and SelFgColor allow to configure the background and
 	// foreground colors of the frame of the current view.
-	SelBgColor, SelFgColor Attribute
+	SelBgColor, SelFgColor, SelFrameColor Attribute
 
 	// If Highlight is true, Sel{Bg,Fg}Colors will be used to draw the
 	// frame of the current view.
@@ -483,23 +483,25 @@ func (g *Gui) flush() error {
 		}
 	}
 	for _, v := range g.views {
-		if v.y1 < v.y0 {
+		if !v.Visible || v.y1 < v.y0 {
 			continue
 		}
 		if v.Frame {
-			var fgColor, bgColor Attribute
+			var fgColor, bgColor, frameColor Attribute
 			if g.Highlight && v == g.currentView {
 				fgColor = g.SelFgColor
 				bgColor = g.SelBgColor
+				frameColor = g.SelFrameColor
 			} else {
 				fgColor = g.FgColor
 				bgColor = g.BgColor
+				frameColor = g.FrameColor
 			}
 
-			if err := g.drawFrameEdges(v, fgColor, bgColor); err != nil {
+			if err := g.drawFrameEdges(v, frameColor, bgColor); err != nil {
 				return err
 			}
-			if err := g.drawFrameCorners(v, fgColor, bgColor); err != nil {
+			if err := g.drawFrameCorners(v, frameColor, bgColor); err != nil {
 				return err
 			}
 			if v.Title != "" {
