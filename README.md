@@ -30,7 +30,7 @@ This fork has meany improvements over the original work from [jroimartin](https:
 * Better support for running in docker container
 * Customize frame colors
 * Improved code comments and quality
-* Meany small improvements
+* Many small improvements
 * Change Visibility of views
 
 For information about this org see: [awesome-gocui/about](https://github.com/awesome-gocui/about).
