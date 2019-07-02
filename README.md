@@ -106,5 +106,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 * [fac](https://github.com/mkchoi212/fac): git merge conflict resolver
 * [jsonui](https://github.com/gulyasm/jsonui): Interactive JSON explorer for your terminal.
 * [cointop](https://github.com/miguelmota/cointop): Interactive terminal based UI application for tracking cryptocurrencies.
+* [lazydocker](https://github.com/jesseduffield/lazydocker): The lazier way to manage everything docker
+* [lazygit](https://github.com/jesseduffield/lazygit): simple terminal UI for git commands
 
 Note: if your project is not listed here, let us know! :)
