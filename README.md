@@ -13,7 +13,7 @@ Minimalist Go package aimed at creating Console User Interfaces.
 * Global and view-level keybindings.
 * Mouse support.
 * Colored text.
-* Customizable edition mode.
+* Customizable editing mode.
 * Easy to build reusable widgets, complex layouts...
 
 ## Installation
