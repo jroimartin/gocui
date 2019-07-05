@@ -6,8 +6,13 @@ package gocui
 
 import (
 	standardErrors "errors"
+	"os"
+	"os/signal"
+	"runtime"
 	"strings"
+	"syscall"
 	"time"
+	"unsafe"
 
 	"github.com/go-errors/errors"
 
@@ -95,7 +100,8 @@ type Gui struct {
 
 // NewGui returns a new Gui object with a given output mode.
 func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
-	if err := termbox.Init(); err != nil {
+	err := termbox.Init()
+	if err != nil {
 		return nil, err
 	}
 
@@ -109,7 +115,14 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	g.tbEvents = make(chan termbox.Event, 20)
 	g.userEvents = make(chan userEvent, 20)
 
-	g.maxX, g.maxY = termbox.Size()
+	if runtime.GOOS != "windows" {
+		g.maxX, g.maxY, err = g.getTermWindowSize()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		g.maxX, g.maxY = termbox.Size()
+	}
 
 	g.BgColor, g.FgColor = ColorDefault, ColorDefault
 	g.SelBgColor, g.SelFgColor = ColorDefault, ColorDefault
@@ -847,4 +860,47 @@ func (g *Gui) loaderTick() {
 			}
 		}
 	}()
+}
+
+// getTermWindowSize is get terminal window size on linux or unix.
+// When gocui run inside the docker contaienr need to check and get the window size.
+func (g *Gui) getTermWindowSize() (int, int, error) {
+	var sz struct {
+		rows uint16
+		cols uint16
+	}
+
+	var termw, termh int
+
+	out, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer out.Close()
+
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGWINCH, syscall.SIGINT)
+
+	for {
+		_, _, _ = syscall.Syscall(syscall.SYS_IOCTL,
+			out.Fd(), uintptr(syscall.TIOCGWINSZ), uintptr(unsafe.Pointer(&sz)))
+
+		// check terminal window size
+		termw, termh = int(sz.cols), int(sz.rows)
+		if termw > 0 && termh > 0 {
+			return termw, termh, nil
+		}
+
+		select {
+		case signal := <-signalCh:
+			switch signal {
+			// when the terminal window size is changed
+			case syscall.SIGWINCH:
+				continue
+			// ctrl + c to cancel
+			case syscall.SIGINT:
+				return 0, 0, errors.New("There was not enough window space to start the application")
+			}
+		}
+	}
 }
