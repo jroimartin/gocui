@@ -19,8 +19,6 @@ import (
 	"github.com/jesseduffield/termbox-go"
 )
 
-// this comment is here for no good reason (or is it) (I think it is)
-
 var (
 	// ErrQuit is used to decide if the MainLoop finished successfully.
 	ErrQuit = standardErrors.New("quit")
@@ -100,12 +98,20 @@ type Gui struct {
 
 // NewGui returns a new Gui object with a given output mode.
 func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
-	err := termbox.Init()
-	if err != nil {
-		return nil, err
+	g := &Gui{}
+
+	if runtime.GOOS != "windows" {
+		var err error
+		if g.maxX, g.maxY, err = g.getTermWindowSize(); err != nil {
+			return nil, err
+		}
+	} else {
+		g.maxX, g.maxY = termbox.Size()
 	}
 
-	g := &Gui{}
+	if err := termbox.Init(); err != nil {
+		return nil, err
+	}
 
 	g.outputMode = mode
 	termbox.SetOutputMode(termbox.OutputMode(mode))
@@ -114,15 +120,6 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 
 	g.tbEvents = make(chan termbox.Event, 20)
 	g.userEvents = make(chan userEvent, 20)
-
-	if runtime.GOOS != "windows" {
-		g.maxX, g.maxY, err = g.getTermWindowSize()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		g.maxX, g.maxY = termbox.Size()
-	}
 
 	g.BgColor, g.FgColor = ColorDefault, ColorDefault
 	g.SelBgColor, g.SelFgColor = ColorDefault, ColorDefault
@@ -880,6 +877,7 @@ func (g *Gui) getTermWindowSize() (int, int, error) {
 
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGWINCH, syscall.SIGINT)
+	defer signal.Stop(signalCh)
 
 	for {
 		_, _, _ = syscall.Syscall(syscall.SYS_IOCTL,
