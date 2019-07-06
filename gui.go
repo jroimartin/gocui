@@ -859,16 +859,16 @@ func (g *Gui) loaderTick() {
 	}()
 }
 
+type windowSize struct {
+	rows    uint16
+	cols    uint16
+	xpixels uint16
+	ypixels uint16
+}
+
 // getTermWindowSize is get terminal window size on linux or unix.
 // When gocui run inside the docker contaienr need to check and get the window size.
 func (g *Gui) getTermWindowSize() (int, int, error) {
-	var sz struct {
-		rows uint16
-		cols uint16
-	}
-
-	var termw, termh int
-
 	out, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
 	if err != nil {
 		return 0, 0, err
@@ -879,14 +879,19 @@ func (g *Gui) getTermWindowSize() (int, int, error) {
 	signal.Notify(signalCh, syscall.SIGWINCH, syscall.SIGINT)
 	defer signal.Stop(signalCh)
 
+	var sz windowSize
+
 	for {
-		_, _, _ = syscall.Syscall(syscall.SYS_IOCTL,
-			out.Fd(), uintptr(syscall.TIOCGWINSZ), uintptr(unsafe.Pointer(&sz)))
+		_, _, err = syscall.Syscall(
+			syscall.SYS_IOCTL,
+			out.Fd(),
+			uintptr(syscall.TIOCGWINSZ),
+			uintptr(unsafe.Pointer(&sz)),
+		)
 
 		// check terminal window size
-		termw, termh = int(sz.cols), int(sz.rows)
-		if termw > 0 && termh > 0 {
-			return termw, termh, nil
+		if sz.cols > 0 && sz.rows > 0 {
+			return int(sz.cols), int(sz.rows), nil
 		}
 
 		select {
