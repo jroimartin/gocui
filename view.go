@@ -63,7 +63,7 @@ type View struct {
 	// buffer at the cursor position.
 	Editable bool
 
-	// Editor allows to define the editor that manages the edition mode,
+	// Editor allows to define the editor that manages the editing mode,
 	// including keybindings or cursor behaviour. DefaultEditor is used by
 	// default.
 	Editor Editor
