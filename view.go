@@ -493,7 +493,7 @@ func (v *View) Word(x, y int) (string, error) {
 	} else {
 		nr = nr + x
 	}
-	return string(str[nl:nr]), nil
+	return str[nl:nr], nil
 }
 
 // indexFunc allows to split lines by words taking into account spaces
