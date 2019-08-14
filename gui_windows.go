@@ -42,8 +42,7 @@ var (
 	procGetConsoleScreenBufferInfo = kernel32.NewProc("GetConsoleScreenBufferInfo")
 )
 
-// getTermWindowSize is get terminal window size on linux or unix.
-// When gocui run inside the docker contaienr need to check and get the window size.
+// getTermWindowSize is get terminal window size on windows.
 func (g *Gui) getTermWindowSize() (int, int, error) {
 	var csbi consoleScreenBufferInfo
 	r1, _, err := procGetConsoleScreenBufferInfo.Call(os.Stdout.Fd(), uintptr(unsafe.Pointer(&csbi)))
