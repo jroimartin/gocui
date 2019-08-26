@@ -23,7 +23,7 @@ A community fork based on the amazing work of [jroimartin](https://github.com/jr
 
 ## About fork
 
-This fork has meany improvements over the original work from [jroimartin](https://github.com/jroimartin/gocui).  
+This fork has many improvements over the original work from [jroimartin](https://github.com/jroimartin/gocui).  
 
 * Better wide character support
 * Support for 1 Line height views
