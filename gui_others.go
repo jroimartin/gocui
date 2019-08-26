@@ -21,6 +21,7 @@ func (g *Gui) getTermWindowSize() (int, int, error) {
 	var sz struct {
 		rows uint16
 		cols uint16
+		_    [2]uint16 // to match underlying syscall; see https://github.com/awesome-gocui/gocui/issues/33
 	}
 
 	var termw, termh int
