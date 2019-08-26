@@ -23,7 +23,7 @@ A community fork based on the amazing work of [jroimartin](https://github.com/jr
 
 ## About fork
 
-This fork has meany improvements over the original work from [jroimartin](https://github.com/jroimartin/gocui).  
+This fork has many improvements over the original work from [jroimartin](https://github.com/jroimartin/gocui).  
 
 * Better wide character support
 * Support for 1 Line height views
@@ -129,5 +129,6 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 * [fac](https://github.com/mkchoi212/fac): git merge conflict resolver
 * [jsonui](https://github.com/gulyasm/jsonui): Interactive JSON explorer for your terminal.
 * [cointop](https://github.com/miguelmota/cointop): Interactive terminal based UI application for tracking cryptocurrencies.
+* [lazygit](https://github.com/jesseduffield/lazygit): simple terminal UI for git commands.
 
 Note: if your project is not listed here, let us know! :)

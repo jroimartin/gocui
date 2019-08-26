@@ -750,12 +750,12 @@ func (g *Gui) execKeybinding(v *View, kb *keybinding) (bool, error) {
 	return true, nil
 }
 
-// IsUnknownView return true if the contents of an error is "unknown view"
+// IsUnknownView reports whether the contents of an error is "unknown view".
 func IsUnknownView(err error) bool {
-	return err.Error() == ErrUnknownView.Error()
+	return err != nil && err.Error() == ErrUnknownView.Error()
 }
 
-// IsQuit return true if the contents of an error is "quit"
+// IsQuit reports whether the contents of an error is "quit".
 func IsQuit(err error) bool {
-	return err.Error() == ErrQuit.Error()
+	return err != nil && err.Error() == ErrQuit.Error()
 }
