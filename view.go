@@ -690,7 +690,7 @@ func indexFunc(r rune) bool {
 
 // SetLine changes the contents of an existing line.
 func (v *View) SetLine(y int, text string) error {
-	if y > len(v.lines) {
+	if y < 0 || y >= len(v.lines) {
 		err := ErrInvalidPoint
 		return err
 	}
