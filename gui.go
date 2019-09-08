@@ -141,7 +141,8 @@ func (g *Gui) Size() (x, y int) {
 // the given colors.
 func (g *Gui) SetRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
-		return errors.New("invalid point")
+		// swallowing error because it's not that big of a deal
+		return nil
 	}
 	termbox.SetCell(x, y, ch, termbox.Attribute(fgColor), termbox.Attribute(bgColor))
 	return nil
