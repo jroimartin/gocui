@@ -708,7 +708,7 @@ func (v *View) SetLine(y int, text string) error {
 // SetHighlight toggles highlighting of separate lines, for custom lists
 // or multiple selection in views.
 func (v *View) SetHighlight(y int, on bool) error {
-	if y > len(v.lines) {
+	if y < 0 || y >= len(v.lines) {
 		err := ErrInvalidPoint
 		return err
 	}
