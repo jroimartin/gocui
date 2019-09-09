@@ -584,11 +584,14 @@ func (v *View) realPosition(vx, vy int) (x, y int, err error) {
 // Clear empties the view's internal buffer.
 // And resets reading and writing offsets.
 func (v *View) Clear() {
+	v.writeMutex.Lock()
 	v.Rewind()
 	v.tainted = true
+	v.ei.reset()
 	v.lines = nil
 	v.viewLines = nil
 	v.clearRunes()
+	v.writeMutex.Unlock()
 }
 
 // clearRunes erases all the cells in the view.
