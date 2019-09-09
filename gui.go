@@ -722,23 +722,29 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 // and event. The value of matched is true if there is a match and no errors.
 func (g *Gui) execKeybindings(v *View, ev *termbox.Event) (matched bool, err error) {
 	var globalKb *keybinding
+
 	for _, kb := range g.keybindings {
 		if kb.handler == nil {
 			continue
 		}
+
 		if !kb.matchKeypress(Key(ev.Key), ev.Ch, Modifier(ev.Mod)) {
 			continue
 		}
+
 		if kb.matchView(v) {
 			return g.execKeybinding(v, kb)
 		}
-		if kb.viewName == "" && ((v != nil && !v.Editable) || kb.ch == 0) {
+
+		if kb.viewName == "" && ((v != nil && !v.Editable) || (kb.ch == 0 && kb.key != KeyCtrlU && kb.key != KeyCtrlA && kb.key != KeyCtrlE)) {
 			globalKb = kb
 		}
 	}
+
 	if globalKb != nil {
 		return g.execKeybinding(v, globalKb)
 	}
+
 	return false, nil
 }
 
