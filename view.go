@@ -470,6 +470,11 @@ func (v *View) Rewind() {
 	}
 }
 
+// IsTainted tells us if the view is tainted
+func (v *View) IsTainted() bool {
+	return v.tainted
+}
+
 // draw re-draws the view's contents.
 func (v *View) draw() error {
 	if !v.Visible {
