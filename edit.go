@@ -54,17 +54,11 @@ func simpleEditor(v *View, key Key, ch rune, mod Modifier) {
 	case key == KeyArrowRight:
 		v.MoveCursor(1, 0, false)
 	case key == KeyTab:
-		v.EditNewLine()
+		v.EditWrite('\t')
 	case key == KeySpace:
 		v.EditWrite(' ')
 	case key == KeyInsert:
 		v.Overwrite = !v.Overwrite
-	case key == KeyCtrlU:
-		v.EditDeleteToStartOfLine()
-	case key == KeyCtrlA:
-		v.EditGotoToStartOfLine()
-	case key == KeyCtrlE:
-		v.EditGotoToEndOfLine()
 	default:
 		v.EditWrite(ch)
 	}
@@ -77,7 +71,7 @@ func (v *View) EditWrite(ch rune) {
 	v.moveCursor(w, 0, true)
 }
 
-// EditDeleteToStartOfLine is the equivalent of pressing ctrl+U in your terminal, it deletes to the end of the line. Or if you are already at the start of the line, it deletes the newline character
+// EditDeleteToStartOfLine is the equivalent of pressing ctrl+U in your terminal, it deletes to the start of the line. Or if you are already at the start of the line, it deletes the newline character
 func (v *View) EditDeleteToStartOfLine() {
 	x, _ := v.Cursor()
 	if x == 0 {

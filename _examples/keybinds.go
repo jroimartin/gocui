@@ -53,14 +53,34 @@ func main() {
 		log.Panicln(err)
 	}
 
+	// We can blacklist a keybinding.
+	// This allows us to prevent setting the keybinding.
+	if err := g.BlacklistKeybinding(gocui.KeyCtrlC); err != nil {
+		log.Panic(err)
+	}
+
+	// If for some reason you want to whitelist the keybinding,
+	// you can allow it again by calling g.WhitelistKeybinding.
+	if err := g.WhitelistKeybinding(gocui.KeyCtrlC); err != nil {
+		log.Panic(err)
+	}
+
 	// The normal parse returns an key, a modifier and an error
-	keyNormal, modNormal, err := gocui.Parse("Ctrl+c")
+	keyNormal, modNormal, err := gocui.Parse("Ctrl+C")
 	if err != nil {
 		log.Panicln(err)
 	}
+
 	if err = g.SetKeybinding("", keyNormal, modNormal, quit); err != nil {
 		log.Panicln(err)
 	}
+
+	// You can still block it when it is set, just blacklist it again, this will not throw
+	// an error at parsing, since it is already parsed above,
+	// but it will prevent it from being executed
+	//if err := g.BlacklistKeybinding(gocui.KeyCtrlC); err != nil {
+	//	log.Panicln(err)
+	//}
 
 	// Now just start a mainloop for the demo
 	if err = g.MainLoop(); err != nil && err != gocui.ErrQuit {

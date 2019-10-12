@@ -5,7 +5,6 @@
 package gocui
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/awesome-gocui/termbox-go"
@@ -27,10 +26,8 @@ type keybinding struct {
 	handler  func(*Gui, *View) error
 }
 
-var (
-	ErrorNotExist = errors.New("no such keybind")
-)
-
+// Parse takes the input string and extracts the keybinding.
+// Returns a Key / rune, a Modifier and an error.
 func Parse(input string) (interface{}, Modifier, error) {
 	if len(input) == 1 {
 		_, r, err := getKey(rune(input[0]))
@@ -55,12 +52,13 @@ func Parse(input string) (interface{}, Modifier, error) {
 
 	key, exist := translate[strings.Join(cleaned, "")]
 	if !exist {
-		return nil, ModNone, ErrorNotExist
+		return nil, ModNone, ErrNoSuchKeybind
 	}
 
 	return key, modifier, nil
 }
 
+// ParseAll takes an array of strings and returns a map of all keybindings.
 func ParseAll(input []string) (map[interface{}]Modifier, error) {
 	ret := make(map[interface{}]Modifier)
 	for _, i := range input {
@@ -73,6 +71,8 @@ func ParseAll(input []string) (map[interface{}]Modifier, error) {
 	return ret, nil
 }
 
+// MustParse takes the input string and returns a Key / rune and a Modifier.
+// It will panic if any error occured.
 func MustParse(input string) (interface{}, Modifier) {
 	k, m, err := Parse(input)
 	if err != nil {
@@ -81,6 +81,8 @@ func MustParse(input string) (interface{}, Modifier) {
 	return k, m
 }
 
+// MustParseAll takes an array of strings and returns a map of all keybindings.
+// It will panic if any error occured.
 func MustParseAll(input []string) map[interface{}]Modifier {
 	result, err := ParseAll(input)
 	if err != nil {
@@ -115,6 +117,7 @@ func (kb *keybinding) matchView(v *View) bool {
 	return kb.viewName == v.name
 }
 
+// translations for strings to keys
 var translate = map[string]Key{
 	"F1":             KeyF1,
 	"F2":             KeyF2,
