@@ -17,11 +17,23 @@ import (
 type OutputMode termbox.OutputMode
 
 var (
-	// ErrQuit is used to decide if the MainLoop finished successfully.
-	ErrQuit = standardErrors.New("quit")
+	// ErrAlreadyBlacklisted is returned when the keybinding is already blacklisted.
+	ErrAlreadyBlacklisted = standardErrors.New("keybind already blacklisted")
+
+	// ErrBlacklisted is returned when the keybinding being parsed / used is blacklisted.
+	ErrBlacklisted = standardErrors.New("keybind blacklisted")
+
+	// ErrNotBlacklisted is returned when a keybinding being whitelisted is not blacklisted.
+	ErrNotBlacklisted = standardErrors.New("keybind not blacklisted")
+
+	// ErrNoSuchKeybind is returned when the keybinding being parsed does not exist.
+	ErrNoSuchKeybind = standardErrors.New("no such keybind")
 
 	// ErrUnknownView allows to assert if a View must be initialized.
 	ErrUnknownView = standardErrors.New("unknown view")
+
+	// ErrQuit is used to decide if the MainLoop finished successfully.
+	ErrQuit = standardErrors.New("quit")
 )
 
 const (
@@ -50,6 +62,7 @@ type Gui struct {
 	maxX, maxY  int
 	outputMode  OutputMode
 	stop        chan struct{}
+	blacklist   []Key
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the GUI.
@@ -183,6 +196,17 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int, overlaps byte) (*View, er
 	return v, errors.Wrap(ErrUnknownView, 0)
 }
 
+// SetViewBeneath sets a view stacked beneath another view
+func (g *Gui) SetViewBeneath(name string, aboveViewName string, height int) (*View, error) {
+	aboveView, err := g.View(aboveViewName)
+	if err != nil {
+		return nil, err
+	}
+
+	viewTop := aboveView.y1 + 1
+	return g.SetView(name, aboveView.x0, viewTop, aboveView.x1, viewTop+height-1, 0)
+}
+
 // SetViewOnTop sets the given view on top of the existing ones.
 func (g *Gui) SetViewOnTop(name string) (*View, error) {
 	for i, v := range g.views {
@@ -285,6 +309,11 @@ func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, hand
 	if err != nil {
 		return err
 	}
+
+	if g.isBlacklisted(k) {
+		return ErrBlacklisted
+	}
+
 	kb = newKeybinding(viewname, k, ch, mod, handler)
 	g.keybindings = append(g.keybindings, kb)
 	return nil
@@ -315,6 +344,28 @@ func (g *Gui) DeleteKeybindings(viewname string) {
 		}
 	}
 	g.keybindings = s
+}
+
+// BlackListKeybinding adds a keybinding to the blacklist
+func (g *Gui) BlacklistKeybinding(k Key) error {
+	for _, j := range g.blacklist {
+		if j == k {
+			return ErrAlreadyBlacklisted
+		}
+	}
+	g.blacklist = append(g.blacklist, k)
+	return nil
+}
+
+// WhiteListKeybinding removes a keybinding from the blacklist
+func (g *Gui) WhitelistKeybinding(k Key) error {
+	for i, j := range g.blacklist {
+		if j == k {
+			g.blacklist = append(g.blacklist[:i], g.blacklist[i+1:]...)
+			return nil
+		}
+	}
+	return ErrNotBlacklisted
 }
 
 // getKey takes an empty interface with a key and returns the corresponding
@@ -722,32 +773,52 @@ func (g *Gui) onKey(ev *termbox.Event) error {
 // and event. The value of matched is true if there is a match and no errors.
 func (g *Gui) execKeybindings(v *View, ev *termbox.Event) (matched bool, err error) {
 	var globalKb *keybinding
+
 	for _, kb := range g.keybindings {
 		if kb.handler == nil {
 			continue
 		}
+
 		if !kb.matchKeypress(Key(ev.Key), ev.Ch, Modifier(ev.Mod)) {
 			continue
 		}
+
 		if kb.matchView(v) {
 			return g.execKeybinding(v, kb)
 		}
+
 		if kb.viewName == "" && ((v != nil && !v.Editable) || kb.ch == 0) {
 			globalKb = kb
 		}
 	}
+
 	if globalKb != nil {
 		return g.execKeybinding(v, globalKb)
 	}
+
 	return false, nil
 }
 
 // execKeybinding executes a given keybinding
 func (g *Gui) execKeybinding(v *View, kb *keybinding) (bool, error) {
+	if g.isBlacklisted(kb.key) {
+		return true, nil
+	}
+
 	if err := kb.handler(g, v); err != nil {
 		return false, err
 	}
 	return true, nil
+}
+
+// isBlacklisted reports whether the key is blacklisted
+func (g *Gui) isBlacklisted(k Key) bool {
+	for _, j := range g.blacklist {
+		if j == k {
+			return true
+		}
+	}
+	return false
 }
 
 // IsUnknownView reports whether the contents of an error is "unknown view".

@@ -470,6 +470,11 @@ func (v *View) Rewind() {
 	}
 }
 
+// IsTainted tells us if the view is tainted
+func (v *View) IsTainted() bool {
+	return v.tainted
+}
+
 // draw re-draws the view's contents.
 func (v *View) draw() error {
 	if !v.Visible {
@@ -635,8 +640,14 @@ func (v *View) ViewBufferLines() []string {
 	return lines
 }
 
+// LinesHeight is the count of view lines (i.e. lines excluding wrapping)
 func (v *View) LinesHeight() int {
 	return len(v.lines)
+}
+
+// ViewLinesHeight is the count of view lines (i.e. lines including wrapping)
+func (v *View) ViewLinesHeight() int {
+	return len(v.viewLines)
 }
 
 // ViewBuffer returns a string with the contents of the view's buffer that is
