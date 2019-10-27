@@ -31,6 +31,11 @@ func TestEscape(t *testing.T) {
 			fg:    ColorDefault,
 			bg:    101,
 		},
+		{
+			input: "Hi!!",
+			fg:    ColorDefault,
+			bg:    ColorDefault,
+		},
 	}
 
 	for i, tc := range testCases {
