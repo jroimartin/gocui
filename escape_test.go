@@ -45,10 +45,10 @@ func TestEscape(t *testing.T) {
 			}
 
 			if ei.curFgColor != tc.fg {
-				t.Fatalf("foreground color is not 100: %v", ei.curFgColor)
+				t.Fatalf("foreground color is not %d: %v", tc.fg, ei.curFgColor)
 			}
 			if ei.curBgColor != tc.bg {
-				t.Fatalf("background color is not 100: %v", ei.curBgColor)
+				t.Fatalf("background color is not %d: %v", tc.bg, ei.curBgColor)
 			}
 		})
 	}
