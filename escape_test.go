@@ -17,6 +17,11 @@ func TestEscape(t *testing.T) {
 			bg:    201,
 		},
 		{
+			input: "\033[38;5;100;48;5;200mHi!!",
+			fg:    101,
+			bg:    201,
+		},
+		{
 			input: "\033[38;5;100mHi!!",
 			fg:    101,
 			bg:    ColorDefault,
