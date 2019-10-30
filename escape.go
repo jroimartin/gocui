@@ -18,7 +18,10 @@ type escapeInterpreter struct {
 	mode                   OutputMode
 }
 
-type escapeState int
+type (
+	escapeState int
+	fontEffect  int
+)
 
 const (
 	stateNone escapeState = iota
@@ -26,8 +29,11 @@ const (
 	stateCSI
 	stateParams
 
-	setForegroundColor = 38
-	setBackgroundColor = 48
+	bold               fontEffect = 1
+	underline          fontEffect = 4
+	reverse            fontEffect = 7
+	setForegroundColor fontEffect = 38
+	setBackgroundColor fontEffect = 48
 )
 
 var (
@@ -205,7 +211,7 @@ func (ei *escapeInterpreter) output256() error {
 			return errCSIParseError
 		}
 
-		switch fgbg {
+		switch fontEffect(fgbg) {
 		case setForegroundColor:
 			ei.curFgColor = Attribute(color + 1)
 
@@ -215,12 +221,12 @@ func (ei *escapeInterpreter) output256() error {
 					return errCSIParseError
 				}
 
-				switch {
-				case p == 1:
+				switch fontEffect(p) {
+				case bold:
 					ei.curFgColor |= AttrBold
-				case p == 4:
+				case underline:
 					ei.curFgColor |= AttrUnderline
-				case p == 7:
+				case reverse:
 					ei.curFgColor |= AttrReverse
 
 				}
