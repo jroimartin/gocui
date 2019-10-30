@@ -26,8 +26,8 @@ const (
 	stateCSI
 	stateParams
 
-	foregroundColor = 38
-	backgroundColor = 48
+	setForegroundColor = 38
+	setBackgroundColor = 48
 )
 
 var (
@@ -206,7 +206,7 @@ func (ei *escapeInterpreter) output256() error {
 		}
 
 		switch fgbg {
-		case foregroundColor:
+		case setForegroundColor:
 			ei.curFgColor = Attribute(color + 1)
 
 			for _, s := range param[3:] {
@@ -225,7 +225,7 @@ func (ei *escapeInterpreter) output256() error {
 
 				}
 			}
-		case backgroundColor:
+		case setBackgroundColor:
 			ei.curBgColor = Attribute(color + 1)
 		default:
 			return errCSIParseError
