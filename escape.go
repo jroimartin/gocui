@@ -5,8 +5,9 @@
 package gocui
 
 import (
-	"github.com/go-errors/errors"
 	"strconv"
+
+	"github.com/go-errors/errors"
 )
 
 type escapeInterpreter struct {
@@ -24,6 +25,9 @@ const (
 	stateEscape
 	stateCSI
 	stateParams
+
+	foregroundColor = 38
+	backgroundColor = 48
 )
 
 var (
@@ -202,7 +206,7 @@ func (ei *escapeInterpreter) output256() error {
 		}
 
 		switch fgbg {
-		case 38:
+		case foregroundColor:
 			ei.curFgColor = Attribute(color + 1)
 
 			for _, s := range param[3:] {
@@ -221,7 +225,7 @@ func (ei *escapeInterpreter) output256() error {
 
 				}
 			}
-		case 48:
+		case backgroundColor:
 			ei.curBgColor = Attribute(color + 1)
 		default:
 			return errCSIParseError
