@@ -244,7 +244,7 @@ func (ei *escapeInterpreter) splitFgBg() [][]string {
 	var out [][]string
 	var current []string
 	for _, p := range ei.csiParam {
-		if len(current) > 0 && (p == "48" || p == "38") {
+		if len(current) == 3 && (p == "48" || p == "38") {
 			out = append(out, current)
 			current = []string{}
 		}
