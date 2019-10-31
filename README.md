@@ -27,7 +27,8 @@ This fork has many improvements over the original work from [jroimartin](https:/
 
 * Better wide character support
 * Support for 1 Line height views
-* Better support for running in docker container
+* Support for running in docker container
+* Better cursor handling
 * Customize frame colors
 * Improved code comments and quality
 * Many small improvements

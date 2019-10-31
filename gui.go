@@ -188,7 +188,7 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int, overlaps byte) (*View, er
 		return v, nil
 	}
 
-	v := newView(name, x0, y0, x1, y1, g.outputMode)
+	v := g.newView(name, x0, y0, x1, y1, g.outputMode)
 	v.BgColor, v.FgColor = g.BgColor, g.FgColor
 	v.SelBgColor, v.SelFgColor = g.SelBgColor, g.SelFgColor
 	v.Overlaps = overlaps
@@ -703,37 +703,40 @@ func (g *Gui) drawSubtitle(v *View, fgColor, bgColor Attribute) error {
 
 // draw manages the cursor and calls the draw function of a view.
 func (g *Gui) draw(v *View) error {
-	if g.Cursor {
-		if curview := g.currentView; curview != nil {
-			vMaxX, vMaxY := curview.Size()
-			if curview.cx < 0 {
-				curview.cx = 0
-			} else if curview.cx >= vMaxX {
-				curview.cx = vMaxX - 1
-			}
-			if curview.cy < 0 {
-				curview.cy = 0
-			} else if curview.cy >= vMaxY {
-				curview.cy = vMaxY - 1
-			}
-
-			gMaxX, gMaxY := g.Size()
-			cx, cy := curview.x0+curview.cx+1, curview.y0+curview.cy+1
-			if cx >= 0 && cx < gMaxX && cy >= 0 && cy < gMaxY {
-				termbox.SetCursor(cx, cy)
-			} else {
-				termbox.HideCursor()
-			}
+	completed := func(hideCursor bool) error {
+		if hideCursor {
+			termbox.HideCursor()
 		}
-	} else {
-		termbox.HideCursor()
+		v.clearRunes()
+		return v.draw()
 	}
 
-	v.clearRunes()
-	if err := v.draw(); err != nil {
-		return err
+	if !g.Cursor {
+		return completed(true)
 	}
-	return nil
+
+	curview := g.currentView
+	if curview == nil {
+		return completed(false)
+	}
+
+	if curview.cx < 0 {
+		curview.cx = 0
+	}
+	if curview.cy < 0 {
+		curview.cy = 0
+	}
+
+	cursorX, cursorY, onScreen := curview.linesPosOnScreen(curview.cx, curview.cy)
+	if !onScreen {
+		return completed(true)
+	}
+
+	x := curview.x0 + cursorX + 1 - curview.ox
+	y := curview.y0 + cursorY + 1 - curview.oy
+	termbox.SetCursor(x, y)
+
+	return completed(false)
 }
 
 // onKey manages key-press events. A keybinding handler is called when
