@@ -201,7 +201,7 @@ func (ei *escapeInterpreter) output256() error {
 		return ei.outputNormal()
 	}
 
-	for _, param := range ei.splitFgBg() {
+	for _, param := range splitFgBg(ei.csiParam) {
 		fgbg, err := strconv.Atoi(param[0])
 		if err != nil {
 			return errCSIParseError
@@ -240,10 +240,10 @@ func (ei *escapeInterpreter) output256() error {
 	return nil
 }
 
-func (ei *escapeInterpreter) splitFgBg() [][]string {
+func splitFgBg(params []string) [][]string {
 	var out [][]string
 	var current []string
-	for _, p := range ei.csiParam {
+	for _, p := range params {
 		if len(current) == 3 && (p == "48" || p == "38") {
 			out = append(out, current)
 			current = []string{}
