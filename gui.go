@@ -535,7 +535,12 @@ func (g *Gui) drawTitle(v *View, fgColor, bgColor Attribute) error {
 		return nil
 	}
 
-	for i, ch := range v.Title {
+	runes := make([]rune, 0)
+	for _, r := range v.Title {
+		runes = append(runes, r)
+	}
+
+	for i, ch := range runes {
 		x := v.x0 + i + 2
 		if x < 0 {
 			continue
