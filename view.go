@@ -230,6 +230,12 @@ func (v *View) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+// WriteString appends a string into the view
+func (v *View) WriteString(s string) error {
+	_, err := v.Write([]byte(s))
+	return err
+}
+
 // parseInput parses char by char the input written to the View. It returns nil
 // while processing ESC sequences. Otherwise, it returns a cell slice that
 // contains the processed data.

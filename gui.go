@@ -122,6 +122,19 @@ func (g *Gui) Rune(x, y int) (rune, error) {
 	return c.Ch, nil
 }
 
+// CreateView creates a new view.
+// The difference with SetView is that it ignores ErrUnknownView.
+func (g *Gui) CreateView(name string, x0, y0, x1, y1 int) (*View, error) {
+	v, err := g.SetView(name, x0, y0, x1, y1)
+	if err != nil {
+		if err == ErrUnknownView {
+			return v, nil
+		}
+		return nil, err
+	}
+	return v, nil
+}
+
 // SetView creates a new view with its top-left corner at (x0, y0)
 // and the bottom-right one at (x1, y1). If a view with the same name
 // already exists, its dimensions are updated; otherwise, the error
