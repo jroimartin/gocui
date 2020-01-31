@@ -842,20 +842,17 @@ func (g *Gui) StartTicking() {
 		g.tickingMutex.Lock()
 		defer g.tickingMutex.Unlock()
 		ticker := time.NewTicker(time.Millisecond * 50)
+	outer:
 		for {
 			select {
 			case <-ticker.C:
-				someViewHasLoader := false
 				for _, view := range g.Views() {
 					if view.HasLoader {
-						someViewHasLoader = true
-						break
+						g.userEvents <- userEvent{func(g *Gui) error { return nil }}
+						continue outer
 					}
 				}
-				if !someViewHasLoader {
-					return
-				}
-				g.userEvents <- userEvent{func(g *Gui) error { return nil }}
+				return
 			case <-g.stop:
 				return
 			}
