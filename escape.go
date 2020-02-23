@@ -35,7 +35,6 @@ var (
 
 // runes in case of error will output the non-parsed runes as a string.
 func (ei *escapeInterpreter) runes() []rune {
-
 	switch ei.state {
 	case stateNone:
 		return []rune{0x1b}
@@ -68,7 +67,6 @@ func newEscapeInterpreter(mode OutputMode) *escapeInterpreter {
 
 // reset sets the escapeInterpreter in initial state.
 func (ei *escapeInterpreter) reset() {
-
 	ei.state = stateNone
 	ei.curFgColor = ColorDefault
 	ei.curBgColor = ColorDefault
@@ -79,7 +77,6 @@ func (ei *escapeInterpreter) reset() {
 // of an escape sequence, and as such should not be printed verbatim. Otherwise,
 // it's not an escape sequence.
 func (ei *escapeInterpreter) parseOne(ch rune) (isEscape bool, err error) {
-
 	// Sanity checks
 	if len(ei.csiParam) > 20 {
 		return false, errCSITooLong
