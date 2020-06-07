@@ -111,6 +111,10 @@ type View struct {
 
 	// If HasLoader is true, the message will be appended with a spinning loader animation
 	HasLoader bool
+
+	// KeybindOnEdit should be set to true when you want to execute keybindings even when the view is editable
+	// (this is usually not the case)
+	KeybindOnEdit bool
 }
 
 type viewLine struct {
