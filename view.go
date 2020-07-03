@@ -218,7 +218,7 @@ func (v *View) Write(p []byte) (n int, err error) {
 			}
 		default:
 			cells := v.parseInput(ch)
-			if cells == nil {
+			if cells == nil || len(cells) <= 0 {
 				continue
 			}
 
