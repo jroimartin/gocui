@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
 )
 
 var vbuf, buf string
@@ -28,8 +28,8 @@ func overwrite(g *gocui.Gui, v *gocui.View) error {
 
 func layout(g *gocui.Gui) error {
 	_, maxY := g.Size()
-	if v, err := g.SetView("main", 0, 0, 20, maxY-1); err != nil {
-		if err != gocui.ErrUnknownView {
+	if v, err := g.SetView("main", 0, 0, 20, maxY-1, 0); err != nil {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Editable = true
@@ -42,7 +42,7 @@ func layout(g *gocui.Gui) error {
 }
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -59,7 +59,7 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Panicln(err)
 	}
 

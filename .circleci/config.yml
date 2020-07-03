@@ -1,0 +1,34 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/glvr182/git-profile
+    
+    docker:
+      - image: circleci/golang:1.12
+
+    steps:
+      - checkout
+      - run:
+          name: go mod
+          command: go mod tidy
+      - run:
+          name: go fmt
+          command: |            
+            if [ $(find . ! -path "./vendor/*" -name "*.go" -exec gofmt -s -d {} \;|wc -l) -gt 0 ]; then
+              find . ! -path "./vendor/*" -name "*.go" -exec gofmt -s -d {} \;
+              exit 1;
+            fi
+      - run:
+          name: go build
+          command: |
+            cd _examples/
+            for file in *.go
+            do
+              go build $file 
+            done
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
