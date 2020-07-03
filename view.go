@@ -332,7 +332,7 @@ func (v *View) draw() error {
 	}
 
 	if v.Autoscroll && len(v.viewLines) > maxY {
-		v.oy = len(v.viewLines) - maxY
+		v.oy = len(v.viewLines) - maxY - 1
 	}
 	y := 0
 	for i, vline := range v.viewLines {
