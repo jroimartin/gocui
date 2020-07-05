@@ -392,7 +392,14 @@ type userEvent struct {
 // the user events queue. Given that Update spawns a goroutine, the order in
 // which the user events will be handled is not guaranteed.
 func (g *Gui) Update(f func(*Gui) error) {
-	go func() { g.userEvents <- userEvent{f: f} }()
+	go g.UpdateAsync(f)
+}
+
+// UpdateAsync is a version of Update that does not spawn a go routine, it can
+// be a bit more efficient in cases where Update is called many times like when
+// tailing a file.  In general you should use Update()
+func (g *Gui) UpdateAsync(f func(*Gui) error) {
+	g.userEvents <- userEvent{f: f}
 }
 
 // A Manager is in charge of GUI's layout and can be used to build widgets.
