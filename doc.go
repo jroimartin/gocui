@@ -37,7 +37,7 @@ their content. The same is valid for reading.
 
 Create and initialize a view with absolute coordinates:
 
-	if v, err := g.SetView("viewname", 2, 2, 22, 7); err != nil {
+	if v, err := g.SetView("viewname", 2, 2, 22, 7, 0); err != nil {
 		if !gocui.IsUnknownView(err) {
 			// handle error
 		}
@@ -48,7 +48,7 @@ Create and initialize a view with absolute coordinates:
 Views can also be created using relative coordinates:
 
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("viewname", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
+	if v, err := g.SetView("viewname", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2, 0); err != nil {
 		// ...
 	}
 
