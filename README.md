@@ -91,6 +91,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 
 ## Projects using gocui
 
+* [lazydocker](https://github.com/jesseduffield/lazydocker): A simple terminal UI for both docker and docker-compose.
 * [komanda-cli](https://github.com/mephux/komanda-cli): IRC Client For Developers.
 * [vuls](https://github.com/future-architect/vuls): Agentless vulnerability scanner for Linux/FreeBSD.
 * [wuzz](https://github.com/asciimoo/wuzz): Interactive cli tool for HTTP inspection.
