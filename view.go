@@ -87,6 +87,24 @@ type View struct {
 	// If Frame is true, a border will be drawn around the view.
 	Frame bool
 
+	// FrameColor allow to configure the color of the Frame when it is not highlighted.
+	FrameColor Attribute
+
+	// FrameRunes allows to define custom runes for the frame edges.
+	// The rune slice can be defined with 3 different lengths.
+	// If slice doesn't match these lengths, default runes will be used instead of missing one.
+	//
+	// 2 runes with only horizontal and vertical edges.
+	//  []rune{'─', '│'}
+	//  []rune{'═','║'}
+	// 6 runes with horizontal, vertical edges and top-left, top-right, bottom-left, bottom-right cornes.
+	//  []rune{'─', '│', '┌', '┐', '└', '┘'}
+	//  []rune{'═','║','╔','╗','╚','╝'}
+	// 11 runes which can be used with `gocui.Gui.SupportOverlaps` property.
+	//  []rune{'─', '│', '┌', '┐', '└', '┘', '├', '┤', '┬', '┴', '┼'}
+	//  []rune{'═','║','╔','╗','╚','╝','╠','╣','╦','╩','╬'}
+	FrameRunes []rune
+
 	// If Wrap is true, the content that is written to this View is
 	// automatically wrapped when it is longer than its width. If true the
 	// view's x-origin will be ignored.
@@ -98,6 +116,9 @@ type View struct {
 
 	// If Frame is true, Title allows to configure a title for the view.
 	Title string
+
+	// TitleColor allow to configure the color of title and subtitle for the view.
+	TitleColor Attribute
 
 	// If Frame is true, Subtitle allows to configure a subtitle for the view.
 	Subtitle string
