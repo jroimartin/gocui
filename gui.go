@@ -10,7 +10,8 @@ import (
 
 	"github.com/go-errors/errors"
 
-	"github.com/awesome-gocui/termbox-go"
+	// "github.com/awesome-gocui/termbox-go"
+	"github.com/gdamore/tcell/termbox"
 )
 
 // OutputMode represents the terminal's output mode (8 or 256 colors).
@@ -162,8 +163,9 @@ func (g *Gui) Rune(x, y int) (rune, error) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return ' ', errors.New("invalid point")
 	}
-	c := termbox.CellBuffer()[y*g.maxX+x]
-	return c.Ch, nil
+	// c := termbox.CellBuffer()[y*g.maxX+x]
+	// return c.Ch, nil
+	return ' ', errors.New("invalid point")
 }
 
 // SetView creates a new view with its top-left corner at (x0, y0)

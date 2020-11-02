@@ -13,7 +13,8 @@ import (
 
 	"github.com/go-errors/errors"
 
-	"github.com/awesome-gocui/termbox-go"
+	// "github.com/awesome-gocui/termbox-go"
+	"github.com/gdamore/tcell/termbox"
 	"github.com/mattn/go-runewidth"
 )
 

@@ -7,7 +7,8 @@ package gocui
 import (
 	"strings"
 
-	"github.com/awesome-gocui/termbox-go"
+	// "github.com/awesome-gocui/termbox-go"
+	"github.com/gdamore/tcell/termbox"
 )
 
 // Key represents special keys or keys combinations.
@@ -119,31 +120,31 @@ func (kb *keybinding) matchView(v *View) bool {
 
 // translations for strings to keys
 var translate = map[string]Key{
-	"F1":             KeyF1,
-	"F2":             KeyF2,
-	"F3":             KeyF3,
-	"F4":             KeyF4,
-	"F5":             KeyF5,
-	"F6":             KeyF6,
-	"F7":             KeyF7,
-	"F8":             KeyF8,
-	"F9":             KeyF9,
-	"F10":            KeyF10,
-	"F11":            KeyF11,
-	"F12":            KeyF12,
-	"Insert":         KeyInsert,
-	"Delete":         KeyDelete,
-	"Home":           KeyHome,
-	"End":            KeyEnd,
-	"Pgup":           KeyPgup,
-	"Pgdn":           KeyPgdn,
-	"ArrowUp":        KeyArrowUp,
-	"ArrowDown":      KeyArrowDown,
-	"ArrowLeft":      KeyArrowLeft,
-	"ArrowRight":     KeyArrowRight,
-	"CtrlTilde":      KeyCtrlTilde,
-	"Ctrl2":          KeyCtrl2,
-	"CtrlSpace":      KeyCtrlSpace,
+	"F1":         KeyF1,
+	"F2":         KeyF2,
+	"F3":         KeyF3,
+	"F4":         KeyF4,
+	"F5":         KeyF5,
+	"F6":         KeyF6,
+	"F7":         KeyF7,
+	"F8":         KeyF8,
+	"F9":         KeyF9,
+	"F10":        KeyF10,
+	"F11":        KeyF11,
+	"F12":        KeyF12,
+	"Insert":     KeyInsert,
+	"Delete":     KeyDelete,
+	"Home":       KeyHome,
+	"End":        KeyEnd,
+	"Pgup":       KeyPgup,
+	"Pgdn":       KeyPgdn,
+	"ArrowUp":    KeyArrowUp,
+	"ArrowDown":  KeyArrowDown,
+	"ArrowLeft":  KeyArrowLeft,
+	"ArrowRight": KeyArrowRight,
+	// "CtrlTilde":      KeyCtrlTilde,
+	"Ctrl2": KeyCtrl2,
+	// "CtrlSpace":      KeyCtrlSpace,
 	"CtrlA":          KeyCtrlA,
 	"CtrlB":          KeyCtrlB,
 	"CtrlC":          KeyCtrlC,
@@ -186,7 +187,7 @@ var translate = map[string]Key{
 	"CtrlUnderscore": KeyCtrlUnderscore,
 	"Space":          KeySpace,
 	"Backspace2":     KeyBackspace2,
-	"Ctrl8":          KeyCtrl8,
+	// "Ctrl8":          KeyCtrl8,
 	"Mouseleft":      MouseLeft,
 	"Mousemiddle":    MouseMiddle,
 	"Mouseright":     MouseRight,
@@ -230,52 +231,52 @@ const (
 
 // Keys combinations.
 const (
-	KeyCtrlTilde      Key = Key(termbox.KeyCtrlTilde)
-	KeyCtrl2              = Key(termbox.KeyCtrl2)
-	KeyCtrlSpace          = Key(termbox.KeyCtrlSpace)
-	KeyCtrlA              = Key(termbox.KeyCtrlA)
-	KeyCtrlB              = Key(termbox.KeyCtrlB)
-	KeyCtrlC              = Key(termbox.KeyCtrlC)
-	KeyCtrlD              = Key(termbox.KeyCtrlD)
-	KeyCtrlE              = Key(termbox.KeyCtrlE)
-	KeyCtrlF              = Key(termbox.KeyCtrlF)
-	KeyCtrlG              = Key(termbox.KeyCtrlG)
-	KeyBackspace          = Key(termbox.KeyBackspace)
-	KeyCtrlH              = Key(termbox.KeyCtrlH)
-	KeyTab                = Key(termbox.KeyTab)
-	KeyCtrlI              = Key(termbox.KeyCtrlI)
-	KeyCtrlJ              = Key(termbox.KeyCtrlJ)
-	KeyCtrlK              = Key(termbox.KeyCtrlK)
-	KeyCtrlL              = Key(termbox.KeyCtrlL)
-	KeyEnter              = Key(termbox.KeyEnter)
-	KeyCtrlM              = Key(termbox.KeyCtrlM)
-	KeyCtrlN              = Key(termbox.KeyCtrlN)
-	KeyCtrlO              = Key(termbox.KeyCtrlO)
-	KeyCtrlP              = Key(termbox.KeyCtrlP)
-	KeyCtrlQ              = Key(termbox.KeyCtrlQ)
-	KeyCtrlR              = Key(termbox.KeyCtrlR)
-	KeyCtrlS              = Key(termbox.KeyCtrlS)
-	KeyCtrlT              = Key(termbox.KeyCtrlT)
-	KeyCtrlU              = Key(termbox.KeyCtrlU)
-	KeyCtrlV              = Key(termbox.KeyCtrlV)
-	KeyCtrlW              = Key(termbox.KeyCtrlW)
-	KeyCtrlX              = Key(termbox.KeyCtrlX)
-	KeyCtrlY              = Key(termbox.KeyCtrlY)
-	KeyCtrlZ              = Key(termbox.KeyCtrlZ)
-	KeyEsc                = Key(termbox.KeyEsc)
-	KeyCtrlLsqBracket     = Key(termbox.KeyCtrlLsqBracket)
-	KeyCtrl3              = Key(termbox.KeyCtrl3)
-	KeyCtrl4              = Key(termbox.KeyCtrl4)
-	KeyCtrlBackslash      = Key(termbox.KeyCtrlBackslash)
-	KeyCtrl5              = Key(termbox.KeyCtrl5)
-	KeyCtrlRsqBracket     = Key(termbox.KeyCtrlRsqBracket)
-	KeyCtrl6              = Key(termbox.KeyCtrl6)
-	KeyCtrl7              = Key(termbox.KeyCtrl7)
-	KeyCtrlSlash          = Key(termbox.KeyCtrlSlash)
-	KeyCtrlUnderscore     = Key(termbox.KeyCtrlUnderscore)
-	KeySpace              = Key(termbox.KeySpace)
-	KeyBackspace2         = Key(termbox.KeyBackspace2)
-	KeyCtrl8              = Key(termbox.KeyCtrl8)
+	// KeyCtrlTilde      Key = Key(termbox.KeyCtrlTilde)
+	KeyCtrl2 = Key(termbox.KeyCtrl2)
+	// KeyCtrlSpace          = Key(termbox.KeyCtrlSpace)
+	KeyCtrlA          = Key(termbox.KeyCtrlA)
+	KeyCtrlB          = Key(termbox.KeyCtrlB)
+	KeyCtrlC          = Key(termbox.KeyCtrlC)
+	KeyCtrlD          = Key(termbox.KeyCtrlD)
+	KeyCtrlE          = Key(termbox.KeyCtrlE)
+	KeyCtrlF          = Key(termbox.KeyCtrlF)
+	KeyCtrlG          = Key(termbox.KeyCtrlG)
+	KeyBackspace      = Key(termbox.KeyBackspace)
+	KeyCtrlH          = Key(termbox.KeyCtrlH)
+	KeyTab            = Key(termbox.KeyTab)
+	KeyCtrlI          = Key(termbox.KeyCtrlI)
+	KeyCtrlJ          = Key(termbox.KeyCtrlJ)
+	KeyCtrlK          = Key(termbox.KeyCtrlK)
+	KeyCtrlL          = Key(termbox.KeyCtrlL)
+	KeyEnter          = Key(termbox.KeyEnter)
+	KeyCtrlM          = Key(termbox.KeyCtrlM)
+	KeyCtrlN          = Key(termbox.KeyCtrlN)
+	KeyCtrlO          = Key(termbox.KeyCtrlO)
+	KeyCtrlP          = Key(termbox.KeyCtrlP)
+	KeyCtrlQ          = Key(termbox.KeyCtrlQ)
+	KeyCtrlR          = Key(termbox.KeyCtrlR)
+	KeyCtrlS          = Key(termbox.KeyCtrlS)
+	KeyCtrlT          = Key(termbox.KeyCtrlT)
+	KeyCtrlU          = Key(termbox.KeyCtrlU)
+	KeyCtrlV          = Key(termbox.KeyCtrlV)
+	KeyCtrlW          = Key(termbox.KeyCtrlW)
+	KeyCtrlX          = Key(termbox.KeyCtrlX)
+	KeyCtrlY          = Key(termbox.KeyCtrlY)
+	KeyCtrlZ          = Key(termbox.KeyCtrlZ)
+	KeyEsc            = Key(termbox.KeyEsc)
+	KeyCtrlLsqBracket = Key(termbox.KeyCtrlLsqBracket)
+	KeyCtrl3          = Key(termbox.KeyCtrl3)
+	KeyCtrl4          = Key(termbox.KeyCtrl4)
+	KeyCtrlBackslash  = Key(termbox.KeyCtrlBackslash)
+	KeyCtrl5          = Key(termbox.KeyCtrl5)
+	KeyCtrlRsqBracket = Key(termbox.KeyCtrlRsqBracket)
+	KeyCtrl6          = Key(termbox.KeyCtrl6)
+	KeyCtrl7          = Key(termbox.KeyCtrl7)
+	KeyCtrlSlash      = Key(termbox.KeyCtrlSlash)
+	KeyCtrlUnderscore = Key(termbox.KeyCtrlUnderscore)
+	KeySpace          = Key(termbox.KeySpace)
+	KeyBackspace2     = Key(termbox.KeyBackspace2)
+	// KeyCtrl8          = Key(termbox.KeyCtrl8)
 )
 
 // Modifiers.
