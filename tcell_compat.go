@@ -292,8 +292,11 @@ const (
 	KeyEsc            = Key(tcell.KeyEscape)
 	KeyPgdn           = Key(tcell.KeyPgDn)
 	KeyPgup           = Key(tcell.KeyPgUp)
-	KeySpace          = Key(tcell.Key(' '))
-	KeyTilde          = Key(tcell.Key('~'))
+	KeyCtrlSpace      = Key(tcell.KeyCtrlSpace)
+	// KeySpace          = Key(tcell.Key(' '))
+	KeySpace = ' '
+	// KeyTilde = Key(tcell.Key('~'))
+	KeyTilde = '~'
 
 	// The following assignments are provided for termbox
 	// compatibility.  Their use in applications is discouraged.
@@ -334,13 +337,15 @@ func makeEvent(tev tcell.Event) Event {
 		k := tev.Key()
 		ch := rune(0)
 		if k == tcell.KeyRune {
+			k = 0 // if rune remove key (so it can match, for example spacebar)
 			ch = tev.Rune()
-			if ch == ' ' {
-				k = tcell.Key(' ')
-			}
 		}
 		mod := tev.Modifiers()
-		if mod == tcell.ModCtrl {
+		// remove control modifier and setup special handling of ctrl+spacebar, etc.
+		if mod == tcell.ModCtrl && k == 0 && ch == 0 {
+			mod = 0
+			k = tcell.KeyCtrlSpace
+		} else if mod == tcell.ModCtrl {
 			mod = 0
 		}
 		return Event{
