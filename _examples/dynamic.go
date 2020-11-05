@@ -29,6 +29,7 @@ func main() {
 
 	g.Highlight = true
 	g.SelFgColor = gocui.ColorRed
+	g.SelFrameColor = gocui.ColorRed
 
 	g.SetManagerFunc(layout)
 

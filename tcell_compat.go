@@ -113,6 +113,8 @@ func fixColor(c tcell.Color) tcell.Color {
 		return c
 	}
 	switch outMode {
+	case OutputTrue:
+		return c
 	case OutputNormal:
 		c %= tcell.Color(16)
 	case Output256:
@@ -134,11 +136,11 @@ func mkStyle(fg, bg Attribute) tcell.Style {
 
 	// extract colors and attributes
 	if fg != ColorDefault {
-		st = st.Foreground(tcell.Color(fg & AttrColorBits))
+		st = st.Foreground(fixColor(tcell.Color(fg & AttrColorBits)))
 		st = setAttr(st, fg)
 	}
 	if bg != ColorDefault {
-		st = st.Background(tcell.Color(bg & AttrColorBits))
+		st = st.Background(fixColor(tcell.Color(bg & AttrColorBits)))
 		st = setAttr(st, bg)
 	}
 

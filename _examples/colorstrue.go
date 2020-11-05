@@ -78,7 +78,9 @@ func displayHsv(v *gocui.View) {
 		str = ""
 	}
 
-	fmt.Fprint(v, "\nCtrl + R - Switch light/dark mode\n")
+	fmt.Fprintln(v, "\n\x1b[38;5;245mCtrl + R - Switch light/dark mode")
+	fmt.Fprintln(v, "\nCtrl + C - Exit\n")
+	fmt.Fprint(v, "To enable true colors in terminal run this command: \x1b[0mexport COLORTERM=truecolor")
 }
 
 func hsv(hue, sv int) (uint32, uint32, uint32) {
