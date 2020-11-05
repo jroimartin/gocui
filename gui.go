@@ -105,8 +105,8 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 		g.maxX, g.maxY = Size()
 	}
 
-	g.BgColor, g.FgColor = ColorDefault, ColorDefault
-	g.SelBgColor, g.SelFgColor = ColorDefault, ColorDefault
+	g.BgColor, g.FgColor, g.FrameColor = ColorDefault, ColorDefault, ColorDefault
+	g.SelBgColor, g.SelFgColor, g.SelFrameColor = ColorDefault, ColorDefault, ColorDefault
 
 	// SupportOverlaps is true when we allow for view edges to overlap with other
 	// view edges

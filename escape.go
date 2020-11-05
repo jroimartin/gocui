@@ -7,6 +7,7 @@ package gocui
 import (
 	"strconv"
 
+	"github.com/gdamore/tcell"
 	"github.com/go-errors/errors"
 )
 
@@ -135,6 +136,8 @@ func (ei *escapeInterpreter) parseOne(ch rune) (isEscape bool, err error) {
 				err = ei.outputNormal()
 			case Output256:
 				err = ei.output256()
+			case OutputTrue:
+				err = ei.outputTrue()
 			}
 			if err != nil {
 				return false, errCSIParseError
@@ -161,11 +164,11 @@ func (ei *escapeInterpreter) outputNormal() error {
 
 		switch {
 		case p >= 30 && p <= 37:
-			ei.curFgColor = Attribute(p - 30 + 1)
+			ei.curFgColor = Attribute(p - 30)
 		case p == 39:
 			ei.curFgColor = ColorDefault
 		case p >= 40 && p <= 47:
-			ei.curBgColor = Attribute(p - 40 + 1)
+			ei.curBgColor = Attribute(p - 40)
 		case p == 49:
 			ei.curBgColor = ColorDefault
 		case p == 1:
@@ -201,7 +204,7 @@ func (ei *escapeInterpreter) output256() error {
 		return ei.outputNormal()
 	}
 
-	for _, param := range splitFgBg(ei.csiParam) {
+	for _, param := range splitFgBg(ei.csiParam, 3) {
 		fgbg, err := strconv.Atoi(param[0])
 		if err != nil {
 			return errCSIParseError
@@ -213,7 +216,7 @@ func (ei *escapeInterpreter) output256() error {
 
 		switch fontEffect(fgbg) {
 		case setForegroundColor:
-			ei.curFgColor = Attribute(color + 1)
+			ei.curFgColor = Attribute(color)
 
 			for _, s := range param[3:] {
 				p, err := strconv.Atoi(s)
@@ -232,7 +235,7 @@ func (ei *escapeInterpreter) output256() error {
 				}
 			}
 		case setBackgroundColor:
-			ei.curBgColor = Attribute(color + 1)
+			ei.curBgColor = Attribute(color)
 		default:
 			return errCSIParseError
 		}
@@ -240,11 +243,80 @@ func (ei *escapeInterpreter) output256() error {
 	return nil
 }
 
-func splitFgBg(params []string) [][]string {
+// outputTrue allows you to leverage the true-color terminal mode.
+//
+// Works with rgb ANSI sequence: `\x1b[38;2;<r>;<g>;<b>m`, `\x1b[48;2;<r>;<g>;<b>m`
+func (ei *escapeInterpreter) outputTrue() error {
+	if len(ei.csiParam) < 5 {
+		return ei.output256()
+	}
+
+	mode, err := strconv.Atoi(ei.csiParam[1])
+	if err != nil {
+		return errCSIParseError
+	}
+	if mode != 2 {
+		return ei.output256()
+	}
+
+	for _, param := range splitFgBg(ei.csiParam, 5) {
+		fgbg, err := strconv.Atoi(param[0])
+		if err != nil {
+			return errCSIParseError
+		}
+		colr, err := strconv.Atoi(param[2])
+		if err != nil {
+			return errCSIParseError
+		}
+		colg, err := strconv.Atoi(param[3])
+		if err != nil {
+			return errCSIParseError
+		}
+		colb, err := strconv.Atoi(param[4])
+		if err != nil {
+			return errCSIParseError
+		}
+		color := tcell.NewRGBColor(int32(colr), int32(colg), int32(colb)).Hex()
+
+		switch fontEffect(fgbg) {
+		case setForegroundColor:
+			if color != 0 {
+			}
+			ei.curFgColor = Attribute(color) | AttrIsRGBColor
+
+			for _, s := range param[5:] {
+				p, err := strconv.Atoi(s)
+				if err != nil {
+					return errCSIParseError
+				}
+
+				switch fontEffect(p) {
+				case bold:
+					ei.curFgColor |= AttrBold
+				case underline:
+					ei.curFgColor |= AttrUnderline
+				case reverse:
+					ei.curFgColor |= AttrReverse
+
+				}
+			}
+		case setBackgroundColor:
+			ei.curBgColor = Attribute(color) | AttrIsRGBColor
+		default:
+			return errCSIParseError
+		}
+	}
+	return nil
+}
+
+// splitFgBg splits foreground and background color according to ANSI sequence.
+//
+// num (number of segments in ansi) is used to determine if it's 256 mode or rgb mode (3 - 256-color, 5 - rgb-color)
+func splitFgBg(params []string, num int) [][]string {
 	var out [][]string
 	var current []string
 	for _, p := range params {
-		if len(current) == 3 && (p == "48" || p == "38") {
+		if len(current) == num && (p == "48" || p == "38") {
 			out = append(out, current)
 			current = []string{}
 		}

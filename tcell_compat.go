@@ -68,12 +68,22 @@ func Size() (int, int) {
 
 // Attribute affects the presentation of characters, such as color, boldness,
 // and so forth.
-type Attribute uint16
+type Attribute int64
+
+const (
+	// ColorDefault is used to leave the Color unchanged from whatever system or teminal default may exist.
+	ColorDefault = Attribute(tcell.ColorDefault)
+	// AttrIsRGBColor is used to indicate that the Attribute value is RGB value of color.
+	// The lower order 3 bytes are RGB.
+	// (It's not a color in basic ANSI range 256).
+	AttrIsRGBColor = Attribute(tcell.ColorIsRGB)
+	// AttrColorBits is a mask where color is located in Attribute (unless it's -1 => default)
+	AttrColorBits = 0x1ffffff
+)
 
 // Colors first.  The order here is significant.
 const (
-	ColorDefault Attribute = iota
-	ColorBlack
+	ColorBlack Attribute = iota
 	ColorRed
 	ColorGreen
 	ColorYellow
@@ -83,12 +93,20 @@ const (
 	ColorWhite
 )
 
-// Other attributes.
+// Attributes are not colors, but affect the display of text.  They can
+// be combined.
 const (
-	AttrBold Attribute = 1 << (9 + iota)
-	AttrUnderline
+	AttrBold Attribute = 1 << (25 + iota)
+	AttrBlink
 	AttrReverse
+	AttrUnderline
+	AttrDim
+	AttrItalic
+	AttrNone Attribute = 0 // Just normal text.
 )
+
+// AttrAll is all the attributes turned on
+const AttrAll = AttrBold | AttrBlink | AttrReverse | AttrUnderline | AttrDim | AttrItalic
 
 func fixColor(c tcell.Color) tcell.Color {
 	if c == tcell.ColorDefault {
@@ -114,20 +132,37 @@ func fixColor(c tcell.Color) tcell.Color {
 func mkStyle(fg, bg Attribute) tcell.Style {
 	st := tcell.StyleDefault
 
-	f := tcell.Color(int(fg)&0x1ff) - 1
-	b := tcell.Color(int(bg)&0x1ff) - 1
+	// extract colors and attributes
+	if fg != ColorDefault {
+		st = st.Foreground(tcell.Color(fg & AttrColorBits))
+		st = setAttr(st, fg)
+	}
+	if bg != ColorDefault {
+		st = st.Background(tcell.Color(bg & AttrColorBits))
+		st = setAttr(st, bg)
+	}
 
-	f = fixColor(f)
-	b = fixColor(b)
-	st = st.Foreground(f).Background(b)
-	if (fg|bg)&AttrBold != 0 {
+	return st
+}
+
+func setAttr(st tcell.Style, attr Attribute) tcell.Style {
+	if attr&AttrBold != 0 {
 		st = st.Bold(true)
 	}
-	if (fg|bg)&AttrUnderline != 0 {
+	if attr&AttrUnderline != 0 {
 		st = st.Underline(true)
 	}
-	if (fg|bg)&AttrReverse != 0 {
+	if attr&AttrReverse != 0 {
 		st = st.Reverse(true)
+	}
+	if attr&AttrBlink != 0 {
+		st = st.Blink(true)
+	}
+	if attr&AttrDim != 0 {
+		st = st.Dim(true)
+	}
+	if attr&AttrItalic != 0 {
+		st = st.Italic(true)
 	}
 	return st
 }
@@ -171,6 +206,7 @@ const (
 	Output256
 	Output216
 	OutputGrayscale
+	OutputTrue
 )
 
 // SetOutputMode is used to set the color palette used.
@@ -181,7 +217,7 @@ func SetOutputMode(mode OutputMode) OutputMode {
 	switch mode {
 	case OutputCurrent:
 		return outMode
-	case OutputNormal, Output256, Output216, OutputGrayscale:
+	case OutputNormal, Output256, Output216, OutputGrayscale, OutputTrue:
 		outMode = mode
 		return mode
 	default:

@@ -171,6 +171,10 @@ func newView(name string, x0, y0, x1, y1 int, mode OutputMode) *View {
 		tainted: true,
 		ei:      newEscapeInterpreter(mode),
 	}
+
+	v.FgColor, v.BgColor = ColorDefault, ColorDefault
+	v.SelFgColor, v.SelBgColor = ColorDefault, ColorDefault
+	v.TitleColor, v.FrameColor = ColorDefault, ColorDefault
 	return v
 }
 
