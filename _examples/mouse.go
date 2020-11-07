@@ -72,6 +72,14 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("msg", gocui.MouseLeft, gocui.ModNone, delMsg); err != nil {
 		return err
 	}
+	// These keys are global, but they work only when you click them while hovering over View.
+	// ModCtrl is actually `ALT` key, not `CTRL` key. Tcell generates it like that, not sure why.
+	if err := g.SetKeybinding("", gocui.MouseRight, gocui.ModCtrl, delMsg); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", gocui.MouseMiddle, gocui.ModNone, delMsg); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -104,7 +112,8 @@ func showMsg(g *gocui.Gui, v *gocui.View) error {
 
 func delMsg(g *gocui.Gui, v *gocui.View) error {
 	if err := g.DeleteView("msg"); err != nil {
-		return err
+		// Error removed for testing purpose, because delete could be called multiple times with the above keybindings
+		// return err
 	}
 	return nil
 }

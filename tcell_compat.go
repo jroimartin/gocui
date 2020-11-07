@@ -191,14 +191,18 @@ type InputMode int
 
 // Unused input modes; here for compatibility.
 const (
-	InputCurrent InputMode = iota
-	InputEsc
+	InputEsc InputMode = 1 << iota
 	InputAlt
 	InputMouse
+	InputCurrent InputMode = 0
 )
 
 // SetInputMode does not do anything in this version.
 func SetInputMode(mode InputMode) InputMode {
+	if mode&InputMouse != 0 {
+		screen.EnableMouse()
+		return InputEsc | InputMouse
+	}
 	// We don't do anything else right now
 	return InputEsc
 }
@@ -352,6 +356,8 @@ const (
 	MouseRelease      = Key(tcell.KeyF60)
 	MouseWheelUp      = Key(tcell.KeyF59)
 	MouseWheelDown    = Key(tcell.KeyF58)
+	MouseWheelLeft    = Key(tcell.KeyF57)
+	MouseWheelRight   = Key(tcell.KeyF56)
 	KeyCtrl2          = Key(tcell.KeyNUL) // termbox defines theses
 	KeyCtrl3          = Key(tcell.KeyEscape)
 	KeyCtrl4          = Key(tcell.KeyCtrlBackslash)
@@ -364,9 +370,16 @@ const (
 	KeyCtrlLsqBracket = Key(tcell.KeyCtrlLeftSq)
 )
 
+var (
+	lastMouseKey tcell.ButtonMask = tcell.ButtonNone
+	lastMouseMod tcell.ModMask    = tcell.ModNone
+)
+
 // Modifiers.
 const (
-	ModAlt  = Modifier(tcell.ModAlt)
+	ModAlt = Modifier(tcell.ModAlt)
+	// ModCtrl doesn't work with keyboard keys. Use CtrlKey in Key and ModNone. This is for mouse clicks only
+	ModCtrl = Modifier(tcell.ModCtrl)
 	ModNone = Modifier(0)
 )
 
@@ -397,6 +410,56 @@ func makeEvent(tev tcell.Event) Event {
 			Key:  Key(k),
 			Ch:   ch,
 			Mod:  Modifier(mod),
+		}
+	case *tcell.EventMouse:
+		x, y := tev.Position()
+		button := tev.Buttons()
+		mouseKey := MouseRelease
+		mouseMod := ModNone
+		if button&tcell.WheelUp != 0 {
+			mouseKey = MouseWheelUp
+		}
+		if button&tcell.WheelDown != 0 {
+			mouseKey = MouseWheelDown
+		}
+		if button&tcell.WheelLeft != 0 {
+			mouseKey = MouseWheelLeft
+		}
+		if button&tcell.WheelRight != 0 {
+			mouseKey = MouseWheelRight
+		}
+
+		// Only process button events, not wheel events
+		button &= tcell.ButtonMask(0xff)
+		if button != tcell.ButtonNone && lastMouseKey == tcell.ButtonNone {
+			lastMouseKey = button
+			lastMouseMod = tev.Modifiers()
+		}
+
+		switch tev.Buttons() {
+		case tcell.ButtonNone:
+			if lastMouseKey != tcell.ButtonNone {
+				switch lastMouseKey {
+				case tcell.Button1:
+					mouseKey = MouseLeft
+				case tcell.Button2:
+					mouseKey = MouseMiddle
+				case tcell.Button3:
+					mouseKey = MouseRight
+				}
+				mouseMod = Modifier(lastMouseMod)
+				lastMouseMod = tcell.ModNone
+				lastMouseKey = tcell.ButtonNone
+			}
+		}
+
+		return Event{
+			Type:   EventMouse,
+			MouseX: x,
+			MouseY: y,
+			Key:    mouseKey,
+			Ch:     0,
+			Mod:    mouseMod,
 		}
 	default:
 		return Event{Type: EventNone}
