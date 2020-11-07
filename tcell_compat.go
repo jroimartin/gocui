@@ -169,6 +169,12 @@ func setAttr(st tcell.Style, attr Attribute) tcell.Style {
 	return st
 }
 
+// GetColor creates a Color from a color name (W3C name). A hex value may
+// be supplied as a string in the format "#ffffff".
+func GetColor(color string) Attribute {
+	return Attribute(tcell.GetColor(color))
+}
+
 // Clear clears the screen with the given attributes.
 func Clear(fg, bg Attribute) {
 	st := mkStyle(fg, bg)

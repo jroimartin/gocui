@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/awesome-gocui/gocui"
 	colorful "github.com/lucasb-eyer/go-colorful"
@@ -15,6 +16,7 @@ import (
 var dark = false
 
 func main() {
+	os.Setenv("COLORTERM", "truecolor")
 	g, err := gocui.NewGui(gocui.OutputTrue, true)
 
 	if err != nil {
@@ -48,11 +50,21 @@ func main() {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("colors", -1, -1, maxX, maxY, 0); err != nil {
+	rows := 33
+	cols := 182
+	if maxY < rows {
+		rows = maxY
+	}
+	if maxX < cols {
+		cols = maxX
+	}
+
+	if v, err := g.SetView("colors", 0, 0, cols-1, rows-1, 0); err != nil {
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
 
+		v.FrameColor = gocui.GetColor("#FFAA55")
 		displayHsv(v)
 
 		if _, err := g.SetCurrentView("colors"); err != nil {
@@ -80,7 +92,7 @@ func displayHsv(v *gocui.View) {
 
 	fmt.Fprintln(v, "\n\x1b[38;5;245mCtrl + R - Switch light/dark mode")
 	fmt.Fprintln(v, "\nCtrl + C - Exit\n")
-	fmt.Fprint(v, "To enable true colors in terminal run this command: \x1b[0mexport COLORTERM=truecolor")
+	fmt.Fprint(v, "Example should enable true color, but if it doesn't work run this command: \x1b[0mexport COLORTERM=truecolor")
 }
 
 func hsv(hue, sv int) (uint32, uint32, uint32) {
