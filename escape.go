@@ -7,7 +7,7 @@ package gocui
 import (
 	"strconv"
 
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 	"github.com/go-errors/errors"
 )
 
@@ -31,7 +31,10 @@ const (
 	stateParams
 
 	bold               fontEffect = 1
+	faint              fontEffect = 2
+	italic             fontEffect = 3
 	underline          fontEffect = 4
+	blink              fontEffect = 5
 	reverse            fontEffect = 7
 	setForegroundColor fontEffect = 38
 	setBackgroundColor fontEffect = 48
@@ -171,15 +174,11 @@ func (ei *escapeInterpreter) outputNormal() error {
 			ei.curBgColor = Attribute(p - 40)
 		case p == 49:
 			ei.curBgColor = ColorDefault
-		case p == 1:
-			ei.curFgColor |= AttrBold
-		case p == 4:
-			ei.curFgColor |= AttrUnderline
-		case p == 7:
-			ei.curFgColor |= AttrReverse
 		case p == 0:
 			ei.curFgColor = ColorDefault
 			ei.curBgColor = ColorDefault
+		default:
+			ei.curFgColor |= getFontEffect(p)
 		}
 	}
 
@@ -224,15 +223,7 @@ func (ei *escapeInterpreter) output256() error {
 					return errCSIParseError
 				}
 
-				switch fontEffect(p) {
-				case bold:
-					ei.curFgColor |= AttrBold
-				case underline:
-					ei.curFgColor |= AttrUnderline
-				case reverse:
-					ei.curFgColor |= AttrReverse
-
-				}
+				ei.curFgColor |= getFontEffect(p)
 			}
 		case setBackgroundColor:
 			ei.curBgColor = Attribute(color)
@@ -280,9 +271,12 @@ func (ei *escapeInterpreter) outputTrue() error {
 
 		switch fontEffect(fgbg) {
 		case setForegroundColor:
-			if color != 0 {
+			if color == -1 {
+				// This shouldn't happen ever, but Hex() could return it, so rather safe than sorry
+				ei.curFgColor = ColorDefault
+			} else {
+				ei.curFgColor = Attribute(color) | AttrIsRGBColor
 			}
-			ei.curFgColor = Attribute(color) | AttrIsRGBColor
 
 			for _, s := range param[5:] {
 				p, err := strconv.Atoi(s)
@@ -290,15 +284,7 @@ func (ei *escapeInterpreter) outputTrue() error {
 					return errCSIParseError
 				}
 
-				switch fontEffect(p) {
-				case bold:
-					ei.curFgColor |= AttrBold
-				case underline:
-					ei.curFgColor |= AttrUnderline
-				case reverse:
-					ei.curFgColor |= AttrReverse
-
-				}
+				ei.curFgColor |= getFontEffect(p)
 			}
 		case setBackgroundColor:
 			ei.curBgColor = Attribute(color) | AttrIsRGBColor
@@ -328,4 +314,22 @@ func splitFgBg(params []string, num int) [][]string {
 	}
 
 	return out
+}
+
+func getFontEffect(f int) Attribute {
+	switch fontEffect(f) {
+	case bold:
+		return AttrBold
+	case faint:
+		return AttrDim
+	case italic:
+		return AttrItalic
+	case underline:
+		return AttrUnderline
+	case blink:
+		return AttrBlink
+	case reverse:
+		return AttrReverse
+	}
+	return AttrNone
 }

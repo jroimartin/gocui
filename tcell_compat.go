@@ -19,9 +19,7 @@
 package gocui
 
 import (
-	"errors"
-
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 )
 
 var screen tcell.Screen
@@ -68,17 +66,22 @@ func Size() (int, int) {
 
 // Attribute affects the presentation of characters, such as color, boldness,
 // and so forth.
-type Attribute int64
+type Attribute uint64
 
 const (
 	// ColorDefault is used to leave the Color unchanged from whatever system or teminal default may exist.
-	ColorDefault = Attribute(tcell.ColorDefault)
+	ColorDefault = Attribute(tcell.ColorValid) // We are going to use reverse method to see if color is setup than tcell does
+
 	// AttrIsRGBColor is used to indicate that the Attribute value is RGB value of color.
 	// The lower order 3 bytes are RGB.
 	// (It's not a color in basic ANSI range 256).
 	AttrIsRGBColor = Attribute(tcell.ColorIsRGB)
-	// AttrColorBits is a mask where color is located in Attribute (unless it's -1 => default)
-	AttrColorBits = 0x1ffffff
+
+	// AttrColorBits is a mask where color is located in Attribute
+	AttrColorBits = 0xffffffffff // roughly 5 bytes, tcell uses 4 bytes and half-byte as a special flags for color (rest is reserved for future)
+
+	// AttrStyleBits is a mask where character attributes (e.g.: bold, italic, underline) are located in Attribute
+	AttrStyleBits = 0xffffff0000000000 // remaining 3 bytes in the 8 bytes Attribute (tcell is not using it, so we should be fine)
 )
 
 // Colors first.  The order here is significant.
@@ -96,7 +99,7 @@ const (
 // Attributes are not colors, but affect the display of text.  They can
 // be combined.
 const (
-	AttrBold Attribute = 1 << (25 + iota)
+	AttrBold Attribute = 1 << (40 + iota)
 	AttrBlink
 	AttrReverse
 	AttrUnderline
@@ -108,27 +111,31 @@ const (
 // AttrAll is all the attributes turned on
 const AttrAll = AttrBold | AttrBlink | AttrReverse | AttrUnderline | AttrDim | AttrItalic
 
-func fixColor(c tcell.Color) tcell.Color {
-	if c == tcell.ColorDefault {
-		return c
+// fixColor transform  Attribute into tcell.Color
+func fixColor(c Attribute) tcell.Color {
+	c = c & AttrColorBits
+	if c&ColorDefault != 0 {
+		return tcell.ColorDefault
 	}
+
+	tc := tcell.Color(c)
 	switch outMode {
 	case OutputTrue:
-		return c
+		return tc | tcell.ColorValid
 	case OutputNormal:
-		c %= tcell.Color(16)
+		tc %= tcell.Color(16)
 	case Output256:
-		c %= tcell.Color(256)
+		tc %= tcell.Color(256)
 	case Output216:
-		c %= tcell.Color(216)
-		c += tcell.Color(16)
+		tc %= tcell.Color(216)
+		tc += tcell.Color(16)
 	case OutputGrayscale:
-		c %= tcell.Color(24)
-		c += tcell.Color(232)
+		tc %= tcell.Color(24)
+		tc += tcell.Color(232)
 	default:
-		c = tcell.ColorDefault
+		return tcell.ColorDefault
 	}
-	return c
+	return tc | tcell.ColorValid
 }
 
 func mkStyle(fg, bg Attribute) tcell.Style {
@@ -136,11 +143,11 @@ func mkStyle(fg, bg Attribute) tcell.Style {
 
 	// extract colors and attributes
 	if fg != ColorDefault {
-		st = st.Foreground(fixColor(tcell.Color(fg & AttrColorBits)))
+		st = st.Foreground(fixColor(fg))
 		st = setAttr(st, fg)
 	}
 	if bg != ColorDefault {
-		st = st.Background(fixColor(tcell.Color(bg & AttrColorBits)))
+		st = st.Background(fixColor(bg))
 		st = setAttr(st, bg)
 	}
 
@@ -172,7 +179,14 @@ func setAttr(st tcell.Style, attr Attribute) tcell.Style {
 // GetColor creates a Color from a color name (W3C name). A hex value may
 // be supplied as a string in the format "#ffffff".
 func GetColor(color string) Attribute {
-	return Attribute(tcell.GetColor(color))
+	c := tcell.GetColor(color)
+	if c&tcell.ColorValid != 0 {
+		// reverse ColorValid for Attribute
+		c &= ^tcell.ColorValid
+		return Attribute(c)
+	}
+
+	return ColorDefault
 }
 
 // Clear clears the screen with the given attributes.
@@ -346,10 +360,9 @@ const (
 	// KeyTilde = Key(tcell.Key('~'))
 	KeyTilde = '~'
 
-	// The following assignments are provided for termbox
-	// compatibility.  Their use in applications is discouraged.
-	// The mouse keys are completely not supported as tcell uses
-	// a separate mouse event instead of key strokes.
+	// The following assignments were used in termbox implementation.
+	// In tcell, these are not keys per se. But in gocui we have them
+	// mapped to the keys so we have to use placeholder keys.
 	MouseLeft         = Key(tcell.KeyF63) // arbitrary assignments
 	MouseRight        = Key(tcell.KeyF62)
 	MouseMiddle       = Key(tcell.KeyF61)
@@ -377,10 +390,10 @@ var (
 
 // Modifiers.
 const (
-	ModAlt = Modifier(tcell.ModAlt)
-	// ModCtrl doesn't work with keyboard keys. Use CtrlKey in Key and ModNone. This is for mouse clicks only
-	ModCtrl = Modifier(tcell.ModCtrl)
+	ModAlt  = Modifier(tcell.ModAlt)
 	ModNone = Modifier(0)
+	// ModCtrl doesn't work with keyboard keys. Use CtrlKey in Key and ModNone. This is for mouse clicks only (tcell.v1)
+	// ModCtrl = Modifier(tcell.ModCtrl)
 )
 
 func makeEvent(tev tcell.Event) Event {
@@ -416,6 +429,7 @@ func makeEvent(tev tcell.Event) Event {
 		button := tev.Buttons()
 		mouseKey := MouseRelease
 		mouseMod := ModNone
+		// process mouse wheel
 		if button&tcell.WheelUp != 0 {
 			mouseKey = MouseWheelUp
 		}
@@ -429,7 +443,7 @@ func makeEvent(tev tcell.Event) Event {
 			mouseKey = MouseWheelRight
 		}
 
-		// Only process button events, not wheel events
+		// process button events (not wheel events)
 		button &= tcell.ButtonMask(0xff)
 		if button != tcell.ButtonNone && lastMouseKey == tcell.ButtonNone {
 			lastMouseKey = button
@@ -440,12 +454,12 @@ func makeEvent(tev tcell.Event) Event {
 		case tcell.ButtonNone:
 			if lastMouseKey != tcell.ButtonNone {
 				switch lastMouseKey {
-				case tcell.Button1:
+				case tcell.ButtonPrimary:
 					mouseKey = MouseLeft
-				case tcell.Button2:
-					mouseKey = MouseMiddle
-				case tcell.Button3:
+				case tcell.ButtonSecondary:
 					mouseKey = MouseRight
+				case tcell.ButtonMiddle:
+					mouseKey = MouseMiddle
 				}
 				mouseMod = Modifier(lastMouseMod)
 				lastMouseMod = tcell.ModNone
@@ -466,32 +480,8 @@ func makeEvent(tev tcell.Event) Event {
 	}
 }
 
-// ParseEvent is not supported.
-func ParseEvent(data []byte) Event {
-	// Not supported
-	return Event{Type: EventError, Err: errors.New("no raw events")}
-}
-
-// PollRawEvent is not supported.
-func PollRawEvent(data []byte) Event {
-	// Not supported
-	return Event{Type: EventError, Err: errors.New("no raw events")}
-}
-
 // PollEvent blocks until an event is ready, and then returns it.
 func PollEvent() Event {
 	ev := screen.PollEvent()
 	return makeEvent(ev)
-}
-
-// Interrupt posts an interrupt event.
-func Interrupt() {
-	screen.PostEvent(tcell.NewEventInterrupt(nil))
-}
-
-// Cell represents a single character cell on screen.
-type Cell struct {
-	Ch rune
-	Fg Attribute
-	Bg Attribute
 }

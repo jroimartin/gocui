@@ -73,8 +73,8 @@ func keybindings(g *gocui.Gui) error {
 		return err
 	}
 	// These keys are global, but they work only when you click them while hovering over View.
-	// ModCtrl is actually `ALT` key, not `CTRL` key. Tcell generates it like that, not sure why.
-	if err := g.SetKeybinding("", gocui.MouseRight, gocui.ModCtrl, delMsg); err != nil {
+	// ModAlt is actually `CTRL` key, not `ALT` key. Tcell generates it like that, not sure why.
+	if err := g.SetKeybinding("", gocui.MouseRight, gocui.ModAlt, delMsg); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.MouseMiddle, gocui.ModNone, delMsg); err != nil {

@@ -498,6 +498,9 @@ func (g *Gui) handleEvent(ev *Event) error {
 		return g.onKey(ev)
 	case EventError:
 		return ev.Err
+	// Not sure if this should be handled. It acts weirder when it's here
+	// case EventResize:
+	// 	return Sync()
 	default:
 		return nil
 	}
