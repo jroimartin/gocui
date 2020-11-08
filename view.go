@@ -230,8 +230,7 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 		ch = ' '
 	}
 
-	SetCell(v.x0+x+1, v.y0+y+1, ch,
-		Attribute(fgColor), Attribute(bgColor))
+	tcellSetCell(v.x0+x+1, v.y0+y+1, ch, fgColor, bgColor)
 
 	return nil
 }
@@ -632,8 +631,7 @@ func (v *View) clearRunes() {
 	maxX, maxY := v.Size()
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < maxY; y++ {
-			SetCell(v.x0+x+1, v.y0+y+1, ' ',
-				Attribute(v.FgColor), Attribute(v.BgColor))
+			tcellSetCell(v.x0+x+1, v.y0+y+1, ' ', v.FgColor, v.BgColor)
 		}
 	}
 }

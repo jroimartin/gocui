@@ -25,8 +25,8 @@ import (
 var screen tcell.Screen
 var outMode OutputMode
 
-// Init initializes the screen for use.
-func Init() error {
+// tcellInit initializes the screen for use.
+func tcellInit() error {
 	outMode = OutputNormal
 	if s, e := tcell.NewScreen(); e != nil {
 		return e
@@ -38,29 +38,29 @@ func Init() error {
 	}
 }
 
-// Close cleans up the terminal, restoring terminal modes, etc.
-func Close() {
+// tcellClose cleans up the terminal, restoring terminal modes, etc.
+func tcellClose() {
 	screen.Fini()
 }
 
-// Flush updates the screen.
-func Flush() error {
+// tcellFlush updates the screen.
+func tcellFlush() error {
 	screen.Show()
 	return nil
 }
 
-// SetCursor displays the terminal cursor at the given location.
-func SetCursor(x, y int) {
+// tcellSetCursor displays the terminal cursor at the given location.
+func tcellSetCursor(x, y int) {
 	screen.ShowCursor(x, y)
 }
 
-// HideCursor hides the terminal cursor.
-func HideCursor() {
-	SetCursor(-1, -1)
+// tcellHideCursor hides the terminal cursor.
+func tcellHideCursor() {
+	tcellSetCursor(-1, -1)
 }
 
-// Size returns the screen size as width, height in character cells.
-func Size() (int, int) {
+// tcellSize returns the screen size as width, height in character cells.
+func tcellSize() (int, int) {
 	return screen.Size()
 }
 
@@ -189,8 +189,8 @@ func GetColor(color string) Attribute {
 	return ColorDefault
 }
 
-// Clear clears the screen with the given attributes.
-func Clear(fg, bg Attribute) {
+// tcellClear clears the screen with the given attributes.
+func tcellClear(fg, bg Attribute) {
 	st := mkStyle(fg, bg)
 	w, h := screen.Size()
 	for row := 0; row < h; row++ {
@@ -211,8 +211,8 @@ const (
 	InputCurrent InputMode = 0
 )
 
-// SetInputMode does not do anything in this version.
-func SetInputMode(mode InputMode) InputMode {
+// tcellSetInputMode does not do anything in this version.
+func tcellSetInputMode(mode InputMode) InputMode {
 	if mode&InputMouse != 0 {
 		screen.EnableMouse()
 		return InputEsc | InputMouse
@@ -235,8 +235,8 @@ const (
 	OutputTrue
 )
 
-// SetOutputMode is used to set the color palette used.
-func SetOutputMode(mode OutputMode) OutputMode {
+// tcellSetOutputMode is used to set the color palette used.
+func tcellSetOutputMode(mode OutputMode) OutputMode {
 	if screen.Colors() < 256 {
 		mode = OutputNormal
 	}
@@ -251,15 +251,15 @@ func SetOutputMode(mode OutputMode) OutputMode {
 	}
 }
 
-// Sync forces a resync of the screen.
-func Sync() error {
+// tcellSync forces a resync of the screen.
+func tcellSync() error {
 	screen.Sync()
 	return nil
 }
 
-// SetCell sets the character cell at a given location to the given
+// tcellSetCell sets the character cell at a given location to the given
 // content (rune) and attributes.
-func SetCell(x, y int, ch rune, fg, bg Attribute) {
+func tcellSetCell(x, y int, ch rune, fg, bg Attribute) {
 	st := mkStyle(fg, bg)
 	screen.SetContent(x, y, ch, nil, st)
 }
@@ -480,8 +480,8 @@ func makeEvent(tev tcell.Event) Event {
 	}
 }
 
-// PollEvent blocks until an event is ready, and then returns it.
-func PollEvent() Event {
+// tcellPollEvent blocks until an event is ready, and then returns it.
+func tcellPollEvent() Event {
 	ev := screen.PollEvent()
 	return makeEvent(ev)
 }

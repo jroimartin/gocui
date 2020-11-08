@@ -81,7 +81,7 @@ type Gui struct {
 
 // NewGui returns a new Gui object with a given output mode.
 func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
-	err := Init()
+	err := tcellInit()
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	g := &Gui{}
 
 	g.outputMode = mode
-	SetOutputMode(OutputMode(mode))
+	tcellSetOutputMode(OutputMode(mode))
 
 	g.stop = make(chan struct{})
 
@@ -102,7 +102,7 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 			return nil, err
 		}
 	} else {
-		g.maxX, g.maxY = Size()
+		g.maxX, g.maxY = tcellSize()
 	}
 
 	g.BgColor, g.FgColor, g.FrameColor = ColorDefault, ColorDefault, ColorDefault
@@ -121,7 +121,7 @@ func (g *Gui) Close() {
 	go func() {
 		g.stop <- struct{}{}
 	}()
-	Close()
+	tcellClose()
 }
 
 // Size returns the terminal's size.
@@ -136,7 +136,7 @@ func (g *Gui) SetRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return errors.New("invalid point")
 	}
-	SetCell(x, y, ch, Attribute(fgColor), Attribute(bgColor))
+	tcellSetCell(x, y, ch, fgColor, bgColor)
 	return nil
 }
 
@@ -435,7 +435,7 @@ func (g *Gui) MainLoop() error {
 			case <-g.stop:
 				return
 			default:
-				g.tbEvents <- PollEvent()
+				g.tbEvents <- tcellPollEvent()
 			}
 		}
 	}()
@@ -447,7 +447,7 @@ func (g *Gui) MainLoop() error {
 	if g.Mouse {
 		inputMode |= InputMouse
 	}
-	SetInputMode(inputMode)
+	tcellSetInputMode(inputMode)
 
 	if err := g.flush(); err != nil {
 		return err
@@ -508,9 +508,9 @@ func (g *Gui) handleEvent(ev *Event) error {
 
 // flush updates the gui, re-drawing frames and buffers.
 func (g *Gui) flush() error {
-	Clear(Attribute(g.FgColor), Attribute(g.BgColor))
+	tcellClear(Attribute(g.FgColor), Attribute(g.BgColor))
 
-	maxX, maxY := Size()
+	maxX, maxY := tcellSize()
 	// if GUI's size has changed, we need to redraw all views
 	if maxX != g.maxX || maxY != g.maxY {
 		for _, v := range g.views {
@@ -569,7 +569,7 @@ func (g *Gui) flush() error {
 			return err
 		}
 	}
-	Flush()
+	tcellFlush()
 	return nil
 }
 
@@ -784,13 +784,13 @@ func (g *Gui) draw(v *View) error {
 			gMaxX, gMaxY := g.Size()
 			cx, cy := curview.x0+curview.cx+1, curview.y0+curview.cy+1
 			if cx >= 0 && cx < gMaxX && cy >= 0 && cy < gMaxY {
-				SetCursor(cx, cy)
+				tcellSetCursor(cx, cy)
 			} else {
-				HideCursor()
+				tcellHideCursor()
 			}
 		}
 	} else {
-		HideCursor()
+		tcellHideCursor()
 	}
 
 	v.clearRunes()
