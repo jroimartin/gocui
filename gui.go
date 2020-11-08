@@ -287,6 +287,11 @@ func (g *Gui) CurrentView() *View {
 // SetKeybinding creates a new keybinding. If viewname equals to ""
 // (empty string) then the keybinding will apply to all views. key must
 // be a rune or a Key.
+//
+// When mouse keys are used (MouseLeft, MouseRight, ...), modifier might not work correctly.
+// It behaves differently on different platforms. Somewhere it doesn't register Alt key press,
+// on others it might report Ctrl as Alt. It's not consistent and therefore it's not recommended
+// to use with mouse keys.
 func (g *Gui) SetKeybinding(viewname string, key interface{}, mod Modifier, handler func(*Gui, *View) error) error {
 	var kb *keybinding
 
