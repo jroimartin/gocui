@@ -188,10 +188,14 @@ func makeEvent(tev tcell.Event) Event {
 		}
 		mod := tev.Modifiers()
 		// remove control modifier and setup special handling of ctrl+spacebar, etc.
-		if mod == tcell.ModCtrl && k == 0 && ch == 0 {
+		if mod == tcell.ModCtrl && k == 0 && ch == ' ' {
 			mod = 0
+			ch = rune(0)
 			k = tcell.KeyCtrlSpace
-		} else if mod == tcell.ModCtrl {
+		} else if mod == tcell.ModCtrl || mod == tcell.ModShift {
+			// remove Ctrl or Shift if specified
+			// - shift - will be translated to the final code of rune
+			// - ctrl  - is translated in the key
 			mod = 0
 		}
 		return Event{
