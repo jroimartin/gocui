@@ -111,9 +111,7 @@ func showMsg(g *gocui.Gui, v *gocui.View) error {
 }
 
 func delMsg(g *gocui.Gui, v *gocui.View) error {
-	if err := g.DeleteView("msg"); err != nil {
-		// Error removed for testing purpose, because delete could be called multiple times with the above keybindings
-		// return err
-	}
+	// Error check removed, because delete could be called multiple times with the above keybindings
+	g.DeleteView("msg")
 	return nil
 }
