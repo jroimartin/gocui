@@ -440,7 +440,7 @@ func (g *Gui) MainLoop() error {
 			case <-g.stop:
 				return
 			default:
-				g.tbEvents <- tcellPollEvent()
+				g.tbEvents <- makeEvent(screen.PollEvent())
 			}
 		}
 	}()
