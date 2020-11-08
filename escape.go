@@ -7,7 +7,6 @@ package gocui
 import (
 	"strconv"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/go-errors/errors"
 )
 
@@ -167,11 +166,11 @@ func (ei *escapeInterpreter) outputNormal() error {
 
 		switch {
 		case p >= 30 && p <= 37:
-			ei.curFgColor = Attribute(p - 30)
+			ei.curFgColor = Get256Color(int32(p) - 30)
 		case p == 39:
 			ei.curFgColor = ColorDefault
 		case p >= 40 && p <= 47:
-			ei.curBgColor = Attribute(p - 40)
+			ei.curBgColor = Get256Color(int32(p) - 40)
 		case p == 49:
 			ei.curBgColor = ColorDefault
 		case p == 0:
@@ -215,7 +214,7 @@ func (ei *escapeInterpreter) output256() error {
 
 		switch fontEffect(fgbg) {
 		case setForegroundColor:
-			ei.curFgColor = Attribute(color)
+			ei.curFgColor = Get256Color(int32(color))
 
 			for _, s := range param[3:] {
 				p, err := strconv.Atoi(s)
@@ -226,7 +225,7 @@ func (ei *escapeInterpreter) output256() error {
 				ei.curFgColor |= getFontEffect(p)
 			}
 		case setBackgroundColor:
-			ei.curBgColor = Attribute(color)
+			ei.curBgColor = Get256Color(int32(color))
 		default:
 			return errCSIParseError
 		}
@@ -267,16 +266,11 @@ func (ei *escapeInterpreter) outputTrue() error {
 		if err != nil {
 			return errCSIParseError
 		}
-		color := tcell.NewRGBColor(int32(colr), int32(colg), int32(colb)).Hex()
+		color := NewRGBColor(int32(colr), int32(colg), int32(colb))
 
 		switch fontEffect(fgbg) {
 		case setForegroundColor:
-			if color == -1 {
-				// This shouldn't happen ever, but Hex() could return it, so rather safe than sorry
-				ei.curFgColor = ColorDefault
-			} else {
-				ei.curFgColor = Attribute(color) | AttrIsRGBColor
-			}
+			ei.curFgColor = color
 
 			for _, s := range param[5:] {
 				p, err := strconv.Atoi(s)
@@ -287,7 +281,7 @@ func (ei *escapeInterpreter) outputTrue() error {
 				ei.curFgColor |= getFontEffect(p)
 			}
 		case setBackgroundColor:
-			ei.curBgColor = Attribute(color) | AttrIsRGBColor
+			ei.curBgColor = color
 		default:
 			return errCSIParseError
 		}

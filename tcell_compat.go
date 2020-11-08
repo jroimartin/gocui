@@ -70,7 +70,12 @@ type Attribute uint64
 
 const (
 	// ColorDefault is used to leave the Color unchanged from whatever system or teminal default may exist.
-	ColorDefault = Attribute(tcell.ColorValid) // We are going to use reverse method to see if color is setup than tcell does
+	ColorDefault = Attribute(tcell.ColorDefault)
+
+	// AttrIsValidColor is used to indicate the color value is actually
+	// valid (initialized).  This is useful to permit the zero value
+	// to be treated as the default.
+	AttrIsValidColor = Attribute(tcell.ColorValid)
 
 	// AttrIsRGBColor is used to indicate that the Attribute value is RGB value of color.
 	// The lower order 3 bytes are RGB.
@@ -84,9 +89,9 @@ const (
 	AttrStyleBits = 0xffffff0000000000 // remaining 3 bytes in the 8 bytes Attribute (tcell is not using it, so we should be fine)
 )
 
-// Colors first.  The order here is significant.
+// Colors compatible with tcell colors
 const (
-	ColorBlack Attribute = iota
+	ColorBlack Attribute = AttrIsValidColor + iota
 	ColorRed
 	ColorGreen
 	ColorYellow
@@ -95,6 +100,12 @@ const (
 	ColorCyan
 	ColorWhite
 )
+
+// grayscale indexes (for backward compatibility with termbox-go original grayscale)
+var grayscale = []tcell.Color{
+	16, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244,
+	245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 231,
+}
 
 // Attributes are not colors, but affect the display of text.  They can
 // be combined.
@@ -114,28 +125,45 @@ const AttrAll = AttrBold | AttrBlink | AttrReverse | AttrUnderline | AttrDim | A
 // fixColor transform  Attribute into tcell.Color
 func fixColor(c Attribute) tcell.Color {
 	c = c & AttrColorBits
-	if c&ColorDefault != 0 {
+	// Default color is 0 in tcell/v2 and was 0 in termbox-go, so we are good here
+	if c == ColorDefault {
 		return tcell.ColorDefault
 	}
 
-	tc := tcell.Color(c)
+	tc := tcell.ColorDefault
+	// Check if we have valid color
+	if c&AttrIsValidColor != 0 {
+		tc = tcell.Color(c)
+	} else if c > 0 && c <= 256 {
+		// It's not valid color, but it has value in range 1-256
+		// This is old Attribute style of color from termbox-go (black=1, etc.)
+		// convert to tcell color (black=0|ColorValid)
+		tc = tcell.Color(c-1) | tcell.ColorValid
+	}
+
 	switch outMode {
 	case OutputTrue:
-		return tc | tcell.ColorValid
+		return tc
 	case OutputNormal:
-		tc %= tcell.Color(16)
+		tc &= tcell.Color(0xf) | tcell.ColorValid
 	case Output256:
-		tc %= tcell.Color(256)
+		tc &= tcell.Color(0xff) | tcell.ColorValid
 	case Output216:
-		tc %= tcell.Color(216)
-		tc += tcell.Color(16)
+		tc &= tcell.Color(0xff)
+		if tc > 215 {
+			return tcell.ColorDefault
+		}
+		tc += tcell.Color(16) | tcell.ColorValid
 	case OutputGrayscale:
-		tc %= tcell.Color(24)
-		tc += tcell.Color(232)
+		tc &= tcell.Color(0x1f)
+		if tc > 26 {
+			return tcell.ColorDefault
+		}
+		tc = grayscale[tc] | tcell.ColorValid
 	default:
 		return tcell.ColorDefault
 	}
-	return tc | tcell.ColorValid
+	return tc
 }
 
 func mkStyle(fg, bg Attribute) tcell.Style {
@@ -179,14 +207,23 @@ func setAttr(st tcell.Style, attr Attribute) tcell.Style {
 // GetColor creates a Color from a color name (W3C name). A hex value may
 // be supplied as a string in the format "#ffffff".
 func GetColor(color string) Attribute {
-	c := tcell.GetColor(color)
-	if c&tcell.ColorValid != 0 {
-		// reverse ColorValid for Attribute
-		c &= ^tcell.ColorValid
-		return Attribute(c)
-	}
+	return Attribute(tcell.GetColor(color))
+}
 
-	return ColorDefault
+// Get256Color creates Attribute which stores ANSI color (0-255)
+func Get256Color(color int32) Attribute {
+	return Attribute(color) | AttrIsValidColor
+}
+
+// GetRGBColor creates Attribute which stores RGB color.
+// Color is passed as 24bit RGB value, where R << 16 | G << 8 | B
+func GetRGBColor(color int32) Attribute {
+	return Attribute(color) | AttrIsValidColor | AttrIsRGBColor
+}
+
+// NewRGBColor creates Attribute which stores RGB color.
+func NewRGBColor(r, g, b int32) Attribute {
+	return Attribute(tcell.NewRGBColor(r, g, b))
 }
 
 // tcellClear clears the screen with the given attributes.
