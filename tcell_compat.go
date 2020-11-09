@@ -142,12 +142,17 @@ func makeEvent(tev tcell.Event) Event {
 		k := tev.Key()
 		ch := rune(0)
 		if k == tcell.KeyRune {
-			k = 0 // if rune remove key (so it can match, for example spacebar)
+			k = 0 // if rune remove key (so it can match rune instead of key)
 			ch = tev.Rune()
+			if ch == ' ' {
+				// special handling for spacebar
+				k = 32 // tcell keys ends at 31 or starts at 256
+				ch = rune(0)
+			}
 		}
 		mod := tev.Modifiers()
 		// remove control modifier and setup special handling of ctrl+spacebar, etc.
-		if mod == tcell.ModCtrl && k == 0 && ch == ' ' {
+		if mod == tcell.ModCtrl && k == 32 {
 			mod = 0
 			ch = rune(0)
 			k = tcell.KeyCtrlSpace

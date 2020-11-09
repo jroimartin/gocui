@@ -256,7 +256,7 @@ const (
 	KeyCtrlZ          = Key(tcell.KeyCtrlZ)
 	KeyEsc            = Key(tcell.KeyEscape)
 	KeyCtrlUnderscore = Key(tcell.KeyCtrlUnderscore)
-	KeySpace          = ' '
+	KeySpace          = Key(32)
 	KeyBackspace2     = Key(tcell.KeyBackspace2)
 	KeyCtrl8          = Key(tcell.KeyBackspace2) // same key as in termbox-go
 
