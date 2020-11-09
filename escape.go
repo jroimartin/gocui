@@ -35,6 +35,7 @@ const (
 	underline          fontEffect = 4
 	blink              fontEffect = 5
 	reverse            fontEffect = 7
+	strike             fontEffect = 9
 	setForegroundColor fontEffect = 38
 	setBackgroundColor fontEffect = 48
 )
@@ -324,6 +325,8 @@ func getFontEffect(f int) Attribute {
 		return AttrBlink
 	case reverse:
 		return AttrReverse
+	case strike:
+		return AttrStrikeThrough
 	}
 	return AttrNone
 }

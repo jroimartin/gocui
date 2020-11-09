@@ -59,6 +59,7 @@ const (
 	AttrUnderline
 	AttrDim
 	AttrItalic
+	AttrStrikeThrough
 	AttrNone Attribute = 0 // Just normal text.
 )
 
@@ -191,6 +192,9 @@ func setAttr(st tcell.Style, attr Attribute) tcell.Style {
 	}
 	if attr&AttrItalic != 0 {
 		st = st.Italic(true)
+	}
+	if attr&AttrStrikeThrough != 0 {
+		st = st.StrikeThrough(true)
 	}
 	return st
 }
