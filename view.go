@@ -39,6 +39,7 @@ type View struct {
 	rx, ry         int      // Read() offsets
 	wx, wy         int      // Write() offsets
 	lines          [][]cell // All the data
+	outMode        OutputMode
 
 	// readBuffer is used for storing unread bytes
 	readBuffer []byte
@@ -169,6 +170,7 @@ func newView(name string, x0, y0, x1, y1 int, mode OutputMode) *View {
 		Frame:   true,
 		Editor:  DefaultEditor,
 		tainted: true,
+		outMode: mode,
 		ei:      newEscapeInterpreter(mode),
 	}
 
@@ -230,7 +232,7 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 		ch = ' '
 	}
 
-	tcellSetCell(v.x0+x+1, v.y0+y+1, ch, fgColor, bgColor)
+	tcellSetCell(v.x0+x+1, v.y0+y+1, ch, fgColor, bgColor, v.outMode)
 
 	return nil
 }
@@ -631,7 +633,7 @@ func (v *View) clearRunes() {
 	maxX, maxY := v.Size()
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < maxY; y++ {
-			tcellSetCell(v.x0+x+1, v.y0+y+1, ' ', v.FgColor, v.BgColor)
+			tcellSetCell(v.x0+x+1, v.y0+y+1, ' ', v.FgColor, v.BgColor, v.outMode)
 		}
 	}
 }

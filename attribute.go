@@ -157,16 +157,16 @@ func fixColor(c Attribute, omode OutputMode) tcell.Color {
 }
 
 // mkStyle creates tcell.Style from Attributes
-func mkStyle(fg, bg Attribute) tcell.Style {
+func mkStyle(fg, bg Attribute, omode OutputMode) tcell.Style {
 	st := tcell.StyleDefault
 
 	// extract colors and attributes
 	if fg != ColorDefault {
-		st = st.Foreground(fixColor(fg, outMode))
+		st = st.Foreground(fixColor(fg, omode))
 		st = setAttr(st, fg)
 	}
 	if bg != ColorDefault {
-		st = st.Background(fixColor(bg, outMode))
+		st = st.Background(fixColor(bg, omode))
 		st = setAttr(st, bg)
 	}
 

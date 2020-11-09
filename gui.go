@@ -34,6 +34,31 @@ var (
 	ErrQuit = standardErrors.New("quit")
 )
 
+// OutputMode represents an output mode, which determines how colors
+// are used.
+type OutputMode int
+
+const (
+	// OutputNormal provides 8-colors terminal mode.
+	OutputNormal OutputMode = iota
+
+	// Output256 provides 256-colors terminal mode.
+	Output256
+
+	// Output216 provides 216 ansi color terminal mode.
+	Output216
+
+	// OutputGrayscale provides greyscale terminal mode.
+	OutputGrayscale
+
+	// OutputTrue provides 24bit color terminal mode.
+	// This mode is recommended even if your terminal doesn't support
+	// such mode. The colors are represented exactly as you
+	// write them (no clamping or truncating). `tcell` will take care
+	// of what your terminal can do.
+	OutputTrue
+)
+
 // Gui represents the whole User Interface, including the views, layouts
 // and keybindings.
 type Gui struct {
@@ -89,7 +114,6 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	g := &Gui{}
 
 	g.outputMode = mode
-	tcellSetOutputMode(OutputMode(mode))
 
 	g.stop = make(chan struct{})
 
@@ -136,7 +160,7 @@ func (g *Gui) SetRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return errors.New("invalid point")
 	}
-	tcellSetCell(x, y, ch, fgColor, bgColor)
+	tcellSetCell(x, y, ch, fgColor, bgColor, g.outputMode)
 	return nil
 }
 
@@ -513,7 +537,7 @@ func (g *Gui) handleEvent(ev *Event) error {
 
 // flush updates the gui, re-drawing frames and buffers.
 func (g *Gui) flush() error {
-	tcellClear(Attribute(g.FgColor), Attribute(g.BgColor))
+	g.clear(g.FgColor, g.BgColor)
 
 	maxX, maxY := tcellSize()
 	// if GUI's size has changed, we need to redraw all views
@@ -576,6 +600,17 @@ func (g *Gui) flush() error {
 	}
 	tcellFlush()
 	return nil
+}
+
+func (g *Gui) clear(fg, bg Attribute) (int, int) {
+	st := mkStyle(fg, bg, g.outputMode)
+	w, h := screen.Size()
+	for row := 0; row < h; row++ {
+		for col := 0; col < w; col++ {
+			screen.SetContent(col, row, ' ', nil, st)
+		}
+	}
+	return w, h
 }
 
 // drawFrameEdges draws the horizontal and vertical edges of a view.

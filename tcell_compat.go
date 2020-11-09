@@ -64,17 +64,6 @@ func tcellSize() (int, int) {
 	return screen.Size()
 }
 
-// tcellClear clears the screen with the given attributes.
-func tcellClear(fg, bg Attribute) {
-	st := mkStyle(fg, bg)
-	w, h := screen.Size()
-	for row := 0; row < h; row++ {
-		for col := 0; col < w; col++ {
-			screen.SetContent(col, row, ' ', nil, st)
-		}
-	}
-}
-
 // InputMode is not used.
 type InputMode int
 
@@ -96,36 +85,6 @@ func tcellSetInputMode(mode InputMode) InputMode {
 	return InputEsc
 }
 
-// OutputMode represents an output mode, which determines how colors
-// are used.  See the termbox documentation for an explanation.
-type OutputMode int
-
-// OutputMode values.
-const (
-	OutputCurrent OutputMode = iota
-	OutputNormal
-	Output256
-	Output216
-	OutputGrayscale
-	OutputTrue
-)
-
-// tcellSetOutputMode is used to set the color palette used.
-func tcellSetOutputMode(mode OutputMode) OutputMode {
-	if screen.Colors() < 256 {
-		mode = OutputNormal
-	}
-	switch mode {
-	case OutputCurrent:
-		return outMode
-	case OutputNormal, Output256, Output216, OutputGrayscale, OutputTrue:
-		outMode = mode
-		return mode
-	default:
-		return outMode
-	}
-}
-
 // tcellSync forces a resync of the screen.
 func tcellSync() error {
 	screen.Sync()
@@ -134,8 +93,8 @@ func tcellSync() error {
 
 // tcellSetCell sets the character cell at a given location to the given
 // content (rune) and attributes.
-func tcellSetCell(x, y int, ch rune, fg, bg Attribute) {
-	st := mkStyle(fg, bg)
+func tcellSetCell(x, y int, ch rune, fg, bg Attribute, omode OutputMode) {
+	st := mkStyle(fg, bg, omode)
 	screen.SetContent(x, y, ch, nil, st)
 }
 
