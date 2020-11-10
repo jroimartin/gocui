@@ -11,8 +11,9 @@ import (
 	"github.com/go-errors/errors"
 )
 
-// OutputMode represents the terminal's output mode (8 or 256 colors).
-// type OutputMode OutputMode
+// OutputMode represents an output mode, which determines how colors
+// are used.
+type OutputMode int
 
 var (
 	// ErrAlreadyBlacklisted is returned when the keybinding is already blacklisted.
@@ -33,10 +34,6 @@ var (
 	// ErrQuit is used to decide if the MainLoop finished successfully.
 	ErrQuit = standardErrors.New("quit")
 )
-
-// OutputMode represents an output mode, which determines how colors
-// are used.
-type OutputMode int
 
 const (
 	// OutputNormal provides 8-colors terminal mode.
@@ -170,9 +167,8 @@ func (g *Gui) Rune(x, y int) (rune, error) {
 	if x < 0 || y < 0 || x >= g.maxX || y >= g.maxY {
 		return ' ', errors.New("invalid point")
 	}
-	// c := CellBuffer()[y*g.maxX+x]
-	// return c.Ch, nil
-	return ' ', errors.New("invalid point")
+	c, _, _, _ := screen.GetContent(x, y)
+	return c, nil
 }
 
 // SetView creates a new view with its top-left corner at (x0, y0)
