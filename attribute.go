@@ -6,8 +6,7 @@ package gocui
 
 import "github.com/gdamore/tcell/v2"
 
-// Attribute affects the presentation of characters, such as color, boldness,
-// and so forth.
+// Attribute affects the presentation of characters, such as color, boldness, etc.
 type Attribute uint64
 
 const (
@@ -50,8 +49,8 @@ var grayscale = []tcell.Color{
 	245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 231,
 }
 
-// Attributes are not colors, but affect the display of text.  They can
-// be combined.
+// Attributes are not colors, but effects (e.g.: bold, dim) which affect the display of text.
+// They can be combined.
 const (
 	AttrBold Attribute = 1 << (40 + iota)
 	AttrBlink
@@ -63,8 +62,13 @@ const (
 	AttrNone Attribute = 0 // Just normal text.
 )
 
-// AttrAll is all the attributes turned on
+// AttrAll represents all the text effect attributes turned on
 const AttrAll = AttrBold | AttrBlink | AttrReverse | AttrUnderline | AttrDim | AttrItalic
+
+// IsValidColor indicates if the Attribute is a valid color value (has been set).
+func (a Attribute) IsValidColor() bool {
+	return a&AttrIsValidColor != 0
+}
 
 // Hex returns the color's hexadecimal RGB 24-bit value with each component
 // consisting of a single byte, ala R << 16 | G << 8 | B.  If the color
@@ -73,8 +77,11 @@ const AttrAll = AttrBold | AttrBlink | AttrReverse | AttrUnderline | AttrDim | A
 // This function produce the same output as `tcell.Hex()` with additional
 // support for `termbox-go` colors (to 256).
 func (a Attribute) Hex() int32 {
-	fixa := fixColor(a, OutputTrue)
-	return fixa.Hex()
+	if !a.IsValidColor() {
+		return -1
+	}
+	tc := getTcellColor(a, OutputTrue)
+	return tc.Hex()
 }
 
 // RGB returns the red, green, and blue components of the color, with
@@ -113,8 +120,8 @@ func NewRGBColor(r, g, b int32) Attribute {
 	return Attribute(tcell.NewRGBColor(r, g, b))
 }
 
-// fixColor transform  Attribute into tcell.Color
-func fixColor(c Attribute, omode OutputMode) tcell.Color {
+// getTcellColor transform  Attribute into tcell.Color
+func getTcellColor(c Attribute, omode OutputMode) tcell.Color {
 	c = c & AttrColorBits
 	// Default color is 0 in tcell/v2 and was 0 in termbox-go, so we are good here
 	if c == ColorDefault {
@@ -123,7 +130,7 @@ func fixColor(c Attribute, omode OutputMode) tcell.Color {
 
 	tc := tcell.ColorDefault
 	// Check if we have valid color
-	if c&AttrIsValidColor != 0 {
+	if c.IsValidColor() {
 		tc = tcell.Color(c)
 	} else if c > 0 && c <= 256 {
 		// It's not valid color, but it has value in range 1-256
@@ -155,46 +162,4 @@ func fixColor(c Attribute, omode OutputMode) tcell.Color {
 		return tcell.ColorDefault
 	}
 	return tc
-}
-
-// mkStyle creates tcell.Style from Attributes
-func mkStyle(fg, bg Attribute, omode OutputMode) tcell.Style {
-	st := tcell.StyleDefault
-
-	// extract colors and attributes
-	if fg != ColorDefault {
-		st = st.Foreground(fixColor(fg, omode))
-		st = setAttr(st, fg)
-	}
-	if bg != ColorDefault {
-		st = st.Background(fixColor(bg, omode))
-		st = setAttr(st, bg)
-	}
-
-	return st
-}
-
-func setAttr(st tcell.Style, attr Attribute) tcell.Style {
-	if attr&AttrBold != 0 {
-		st = st.Bold(true)
-	}
-	if attr&AttrUnderline != 0 {
-		st = st.Underline(true)
-	}
-	if attr&AttrReverse != 0 {
-		st = st.Reverse(true)
-	}
-	if attr&AttrBlink != 0 {
-		st = st.Blink(true)
-	}
-	if attr&AttrDim != 0 {
-		st = st.Dim(true)
-	}
-	if attr&AttrItalic != 0 {
-		st = st.Italic(true)
-	}
-	if attr&AttrStrikeThrough != 0 {
-		st = st.StrikeThrough(true)
-	}
-	return st
 }

@@ -54,7 +54,7 @@ const (
 	// OutputTrue provides 24bit color terminal mode.
 	// This mode is recommended even if your terminal doesn't support
 	// such mode. The colors are represented exactly as you
-	// write them (no clamping or truncating). `tcell` will take care
+	// write them (no clamping or truncating). `tcell` should take care
 	// of what your terminal can do.
 	OutputTrue
 )
@@ -62,7 +62,7 @@ const (
 // Gui represents the whole User Interface, including the views, layouts
 // and keybindings.
 type Gui struct {
-	tbEvents    chan Event
+	gEvents     chan gocuiEvent
 	userEvents  chan userEvent
 	views       []*View
 	currentView *View
@@ -117,7 +117,7 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 
 	g.stop = make(chan struct{})
 
-	g.tbEvents = make(chan Event, 20)
+	g.gEvents = make(chan gocuiEvent, 20)
 	g.userEvents = make(chan userEvent, 20)
 
 	if runtime.GOOS != "windows" {
@@ -126,7 +126,7 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 			return nil, err
 		}
 	} else {
-		g.maxX, g.maxY = tcellSize()
+		g.maxX, g.maxY = screen.Size()
 	}
 
 	g.BgColor, g.FgColor, g.FrameColor = ColorDefault, ColorDefault, ColorDefault
@@ -145,7 +145,7 @@ func (g *Gui) Close() {
 	go func() {
 		g.stop <- struct{}{}
 	}()
-	tcellClose()
+	screen.Fini()
 }
 
 // Size returns the terminal's size.
@@ -441,7 +441,7 @@ func (g *Gui) SetManager(managers ...Manager) {
 	g.views = nil
 	g.keybindings = nil
 
-	go func() { g.tbEvents <- Event{Type: EventResize} }()
+	go func() { g.gEvents <- gocuiEvent{Type: eventResize} }()
 }
 
 // SetManagerFunc sets the given manager function. It deletes all views and
@@ -464,26 +464,21 @@ func (g *Gui) MainLoop() error {
 			case <-g.stop:
 				return
 			default:
-				g.tbEvents <- makeEvent(screen.PollEvent())
+				g.gEvents <- pollEvent()
 			}
 		}
 	}()
 
-	inputMode := InputAlt
-	if true { // previously g.InputEsc, but didn't seem to work
-		inputMode = InputEsc
-	}
 	if g.Mouse {
-		inputMode |= InputMouse
+		screen.EnableMouse()
 	}
-	tcellSetInputMode(inputMode)
 
 	if err := g.flush(); err != nil {
 		return err
 	}
 	for {
 		select {
-		case ev := <-g.tbEvents:
+		case ev := <-g.gEvents:
 			if err := g.handleEvent(&ev); err != nil {
 				return err
 			}
@@ -505,7 +500,7 @@ func (g *Gui) MainLoop() error {
 func (g *Gui) consumeevents() error {
 	for {
 		select {
-		case ev := <-g.tbEvents:
+		case ev := <-g.gEvents:
 			if err := g.handleEvent(&ev); err != nil {
 				return err
 			}
@@ -521,14 +516,14 @@ func (g *Gui) consumeevents() error {
 
 // handleEvent handles an event, based on its type (key-press, error,
 // etc.)
-func (g *Gui) handleEvent(ev *Event) error {
+func (g *Gui) handleEvent(ev *gocuiEvent) error {
 	switch ev.Type {
-	case EventKey, EventMouse:
+	case eventKey, eventMouse:
 		return g.onKey(ev)
-	case EventError:
+	case eventError:
 		return ev.Err
 	// Not sure if this should be handled. It acts weirder when it's here
-	// case EventResize:
+	// case eventResize:
 	// 	return Sync()
 	default:
 		return nil
@@ -539,7 +534,7 @@ func (g *Gui) handleEvent(ev *Event) error {
 func (g *Gui) flush() error {
 	g.clear(g.FgColor, g.BgColor)
 
-	maxX, maxY := tcellSize()
+	maxX, maxY := screen.Size()
 	// if GUI's size has changed, we need to redraw all views
 	if maxX != g.maxX || maxY != g.maxY {
 		for _, v := range g.views {
@@ -598,12 +593,12 @@ func (g *Gui) flush() error {
 			return err
 		}
 	}
-	tcellFlush()
+	screen.Show()
 	return nil
 }
 
 func (g *Gui) clear(fg, bg Attribute) (int, int) {
-	st := mkStyle(fg, bg, g.outputMode)
+	st := getTcellStyle(fg, bg, g.outputMode)
 	w, h := screen.Size()
 	for row := 0; row < h; row++ {
 		for col := 0; col < w; col++ {
@@ -823,14 +818,17 @@ func (g *Gui) draw(v *View) error {
 
 			gMaxX, gMaxY := g.Size()
 			cx, cy := curview.x0+curview.cx+1, curview.y0+curview.cy+1
+			// This test probably doesn't need to be here.
+			// tcell is hiding cursor by setting coordinates outside of screen.
+			// Keeping it here for now, as I'm not 100% sure :)
 			if cx >= 0 && cx < gMaxX && cy >= 0 && cy < gMaxY {
-				tcellSetCursor(cx, cy)
+				screen.ShowCursor(cx, cy)
 			} else {
-				tcellHideCursor()
+				screen.HideCursor()
 			}
 		}
 	} else {
-		tcellHideCursor()
+		screen.HideCursor()
 	}
 
 	v.clearRunes()
@@ -843,9 +841,9 @@ func (g *Gui) draw(v *View) error {
 // onKey manages key-press events. A keybinding handler is called when
 // a key-press or mouse event satisfies a configured keybinding. Furthermore,
 // currentView's internal buffer is modified if currentView.Editable is true.
-func (g *Gui) onKey(ev *Event) error {
+func (g *Gui) onKey(ev *gocuiEvent) error {
 	switch ev.Type {
-	case EventKey:
+	case eventKey:
 		matched, err := g.execKeybindings(g.currentView, ev)
 		if err != nil {
 			return err
@@ -856,7 +854,7 @@ func (g *Gui) onKey(ev *Event) error {
 		if g.currentView != nil && g.currentView.Editable && g.currentView.Editor != nil {
 			g.currentView.Editor.Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
 		}
-	case EventMouse:
+	case eventMouse:
 		mx, my := ev.MouseX, ev.MouseY
 		v, err := g.ViewByPosition(mx, my)
 		if err != nil {
@@ -875,7 +873,7 @@ func (g *Gui) onKey(ev *Event) error {
 
 // execKeybindings executes the keybinding handlers that match the passed view
 // and event. The value of matched is true if there is a match and no errors.
-func (g *Gui) execKeybindings(v *View, ev *Event) (matched bool, err error) {
+func (g *Gui) execKeybindings(v *View, ev *gocuiEvent) (matched bool, err error) {
 	var globalKb *keybinding
 
 	for _, kb := range g.keybindings {
