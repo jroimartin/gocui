@@ -547,9 +547,17 @@ func (g *Gui) flush() error {
 				bgColor = g.SelBgColor
 				frameColor = g.SelFrameColor
 			} else {
-				fgColor = g.FgColor
 				bgColor = g.BgColor
-				frameColor = g.FrameColor
+				if v.TitleColor != ColorDefault {
+					fgColor = v.TitleColor
+				} else {
+					fgColor = g.FgColor
+				}
+				if v.FrameColor != ColorDefault {
+					frameColor = v.FrameColor
+				} else {
+					frameColor = g.FrameColor
+				}
 			}
 
 			if err := g.drawFrameEdges(v, frameColor, bgColor); err != nil {
@@ -582,6 +590,8 @@ func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 	runeH, runeV := '─', '│'
 	if g.ASCII {
 		runeH, runeV = '-', '|'
+	} else if len(v.FrameRunes) >= 2 {
+		runeH, runeV = v.FrameRunes[0], v.FrameRunes[1]
 	}
 
 	for x := v.x0 + 1; x < v.x1 && x < g.maxX; x++ {
@@ -621,8 +631,64 @@ func cornerRune(index byte) rune {
 	return []rune{' ', '│', '│', '│', '─', '┘', '┐', '┤', '─', '└', '┌', '├', '├', '┴', '┬', '┼'}[index]
 }
 
+// cornerCustomRune returns rune from `v.FrameRunes` slice. If the length of slice is less than 11
+// all the missing runes will be translated to the default `cornerRune()`
+func cornerCustomRune(v *View, index byte) rune {
+	// Translate `cornerRune()` index
+	//  0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15
+	// ' ', '│', '│', '│', '─', '┘', '┐', '┤', '─', '└', '┌', '├', '├', '┴', '┬', '┼'
+	// into `FrameRunes` index
+	//  0    1    2    3    4    5    6    7    8    9    10
+	// '─', '│', '┌', '┐', '└', '┘', '├', '┤', '┬', '┴', '┼'
+	switch index {
+	case 1, 2, 3:
+		return v.FrameRunes[1]
+	case 4, 8:
+		return v.FrameRunes[0]
+	case 5:
+		return v.FrameRunes[5]
+	case 6:
+		return v.FrameRunes[3]
+	case 7:
+		if len(v.FrameRunes) < 8 {
+			break
+		}
+		return v.FrameRunes[7]
+	case 9:
+		return v.FrameRunes[4]
+	case 10:
+		return v.FrameRunes[2]
+	case 11, 12:
+		if len(v.FrameRunes) < 7 {
+			break
+		}
+		return v.FrameRunes[6]
+	case 13:
+		if len(v.FrameRunes) < 10 {
+			break
+		}
+		return v.FrameRunes[9]
+	case 14:
+		if len(v.FrameRunes) < 9 {
+			break
+		}
+		return v.FrameRunes[8]
+	case 15:
+		if len(v.FrameRunes) < 11 {
+			break
+		}
+		return v.FrameRunes[10]
+	default:
+		return ' ' // cornerRune(0)
+	}
+	return cornerRune(index)
+}
+
 func corner(v *View, directions byte) rune {
 	index := v.Overlaps | directions
+	if len(v.FrameRunes) >= 6 {
+		return cornerCustomRune(v, index)
+	}
 	return cornerRune(index)
 }
 
@@ -641,6 +707,9 @@ func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
 	}
 
 	runeTL, runeTR, runeBL, runeBR := '┌', '┐', '└', '┘'
+	if len(v.FrameRunes) >= 6 {
+		runeTL, runeTR, runeBL, runeBR = v.FrameRunes[2], v.FrameRunes[3], v.FrameRunes[4], v.FrameRunes[5]
+	}
 	if g.SupportOverlaps {
 		runeTL = corner(v, BOTTOM|RIGHT)
 		runeTR = corner(v, BOTTOM|LEFT)
