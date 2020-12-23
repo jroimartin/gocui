@@ -25,7 +25,7 @@ func main() {
 	}
 
 	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
-		log.Panicln(err.Error())
+		log.Panicln(err)
 	}
 }
 

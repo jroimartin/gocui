@@ -121,7 +121,7 @@ func main() {
 	defer g.Close()
 
 	g.Highlight = true
-	g.SelFgColor = gocui.ColorRed
+	g.SelFrameColor = gocui.ColorRed
 
 	help := NewHelpWidget("help", 1, 1, helpText)
 	status := NewStatusbarWidget("status", 1, 7, 50)

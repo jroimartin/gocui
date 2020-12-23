@@ -72,6 +72,12 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("msg", gocui.MouseLeft, gocui.ModNone, delMsg); err != nil {
 		return err
 	}
+	if err := g.SetKeybinding("", gocui.MouseRight, gocui.ModNone, delMsg); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", gocui.MouseMiddle, gocui.ModNone, delMsg); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -103,8 +109,7 @@ func showMsg(g *gocui.Gui, v *gocui.View) error {
 }
 
 func delMsg(g *gocui.Gui, v *gocui.View) error {
-	if err := g.DeleteView("msg"); err != nil {
-		return err
-	}
+	// Error check removed, because delete could be called multiple times with the above keybindings
+	g.DeleteView("msg")
 	return nil
 }

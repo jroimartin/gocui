@@ -12,8 +12,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/go-errors/errors"
-
-	"github.com/awesome-gocui/termbox-go"
 	"github.com/mattn/go-runewidth"
 )
 
@@ -41,6 +39,7 @@ type View struct {
 	rx, ry         int      // Read() offsets
 	wx, wy         int      // Write() offsets
 	lines          [][]cell // All the data
+	outMode        OutputMode
 
 	// readBuffer is used for storing unread bytes
 	readBuffer []byte
@@ -88,6 +87,24 @@ type View struct {
 	// If Frame is true, a border will be drawn around the view.
 	Frame bool
 
+	// FrameColor allow to configure the color of the Frame when it is not highlighted.
+	FrameColor Attribute
+
+	// FrameRunes allows to define custom runes for the frame edges.
+	// The rune slice can be defined with 3 different lengths.
+	// If slice doesn't match these lengths, default runes will be used instead of missing one.
+	//
+	// 2 runes with only horizontal and vertical edges.
+	//  []rune{'─', '│'}
+	//  []rune{'═','║'}
+	// 6 runes with horizontal, vertical edges and top-left, top-right, bottom-left, bottom-right cornes.
+	//  []rune{'─', '│', '┌', '┐', '└', '┘'}
+	//  []rune{'═','║','╔','╗','╚','╝'}
+	// 11 runes which can be used with `gocui.Gui.SupportOverlaps` property.
+	//  []rune{'─', '│', '┌', '┐', '└', '┘', '├', '┤', '┬', '┴', '┼'}
+	//  []rune{'═','║','╔','╗','╚','╝','╠','╣','╦','╩','╬'}
+	FrameRunes []rune
+
 	// If Wrap is true, the content that is written to this View is
 	// automatically wrapped when it is longer than its width. If true the
 	// view's x-origin will be ignored.
@@ -99,6 +116,9 @@ type View struct {
 
 	// If Frame is true, Title allows to configure a title for the view.
 	Title string
+
+	// TitleColor allow to configure the color of title and subtitle for the view.
+	TitleColor Attribute
 
 	// If Frame is true, Subtitle allows to configure a subtitle for the view.
 	Subtitle string
@@ -112,6 +132,10 @@ type View struct {
 
 	// If HasLoader is true, the message will be appended with a spinning loader animation
 	HasLoader bool
+
+	// KeybindOnEdit should be set to true when you want to execute keybindings even when the view is editable
+	// (this is usually not the case)
+	KeybindOnEdit bool
 
 	// gui contains the view it's gui
 	gui *Gui
@@ -151,9 +175,14 @@ func (g *Gui) newView(name string, x0, y0, x1, y1 int, mode OutputMode) *View {
 		Frame:   true,
 		Editor:  DefaultEditor,
 		tainted: true,
+		outMode: mode,
 		ei:      newEscapeInterpreter(mode),
 		gui:     g,
 	}
+
+	v.FgColor, v.BgColor = ColorDefault, ColorDefault
+	v.SelFgColor, v.SelBgColor = ColorDefault, ColorDefault
+	v.TitleColor, v.FrameColor = ColorDefault, ColorDefault
 	return v
 }
 
@@ -185,8 +214,9 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 		fgColor = v.FgColor
 		bgColor = v.BgColor
 		ch = v.Mask
-	} else if v.Highlight && y == v.cy {
-		fgColor = fgColor | AttrBold
+	} else if v.Highlight && ry == rcy {
+		fgColor = v.SelFgColor | AttrBold
+		bgColor = v.SelBgColor | AttrBold
 	}
 
 	// Don't display NUL characters
@@ -194,8 +224,7 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 		ch = ' '
 	}
 
-	termbox.SetCell(v.x0+x+1, v.y0+y+1, ch,
-		termbox.Attribute(fgColor), termbox.Attribute(bgColor))
+	tcellSetCell(v.x0+x+1, v.y0+y+1, ch, fgColor, bgColor, v.outMode)
 
 	return nil
 }
@@ -653,8 +682,7 @@ func (v *View) clearRunes() {
 	maxX, maxY := v.Size()
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < maxY; y++ {
-			termbox.SetCell(v.x0+x+1, v.y0+y+1, ' ',
-				termbox.Attribute(v.FgColor), termbox.Attribute(v.BgColor))
+			tcellSetCell(v.x0+x+1, v.y0+y+1, ' ', v.FgColor, v.BgColor, v.outMode)
 		}
 	}
 }

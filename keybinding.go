@@ -7,15 +7,15 @@ package gocui
 import (
 	"strings"
 
-	"github.com/awesome-gocui/termbox-go"
+	"github.com/gdamore/tcell/v2"
 )
 
 // Key represents special keys or keys combinations.
-type Key termbox.Key
+type Key tcell.Key
 
 // Modifier allows to define special keys combinations. They can be used
 // in combination with Keys or Runes when a new keybinding is defined.
-type Modifier termbox.Modifier
+type Modifier tcell.ModMask
 
 // Keybidings are used to link a given key-press event with a handler.
 type keybinding struct {
@@ -111,7 +111,7 @@ func (kb *keybinding) matchKeypress(key Key, ch rune, mod Modifier) bool {
 // matchView returns if the keybinding matches the current view.
 func (kb *keybinding) matchView(v *View) bool {
 	// if the user is typing in a field, ignore char keys
-	if v == nil || (v.Editable && kb.ch != 0) {
+	if v == nil || (v.Editable && kb.ch != 0 && !v.KeybindOnEdit) {
 		return false
 	}
 	return kb.viewName == v.name
@@ -197,89 +197,97 @@ var translate = map[string]Key{
 
 // Special keys.
 const (
-	KeyF1         Key = Key(termbox.KeyF1)
-	KeyF2             = Key(termbox.KeyF2)
-	KeyF3             = Key(termbox.KeyF3)
-	KeyF4             = Key(termbox.KeyF4)
-	KeyF5             = Key(termbox.KeyF5)
-	KeyF6             = Key(termbox.KeyF6)
-	KeyF7             = Key(termbox.KeyF7)
-	KeyF8             = Key(termbox.KeyF8)
-	KeyF9             = Key(termbox.KeyF9)
-	KeyF10            = Key(termbox.KeyF10)
-	KeyF11            = Key(termbox.KeyF11)
-	KeyF12            = Key(termbox.KeyF12)
-	KeyInsert         = Key(termbox.KeyInsert)
-	KeyDelete         = Key(termbox.KeyDelete)
-	KeyHome           = Key(termbox.KeyHome)
-	KeyEnd            = Key(termbox.KeyEnd)
-	KeyPgup           = Key(termbox.KeyPgup)
-	KeyPgdn           = Key(termbox.KeyPgdn)
-	KeyArrowUp        = Key(termbox.KeyArrowUp)
-	KeyArrowDown      = Key(termbox.KeyArrowDown)
-	KeyArrowLeft      = Key(termbox.KeyArrowLeft)
-	KeyArrowRight     = Key(termbox.KeyArrowRight)
-
-	MouseLeft      = Key(termbox.MouseLeft)
-	MouseMiddle    = Key(termbox.MouseMiddle)
-	MouseRight     = Key(termbox.MouseRight)
-	MouseRelease   = Key(termbox.MouseRelease)
-	MouseWheelUp   = Key(termbox.MouseWheelUp)
-	MouseWheelDown = Key(termbox.MouseWheelDown)
+	KeyF1         Key = Key(tcell.KeyF1)
+	KeyF2             = Key(tcell.KeyF2)
+	KeyF3             = Key(tcell.KeyF3)
+	KeyF4             = Key(tcell.KeyF4)
+	KeyF5             = Key(tcell.KeyF5)
+	KeyF6             = Key(tcell.KeyF6)
+	KeyF7             = Key(tcell.KeyF7)
+	KeyF8             = Key(tcell.KeyF8)
+	KeyF9             = Key(tcell.KeyF9)
+	KeyF10            = Key(tcell.KeyF10)
+	KeyF11            = Key(tcell.KeyF11)
+	KeyF12            = Key(tcell.KeyF12)
+	KeyInsert         = Key(tcell.KeyInsert)
+	KeyDelete         = Key(tcell.KeyDelete)
+	KeyHome           = Key(tcell.KeyHome)
+	KeyEnd            = Key(tcell.KeyEnd)
+	KeyPgdn           = Key(tcell.KeyPgDn)
+	KeyPgup           = Key(tcell.KeyPgUp)
+	KeyArrowUp        = Key(tcell.KeyUp)
+	KeyArrowDown      = Key(tcell.KeyDown)
+	KeyArrowLeft      = Key(tcell.KeyLeft)
+	KeyArrowRight     = Key(tcell.KeyRight)
 )
 
 // Keys combinations.
 const (
-	KeyCtrlTilde      Key = Key(termbox.KeyCtrlTilde)
-	KeyCtrl2              = Key(termbox.KeyCtrl2)
-	KeyCtrlSpace          = Key(termbox.KeyCtrlSpace)
-	KeyCtrlA              = Key(termbox.KeyCtrlA)
-	KeyCtrlB              = Key(termbox.KeyCtrlB)
-	KeyCtrlC              = Key(termbox.KeyCtrlC)
-	KeyCtrlD              = Key(termbox.KeyCtrlD)
-	KeyCtrlE              = Key(termbox.KeyCtrlE)
-	KeyCtrlF              = Key(termbox.KeyCtrlF)
-	KeyCtrlG              = Key(termbox.KeyCtrlG)
-	KeyBackspace          = Key(termbox.KeyBackspace)
-	KeyCtrlH              = Key(termbox.KeyCtrlH)
-	KeyTab                = Key(termbox.KeyTab)
-	KeyCtrlI              = Key(termbox.KeyCtrlI)
-	KeyCtrlJ              = Key(termbox.KeyCtrlJ)
-	KeyCtrlK              = Key(termbox.KeyCtrlK)
-	KeyCtrlL              = Key(termbox.KeyCtrlL)
-	KeyEnter              = Key(termbox.KeyEnter)
-	KeyCtrlM              = Key(termbox.KeyCtrlM)
-	KeyCtrlN              = Key(termbox.KeyCtrlN)
-	KeyCtrlO              = Key(termbox.KeyCtrlO)
-	KeyCtrlP              = Key(termbox.KeyCtrlP)
-	KeyCtrlQ              = Key(termbox.KeyCtrlQ)
-	KeyCtrlR              = Key(termbox.KeyCtrlR)
-	KeyCtrlS              = Key(termbox.KeyCtrlS)
-	KeyCtrlT              = Key(termbox.KeyCtrlT)
-	KeyCtrlU              = Key(termbox.KeyCtrlU)
-	KeyCtrlV              = Key(termbox.KeyCtrlV)
-	KeyCtrlW              = Key(termbox.KeyCtrlW)
-	KeyCtrlX              = Key(termbox.KeyCtrlX)
-	KeyCtrlY              = Key(termbox.KeyCtrlY)
-	KeyCtrlZ              = Key(termbox.KeyCtrlZ)
-	KeyEsc                = Key(termbox.KeyEsc)
-	KeyCtrlLsqBracket     = Key(termbox.KeyCtrlLsqBracket)
-	KeyCtrl3              = Key(termbox.KeyCtrl3)
-	KeyCtrl4              = Key(termbox.KeyCtrl4)
-	KeyCtrlBackslash      = Key(termbox.KeyCtrlBackslash)
-	KeyCtrl5              = Key(termbox.KeyCtrl5)
-	KeyCtrlRsqBracket     = Key(termbox.KeyCtrlRsqBracket)
-	KeyCtrl6              = Key(termbox.KeyCtrl6)
-	KeyCtrl7              = Key(termbox.KeyCtrl7)
-	KeyCtrlSlash          = Key(termbox.KeyCtrlSlash)
-	KeyCtrlUnderscore     = Key(termbox.KeyCtrlUnderscore)
-	KeySpace              = Key(termbox.KeySpace)
-	KeyBackspace2         = Key(termbox.KeyBackspace2)
-	KeyCtrl8              = Key(termbox.KeyCtrl8)
+	KeyCtrlTilde      = Key(tcell.KeyF64) // arbitrary assignment
+	KeyCtrlSpace      = Key(tcell.KeyCtrlSpace)
+	KeyCtrlA          = Key(tcell.KeyCtrlA)
+	KeyCtrlB          = Key(tcell.KeyCtrlB)
+	KeyCtrlC          = Key(tcell.KeyCtrlC)
+	KeyCtrlD          = Key(tcell.KeyCtrlD)
+	KeyCtrlE          = Key(tcell.KeyCtrlE)
+	KeyCtrlF          = Key(tcell.KeyCtrlF)
+	KeyCtrlG          = Key(tcell.KeyCtrlG)
+	KeyBackspace      = Key(tcell.KeyBackspace)
+	KeyCtrlH          = Key(tcell.KeyCtrlH)
+	KeyTab            = Key(tcell.KeyTab)
+	KeyCtrlI          = Key(tcell.KeyCtrlI)
+	KeyCtrlJ          = Key(tcell.KeyCtrlJ)
+	KeyCtrlK          = Key(tcell.KeyCtrlK)
+	KeyCtrlL          = Key(tcell.KeyCtrlL)
+	KeyEnter          = Key(tcell.KeyEnter)
+	KeyCtrlM          = Key(tcell.KeyCtrlM)
+	KeyCtrlN          = Key(tcell.KeyCtrlN)
+	KeyCtrlO          = Key(tcell.KeyCtrlO)
+	KeyCtrlP          = Key(tcell.KeyCtrlP)
+	KeyCtrlQ          = Key(tcell.KeyCtrlQ)
+	KeyCtrlR          = Key(tcell.KeyCtrlR)
+	KeyCtrlS          = Key(tcell.KeyCtrlS)
+	KeyCtrlT          = Key(tcell.KeyCtrlT)
+	KeyCtrlU          = Key(tcell.KeyCtrlU)
+	KeyCtrlV          = Key(tcell.KeyCtrlV)
+	KeyCtrlW          = Key(tcell.KeyCtrlW)
+	KeyCtrlX          = Key(tcell.KeyCtrlX)
+	KeyCtrlY          = Key(tcell.KeyCtrlY)
+	KeyCtrlZ          = Key(tcell.KeyCtrlZ)
+	KeyEsc            = Key(tcell.KeyEscape)
+	KeyCtrlUnderscore = Key(tcell.KeyCtrlUnderscore)
+	KeySpace          = Key(32)
+	KeyBackspace2     = Key(tcell.KeyBackspace2)
+	KeyCtrl8          = Key(tcell.KeyBackspace2) // same key as in termbox-go
+
+	// The following assignments were used in termbox implementation.
+	// In tcell, these are not keys per se. But in gocui we have them
+	// mapped to the keys so we have to use placeholder keys.
+
+	MouseLeft         = Key(tcell.KeyF63) // arbitrary assignments
+	MouseRight        = Key(tcell.KeyF62)
+	MouseMiddle       = Key(tcell.KeyF61)
+	MouseRelease      = Key(tcell.KeyF60)
+	MouseWheelUp      = Key(tcell.KeyF59)
+	MouseWheelDown    = Key(tcell.KeyF58)
+	MouseWheelLeft    = Key(tcell.KeyF57)
+	MouseWheelRight   = Key(tcell.KeyF56)
+	KeyCtrl2          = Key(tcell.KeyNUL) // termbox defines theses
+	KeyCtrl3          = Key(tcell.KeyEscape)
+	KeyCtrl4          = Key(tcell.KeyCtrlBackslash)
+	KeyCtrl5          = Key(tcell.KeyCtrlRightSq)
+	KeyCtrl6          = Key(tcell.KeyCtrlCarat)
+	KeyCtrl7          = Key(tcell.KeyCtrlUnderscore)
+	KeyCtrlSlash      = Key(tcell.KeyCtrlUnderscore)
+	KeyCtrlRsqBracket = Key(tcell.KeyCtrlRightSq)
+	KeyCtrlBackslash  = Key(tcell.KeyCtrlBackslash)
+	KeyCtrlLsqBracket = Key(tcell.KeyCtrlLeftSq)
 )
 
 // Modifiers.
 const (
 	ModNone Modifier = Modifier(0)
-	ModAlt           = Modifier(termbox.ModAlt)
+	ModAlt           = Modifier(tcell.ModAlt)
+	// ModCtrl doesn't work with keyboard keys. Use CtrlKey in Key and ModNone. This is was for mouse clicks only (tcell.v1)
+	// ModCtrl = Modifier(tcell.ModCtrl)
 )
