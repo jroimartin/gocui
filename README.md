@@ -6,7 +6,7 @@
 [![GoDoc](https://godoc.org/github.com/awesome-gocui/gocui?status.svg)](https://godoc.org/github.com/awesome-gocui/gocui)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/awesome-gocui/gocui.svg)
 
-Minimalist Go package aimed at creating Console User Interfaces.  
+Minimalist Go package aimed at creating Console User Interfaces.
 A community fork based on the amazing work of [jroimartin](https://github.com/jroimartin/gocui)
 
 ## Features
@@ -23,8 +23,9 @@ A community fork based on the amazing work of [jroimartin](https://github.com/jr
 
 ## About fork
 
-This fork has many improvements over the original work from [jroimartin](https://github.com/jroimartin/gocui).  
+This fork has many improvements over the original work from [jroimartin](https://github.com/jroimartin/gocui).
 
+* Written ontop of TCell
 * Better wide character support
 * Support for 1 Line height views
 * Better support for running in docker container
@@ -68,7 +69,7 @@ import (
 )
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal, false)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -91,11 +92,14 @@ func layout(g *gocui.Gui) error {
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
-		fmt.Fprintln(v, "Hello world!")
+
 		if _, err := g.SetCurrentView("hello"); err != nil {
 			return err
 		}
+
+		fmt.Fprintln(v, "Hello world!")
 	}
+
 	return nil
 }
 
