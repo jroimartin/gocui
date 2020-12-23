@@ -8,6 +8,7 @@
 
 Minimalist Go package aimed at creating Console User Interfaces.
 A community fork based on the amazing work of [jroimartin](https://github.com/jroimartin/gocui)
+For v0 to v1 mirgration help read: [migrate-to-v1.md](migrate-to-v1.md)
 
 ## Features
 
