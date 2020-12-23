@@ -1,10 +1,10 @@
 version: 2
 jobs:
   build:
-    working_directory: /go/src/github.com/glvr182/git-profile
-    
+    working_directory: /go/src/github.com/awesome-gocui/gocui
+
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.15
 
     steps:
       - checkout
@@ -13,7 +13,7 @@ jobs:
           command: go mod tidy
       - run:
           name: go fmt
-          command: |            
+          command: |
             if [ $(find . ! -path "./vendor/*" -name "*.go" -exec gofmt -s -d {} \;|wc -l) -gt 0 ]; then
               find . ! -path "./vendor/*" -name "*.go" -exec gofmt -s -d {} \;
               exit 1;
@@ -24,7 +24,7 @@ jobs:
             cd _examples/
             for file in *.go
             do
-              go build $file 
+              go build $file
             done
 
 workflows:
