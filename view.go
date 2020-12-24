@@ -47,8 +47,9 @@ type View struct {
 	// tained is true if the viewLines must be updated
 	tainted bool
 
-	// internal representation of the view's buffer
-	viewLines []viewLine
+	// contentCache is the content the frame
+	// if a redraw is request with tainted is false this will be used to draw the frame
+	contentCache []cellCache
 
 	// writeMutex protects locks the write process
 	writeMutex sync.Mutex
@@ -135,16 +136,20 @@ type View struct {
 	// KeybindOnEdit should be set to true when you want to execute keybindings even when the view is editable
 	// (this is usually not the case)
 	KeybindOnEdit bool
-}
 
-type viewLine struct {
-	linesX, linesY int // coordinates relative to v.lines
-	line           []cell
+	// gui contains the view it's gui
+	gui *Gui
 }
 
 type cell struct {
 	chr              rune
 	bgColor, fgColor Attribute
+}
+
+type cellCache struct {
+	chr              rune
+	bgColor, fgColor Attribute
+	x, y             int
 }
 
 type lineType []cell
@@ -159,7 +164,7 @@ func (l lineType) String() string {
 }
 
 // newView returns a new View object.
-func newView(name string, x0, y0, x1, y1 int, mode OutputMode) *View {
+func (g *Gui) newView(name string, x0, y0, x1, y1 int, mode OutputMode) *View {
 	v := &View{
 		name:    name,
 		x0:      x0,
@@ -172,6 +177,7 @@ func newView(name string, x0, y0, x1, y1 int, mode OutputMode) *View {
 		tainted: true,
 		outMode: mode,
 		ei:      newEscapeInterpreter(mode),
+		gui:     g,
 	}
 
 	v.FgColor, v.BgColor = ColorDefault, ColorDefault
@@ -203,26 +209,12 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 	if x < 0 || x >= maxX || y < 0 || y >= maxY {
 		return ErrInvalidPoint
 	}
-	var (
-		ry, rcy int
-		err     error
-	)
-	if v.Highlight {
-		_, ry, err = v.realPosition(x, y)
-		if err != nil {
-			return err
-		}
-		_, rcy, err = v.realPosition(v.cx, v.cy)
-		if err != nil {
-			return err
-		}
-	}
 
 	if v.Mask != 0 {
 		fgColor = v.FgColor
 		bgColor = v.BgColor
 		ch = v.Mask
-	} else if v.Highlight && ry == rcy {
+	} else if v.Highlight && y == v.cy {
 		fgColor = v.SelFgColor | AttrBold
 		bgColor = v.SelBgColor | AttrBold
 	}
@@ -238,12 +230,16 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 }
 
 // SetCursor sets the cursor position of the view at the given point,
-// relative to the view. It checks if the position is valid.
+//
+// Rules:
+//   y < total lines && y > 0
+//   (x < view width || x < y's line width) && x > 0
 func (v *View) SetCursor(x, y int) error {
-	maxX, maxY := v.Size()
-	if x < 0 || x >= maxX || y < 0 || y >= maxY {
+	maxX, _ := v.Size()
+	if x < 0 || y < 0 || y >= len(v.lines) || (len(v.lines[y]) >= x && x >= maxX) {
 		return ErrInvalidPoint
 	}
+
 	v.cx = x
 	v.cy = y
 	return nil
@@ -499,6 +495,25 @@ func (v *View) Rewind() {
 	}
 }
 
+// viewLines returns the lines to render on the screen
+func (v *View) viewLines() [][]cell {
+	if !v.Wrap {
+		return v.lines
+	}
+
+	renderLines := [][]cell{}
+	for _, viewLine := range v.lines {
+		for {
+			lineToRender, _, end := v.takeLine(&viewLine)
+			renderLines = append(renderLines, lineToRender)
+			if end {
+				break
+			}
+		}
+	}
+	return renderLines
+}
+
 // IsTainted tells us if the view is tainted
 func (v *View) IsTainted() bool {
 	return v.tainted
@@ -514,105 +529,73 @@ func (v *View) draw() error {
 
 	if v.Wrap {
 		if maxX == 0 {
-			return errors.New("X size of the view cannot be 0")
+			// Just return here, there is no need to try drawing chars in a too small frame
+			// Nor is it needed to return an error, there is just no space
+			return nil
 		}
 		v.ox = 0
 	}
-	if v.tainted {
-		v.viewLines = nil
-		lines := v.lines
-		if v.HasLoader {
-			lines = v.loaderLines()
-		}
-		for i, line := range lines {
-			wrap := 0
-			if v.Wrap {
-				wrap = maxX
-			}
 
-			ls := lineWrap(line, wrap)
-			for j := range ls {
-				vline := viewLine{linesX: j, linesY: i, line: ls[j]}
-				v.viewLines = append(v.viewLines, vline)
+	if !v.tainted && v.contentCache != nil {
+		for _, cell := range v.contentCache {
+			if err := v.setRune(cell.x, cell.y, cell.chr, cell.fgColor, cell.bgColor); err != nil {
+				return err
 			}
 		}
-		if !v.HasLoader {
-			v.tainted = false
-		}
+		return nil
 	}
 
-	if v.Autoscroll && len(v.viewLines) > maxY {
-		v.oy = len(v.viewLines) - maxY
+	linesToRender := v.viewLines()
+
+	if v.Autoscroll && len(linesToRender) > maxY {
+		v.oy = len(v.lines) - maxY
 	}
+
+	newCache := []cellCache{}
 	y := 0
-	for i, vline := range v.viewLines {
-		if i < v.oy {
+	for lineIndex, line := range linesToRender {
+		if lineIndex < v.oy {
 			continue
 		}
 		if y >= maxY {
-			break
+			break // No need to render out of screen chars
 		}
+
 		x := 0
-		for j, c := range vline.line {
-			if j < v.ox {
+		for charIndex, char := range line {
+			if charIndex < v.ox {
 				continue
 			}
 			if x >= maxX {
-				break
+				break // No need to render out of screen chars
 			}
 
-			fgColor := c.fgColor
+			fgColor := char.fgColor
 			if fgColor == ColorDefault {
 				fgColor = v.FgColor
 			}
-			bgColor := c.bgColor
+			bgColor := char.bgColor
 			if bgColor == ColorDefault {
 				bgColor = v.BgColor
 			}
 
-			if err := v.setRune(x, y, c.chr, fgColor, bgColor); err != nil {
+			newCache = append(newCache, cellCache{
+				chr:     char.chr,
+				bgColor: bgColor,
+				fgColor: fgColor,
+				x:       x,
+				y:       y,
+			})
+			if err := v.setRune(x, y, char.chr, fgColor, bgColor); err != nil {
 				return err
 			}
-
-			if c.chr != 0 {
-				// If it is a rune, add rune width
-				x += runewidth.RuneWidth(c.chr)
-			} else {
-				// If it is NULL rune, add 1 to be able to use SetWritePos
-				// (runewidth.RuneWidth of space is 1)
-				x++
-			}
+			x += runewidth.RuneWidth(char.chr)
 		}
 		y++
 	}
+
+	v.contentCache = newCache
 	return nil
-}
-
-// realPosition returns the position in the internal buffer corresponding to the
-// point (x, y) of the view.
-func (v *View) realPosition(vx, vy int) (x, y int, err error) {
-	vx = v.ox + vx
-	vy = v.oy + vy
-
-	if vx < 0 || vy < 0 {
-		return 0, 0, ErrInvalidPoint
-	}
-
-	if len(v.viewLines) == 0 {
-		return vx, vy, nil
-	}
-
-	if vy < len(v.viewLines) {
-		vline := v.viewLines[vy]
-		x = vline.linesX + vx
-		y = vline.linesY
-	} else {
-		vline := v.viewLines[len(v.viewLines)-1]
-		x = vx
-		y = vline.linesY + vy - len(v.viewLines) + 1
-	}
-
-	return x, y, nil
 }
 
 // Clear empties the view's internal buffer.
@@ -623,9 +606,75 @@ func (v *View) Clear() {
 	v.tainted = true
 	v.ei.reset()
 	v.lines = nil
-	v.viewLines = nil
 	v.clearRunes()
 	v.writeMutex.Unlock()
+}
+
+// linesPosOnScreen returns based on the view lines the x and y location
+// the viewX and viewY are NOT based on the view offsets
+// isOnScreen is false if the selected corodinates is not on screen (this is based on the view offsets)
+func (v *View) linesPosOnScreen(x, y int) (viewX int, viewY int, visable bool) {
+	if x < 0 || y < 0 {
+		return
+	}
+
+	maxX, maxY := v.Size()
+	if !v.Wrap {
+		viewX = x
+		viewY = y
+		visable = viewY >= v.oy && viewY < v.oy+maxY && viewX >= v.ox && viewX < v.ox+maxX
+		return
+	}
+
+	var line []cell
+	found := false
+
+	for lineIndex, viewLine := range v.lines {
+		if lineIndex == y {
+			line = viewLine
+			found = true
+			break
+		}
+
+		for {
+			_, _, end := v.takeLine(&viewLine)
+			viewY++
+			if end {
+				break
+			}
+		}
+	}
+
+	if found {
+		for {
+			lineChars, width, end := v.takeLine(&line)
+			lenLineChars := len(lineChars)
+			if x < lenLineChars {
+				x = lineWidth(lineChars[:x])
+				break
+			} else {
+				x -= lenLineChars
+			}
+
+			if end {
+				x += width
+				break
+			}
+			viewY++
+		}
+	} else {
+		if y < len(v.lines) {
+			viewY = y
+		} else {
+			viewY += y - len(v.lines)
+		}
+	}
+
+	viewY += x / maxX
+	viewX = x - ((x / maxX) * maxX)
+
+	visable = viewY >= v.oy && viewY < v.oy+maxY && viewX >= v.ox && viewX < v.ox+maxX
+	return
 }
 
 // clearRunes erases all the cells in the view.
@@ -659,9 +708,9 @@ func (v *View) Buffer() string {
 // ViewBufferLines returns the lines in the view's internal
 // buffer that is shown to the user.
 func (v *View) ViewBufferLines() []string {
-	lines := make([]string, len(v.viewLines))
-	for i, l := range v.viewLines {
-		str := lineType(l.line).String()
+	lines := make([]string, len(v.lines))
+	for i, line := range v.lines {
+		str := lineType(line).String()
 		str = strings.Replace(str, "\x00", " ", -1)
 		lines[i] = str
 	}
@@ -675,28 +724,22 @@ func (v *View) LinesHeight() int {
 
 // ViewLinesHeight is the count of view lines (i.e. lines including wrapping)
 func (v *View) ViewLinesHeight() int {
-	return len(v.viewLines)
+	if !v.tainted && v.contentCache != nil && len(v.contentCache) > 0 {
+		// Use the cache if availabe, it's just a bit faster than re-calculating all frame cells
+		return v.contentCache[len(v.contentCache)-1].y + 1
+	}
+	return len(v.viewLines())
 }
 
 // ViewBuffer returns a string with the contents of the view's buffer that is
 // shown to the user.
 func (v *View) ViewBuffer() string {
-	lines := make([][]cell, len(v.viewLines))
-	for i := range v.viewLines {
-		lines[i] = v.viewLines[i].line
-	}
-
-	return linesToString(lines)
+	return linesToString(v.lines)
 }
 
 // Line returns a string with the line of the view's internal buffer
 // at the position corresponding to the point (x, y).
 func (v *View) Line(y int) (string, error) {
-	_, y, err := v.realPosition(0, y)
-	if err != nil {
-		return "", err
-	}
-
 	if y < 0 || y >= len(v.lines) {
 		return "", ErrInvalidPoint
 	}
@@ -707,11 +750,6 @@ func (v *View) Line(y int) (string, error) {
 // Word returns a string with the word of the view's internal buffer
 // at the position corresponding to the point (x, y).
 func (v *View) Word(x, y int) (string, error) {
-	x, y, err := v.realPosition(x, y)
-	if err != nil {
-		return "", err
-	}
-
 	if x < 0 || y < 0 || y >= len(v.lines) || x >= len(v.lines[y]) {
 		return "", ErrInvalidPoint
 	}
@@ -789,26 +827,44 @@ func lineWidth(line []cell) (n int) {
 	return
 }
 
-func lineWrap(line []cell, columns int) [][]cell {
-	if columns == 0 {
-		return [][]cell{line}
+// takeLine slices one visable line from l and returns the sliced part
+func (v *View) takeLine(l *[]cell) (visableLine []cell, width int, end bool) {
+	if l == nil {
+		panic("take line l can't be nil")
 	}
 
-	var n int
-	var offset int
-	lines := make([][]cell, 0, 1)
-	for i := range line {
-		rw := runewidth.RuneWidth(line[i].chr)
-		n += rw
-		if n > columns {
-			n = rw
-			lines = append(lines, line[offset:i])
-			offset = i
+	visableLine = []cell{}
+
+	if len(*l) == 0 {
+		end = true
+		width = 0
+		return
+	}
+
+	maxX, _ := v.Size()
+	i := 0
+	cell := cell{}
+
+	for i, cell = range *l {
+		chr := cell.chr
+		charWidth := runewidth.RuneWidth(chr)
+
+		if width+charWidth > maxX {
+			break
+		}
+
+		width += charWidth
+		visableLine = append(visableLine, cell)
+		if width == maxX {
+			break
 		}
 	}
 
-	lines = append(lines, line[offset:])
-	return lines
+	i++
+	end = i == len(*l)
+	*l = (*l)[i:]
+
+	return
 }
 
 func linesToString(lines [][]cell) string {

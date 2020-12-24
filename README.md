@@ -8,6 +8,7 @@
 
 Minimalist Go package aimed at creating Console User Interfaces.
 A community fork based on the amazing work of [jroimartin](https://github.com/jroimartin/gocui)
+For v0 to v1 mirgration help read: [migrate-to-v1.md](migrate-to-v1.md)
 
 ## Features
 
@@ -28,7 +29,8 @@ This fork has many improvements over the original work from [jroimartin](https:/
 * Written ontop of TCell
 * Better wide character support
 * Support for 1 Line height views
-* Better support for running in docker container
+* Support for running in docker container
+* Better cursor handling
 * Customize frame colors
 * Improved code comments and quality
 * Many small improvements

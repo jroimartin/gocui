@@ -1,8 +1,36 @@
-# Change from termbox to tcell
+# Migrating from v0 to v1
+
+## Changes made to the cursor
+
+In v0 the cursor position was based on its position in the current visible content, in v1 it's based on the position of the view's content.
+
+If line wrapping is true, the visual line wrappings DO NOT add to the cursors Y position if the cursor is in a visual new line creted by line wrapping the cursor is only moved futher on the X axis.
+
+For an example, if this was the content:
+```
+This line wont be visable
+empty
+This is a multi line wrapped sentence
+Another line
+Text outside of view
+```
+And this was the view with line wrapping on, `█` beeing the cursor and `#` as frame
+```
+####################
+#empty             #
+#This is a multi li#
+#ne wrapped sentenc#
+#e█                #
+####################
+```
+The cursor position in v0: **1, 3** *(x, y)*
+In v1: **37, 2** *(x, y)*
+
+## Change from termbox to tcell
 
 Original GOCUI was written on top of [termbox](https://github.com/nsf/termbox-go) package. This document describes changes which were done to be able to use to [tcell/v2](https://github.com/gdamore/tcell) package.
 
-## Attribute color
+### Attribute color
 
 Attribute type represents a terminal attribute like color and font effects. Color and font effects can be combined using bitwise OR (`|`).
 
@@ -23,7 +51,7 @@ GOCUI provides a few helper functions which could be used to get the real color 
 - `GetRGBColor(int32)` - creates `Attribute` from color number created the same way as `Hex()` function returns.
 - `NewRGBColor(int32, int32, int32)` - creates `Attribute` from color numbers for red, green and blue values.
 
-## Attribute font effect
+### Attribute font effect
 
 There were 3 attributes for font effect, `AttrBold`, `AttrUnderline` and `AttrReverse`.
 
@@ -38,7 +66,7 @@ All the font effect attributes:
 - `AttrItalic`
 - `AttrStrikeThrough`
 
-## OutputMode
+### OutputMode
 
 `OutputMode` in `termbox` was used to translate colors into the correct range. So for example in `OutputGrayscale` you had colors from 1 - 24 all representing gray colors in range 232 - 255, and white and black color.
 
@@ -48,7 +76,7 @@ The original translation from `termbox` was included in GOCUI to be backward com
 
 `OutputTrue` is a new mode. It is recomended, because in this mode GOCUI doesn't do any kind of translation of the colors and pass them directly to `tcell`. If user wants to use true color in terminal and this mode doesn't work, it might be because of the terminal setup. `tcell` has a documentation what needs to be done, but in short `COLORTERM=truecolor` environment variable should help (see [_examples/colorstrue.go](./_examples/colorstrue.go)). Other way would be to have `TERM` environment variable having value with suffix `-truecolor`. To disable true color set `TCELL_TRUECOLOR=disable`.
 
-## Keybinding
+### Keybinding
 
 `termbox` had different way of handling input from terminal than `tcell`. This leads to some adjustement on how the keys are represented.
 In general, all the keys in GOCUI should be presented from before, but the underlying values might be different. This could lead to some problems if a user uses different parser to create the `Key` for the keybinding. If using GOCUI parser, everything should be ok.
