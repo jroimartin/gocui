@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
 )
 
 func main() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -27,14 +27,14 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Panicln(err)
 	}
 }
 
 func layout(g *gocui.Gui) error {
-	if v, err := g.SetView("but1", 2, 2, 22, 7); err != nil {
-		if err != gocui.ErrUnknownView {
+	if v, err := g.SetView("but1", 2, 2, 22, 7, 0); err != nil {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Highlight = true
@@ -44,9 +44,12 @@ func layout(g *gocui.Gui) error {
 		fmt.Fprintln(v, "Button 1 - line 2")
 		fmt.Fprintln(v, "Button 1 - line 3")
 		fmt.Fprintln(v, "Button 1 - line 4")
+		if _, err := g.SetCurrentView("but1"); err != nil {
+			return err
+		}
 	}
-	if v, err := g.SetView("but2", 24, 2, 44, 4); err != nil {
-		if err != gocui.ErrUnknownView {
+	if v, err := g.SetView("but2", 24, 2, 44, 4, 0); err != nil {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Highlight = true
@@ -67,6 +70,12 @@ func keybindings(g *gocui.Gui) error {
 		}
 	}
 	if err := g.SetKeybinding("msg", gocui.MouseLeft, gocui.ModNone, delMsg); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", gocui.MouseRight, gocui.ModNone, delMsg); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", gocui.MouseMiddle, gocui.ModNone, delMsg); err != nil {
 		return err
 	}
 	return nil
@@ -90,8 +99,8 @@ func showMsg(g *gocui.Gui, v *gocui.View) error {
 	}
 
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("msg", maxX/2-10, maxY/2, maxX/2+10, maxY/2+2); err != nil {
-		if err != gocui.ErrUnknownView {
+	if v, err := g.SetView("msg", maxX/2-10, maxY/2, maxX/2+10, maxY/2+2, 0); err != nil {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		fmt.Fprintln(v, l)
@@ -100,8 +109,7 @@ func showMsg(g *gocui.Gui, v *gocui.View) error {
 }
 
 func delMsg(g *gocui.Gui, v *gocui.View) error {
-	if err := g.DeleteView("msg"); err != nil {
-		return err
-	}
+	// Error check removed, because delete could be called multiple times with the above keybindings
+	g.DeleteView("msg")
 	return nil
 }
