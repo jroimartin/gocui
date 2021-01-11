@@ -35,7 +35,7 @@ func NewTable(name string, left, top, right, bottom int) *Table {
 
 func (t *Table) Layout(g *gocui.Gui) error {
 	view, err := g.SetView(t.name, t.Left, t.Top, t.Right, t.Bottom, 0)
-	if err != nil && !gocui.IsUnknownView(err) {
+	if err != nil && !errors.Is(err, gocui.ErrUnknownView) {
 		return err
 	}
 

@@ -82,3 +82,7 @@ The original translation from `termbox` was included in GOCUI to be backward com
 In general, all the keys in GOCUI should be presented from before, but the underlying values might be different. This could lead to some problems if a user uses different parser to create the `Key` for the keybinding. If using GOCUI parser, everything should be ok.
 
 Mouse is handled differently in `tcell`, but translation was done to keep it in the same way as it was before. However this was harder to test due to different behaviour across the platforms, so if anything is missing or not working, please report.
+
+### Error checking
+
+`IsQuit` and `IsUnknownView` helper functions has been removed in favour of standard checking functions `errors.Is` and `errors.As`.

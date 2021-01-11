@@ -7,6 +7,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -29,7 +30,7 @@ func overwrite(g *gocui.Gui, v *gocui.View) error {
 func layout(g *gocui.Gui) error {
 	_, maxY := g.Size()
 	if v, err := g.SetView("main", 0, 0, 20, maxY-1, 0); err != nil {
-		if !gocui.IsUnknownView(err) {
+		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		v.Editable = true
@@ -59,7 +60,7 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
+	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
 		log.Panicln(err)
 	}
 

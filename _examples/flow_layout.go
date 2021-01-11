@@ -36,7 +36,7 @@ func NewLabel(name string, body string) *Label {
 func (w *Label) Layout(g *gocui.Gui) error {
 	v, err := g.SetView(w.name, 0, 0, w.w, w.h, 0)
 	if err != nil {
-		if !gocui.IsUnknownView(err) {
+		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		fmt.Fprint(v, w.body)
@@ -53,7 +53,7 @@ func flowLayout(g *gocui.Gui) error {
 	for _, v := range views {
 		w, h := v.Size()
 		_, err := g.SetView(v.Name(), x, 0, x+w+1, h+1, 0)
-		if err != nil && !gocui.IsUnknownView(err) {
+		if err != nil && !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		x += w + 2
@@ -80,7 +80,7 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
+	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
 		log.Panicln(err)
 	}
 }

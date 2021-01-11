@@ -5,10 +5,8 @@
 package gocui
 
 import (
-	standardErrors "errors"
+	"errors"
 	"runtime"
-
-	"github.com/go-errors/errors"
 )
 
 // OutputMode represents an output mode, which determines how colors
@@ -17,22 +15,22 @@ type OutputMode int
 
 var (
 	// ErrAlreadyBlacklisted is returned when the keybinding is already blacklisted.
-	ErrAlreadyBlacklisted = standardErrors.New("keybind already blacklisted")
+	ErrAlreadyBlacklisted = errors.New("keybind already blacklisted")
 
 	// ErrBlacklisted is returned when the keybinding being parsed / used is blacklisted.
-	ErrBlacklisted = standardErrors.New("keybind blacklisted")
+	ErrBlacklisted = errors.New("keybind blacklisted")
 
 	// ErrNotBlacklisted is returned when a keybinding being whitelisted is not blacklisted.
-	ErrNotBlacklisted = standardErrors.New("keybind not blacklisted")
+	ErrNotBlacklisted = errors.New("keybind not blacklisted")
 
 	// ErrNoSuchKeybind is returned when the keybinding being parsed does not exist.
-	ErrNoSuchKeybind = standardErrors.New("no such keybind")
+	ErrNoSuchKeybind = errors.New("no such keybind")
 
 	// ErrUnknownView allows to assert if a View must be initialized.
-	ErrUnknownView = standardErrors.New("unknown view")
+	ErrUnknownView = errors.New("unknown view")
 
 	// ErrQuit is used to decide if the MainLoop finished successfully.
-	ErrQuit = standardErrors.New("quit")
+	ErrQuit = errors.New("quit")
 )
 
 const (
@@ -198,7 +196,7 @@ func (g *Gui) SetView(name string, x0, y0, x1, y1 int, overlaps byte) (*View, er
 	v.SelBgColor, v.SelFgColor = g.SelBgColor, g.SelFgColor
 	v.Overlaps = overlaps
 	g.views = append(g.views, v)
-	return v, errors.Wrap(ErrUnknownView, 0)
+	return v, ErrUnknownView
 }
 
 // SetViewBeneath sets a view stacked beneath another view
@@ -221,7 +219,7 @@ func (g *Gui) SetViewOnTop(name string) (*View, error) {
 			return v, nil
 		}
 	}
-	return nil, errors.Wrap(ErrUnknownView, 0)
+	return nil, ErrUnknownView
 }
 
 // SetViewOnBottom sets the given view on bottom of the existing ones.
@@ -233,7 +231,7 @@ func (g *Gui) SetViewOnBottom(name string) (*View, error) {
 			return v, nil
 		}
 	}
-	return nil, errors.Wrap(ErrUnknownView, 0)
+	return nil, ErrUnknownView
 }
 
 // Views returns all the views in the GUI.
@@ -249,7 +247,7 @@ func (g *Gui) View(name string) (*View, error) {
 			return v, nil
 		}
 	}
-	return nil, errors.Wrap(ErrUnknownView, 0)
+	return nil, ErrUnknownView
 }
 
 // ViewByPosition returns a pointer to a view matching the given position, or
@@ -262,7 +260,7 @@ func (g *Gui) ViewByPosition(x, y int) (*View, error) {
 			return v, nil
 		}
 	}
-	return nil, errors.Wrap(ErrUnknownView, 0)
+	return nil, ErrUnknownView
 }
 
 // ViewPosition returns the coordinates of the view with the given name, or
@@ -273,7 +271,7 @@ func (g *Gui) ViewPosition(name string) (x0, y0, x1, y1 int, err error) {
 			return v.x0, v.y0, v.x1, v.y1, nil
 		}
 	}
-	return 0, 0, 0, 0, errors.Wrap(ErrUnknownView, 0)
+	return 0, 0, 0, 0, ErrUnknownView
 }
 
 // DeleteView deletes a view by name.
@@ -284,7 +282,7 @@ func (g *Gui) DeleteView(name string) error {
 			return nil
 		}
 	}
-	return errors.Wrap(ErrUnknownView, 0)
+	return ErrUnknownView
 }
 
 // SetCurrentView gives the focus to a given view.
@@ -295,7 +293,7 @@ func (g *Gui) SetCurrentView(name string) (*View, error) {
 			return v, nil
 		}
 	}
-	return nil, errors.Wrap(ErrUnknownView, 0)
+	return nil, ErrUnknownView
 }
 
 // CurrentView returns the currently focused view, or nil if no view
@@ -917,14 +915,4 @@ func (g *Gui) isBlacklisted(k Key) bool {
 		}
 	}
 	return false
-}
-
-// IsUnknownView reports whether the contents of an error is "unknown view".
-func IsUnknownView(err error) bool {
-	return err != nil && err.Error() == ErrUnknownView.Error()
-}
-
-// IsQuit reports whether the contents of an error is "quit".
-func IsQuit(err error) bool {
-	return err != nil && err.Error() == ErrQuit.Error()
 }

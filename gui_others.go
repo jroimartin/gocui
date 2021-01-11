@@ -7,12 +7,11 @@
 package gocui
 
 import (
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
 	"unsafe"
-
-	"github.com/go-errors/errors"
 )
 
 // getTermWindowSize is get terminal window size on linux or unix.

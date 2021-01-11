@@ -41,7 +41,7 @@ func NewHelpWidget(name string, x, y int, body string) *HelpWidget {
 func (w *HelpWidget) Layout(g *gocui.Gui) error {
 	v, err := g.SetView(w.name, w.x, w.y, w.x+w.w, w.y+w.h, 0)
 	if err != nil {
-		if !gocui.IsUnknownView(err) {
+		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		fmt.Fprint(v, w.body)
@@ -74,7 +74,7 @@ func (w *StatusbarWidget) Val() float64 {
 
 func (w *StatusbarWidget) Layout(g *gocui.Gui) error {
 	v, err := g.SetView(w.name, w.x, w.y, w.x+w.w, w.y+2, 0)
-	if err != nil && !gocui.IsUnknownView(err) {
+	if err != nil && !errors.Is(err, gocui.ErrUnknownView) {
 		return err
 	}
 	v.Clear()
@@ -99,7 +99,7 @@ func NewButtonWidget(name string, x, y int, label string, handler func(g *gocui.
 func (w *ButtonWidget) Layout(g *gocui.Gui) error {
 	v, err := g.SetView(w.name, w.x, w.y, w.x+w.w, w.y+2, 0)
 	if err != nil {
-		if !gocui.IsUnknownView(err) {
+		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		if _, err := g.SetCurrentView(w.name); err != nil {
@@ -136,7 +136,7 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
+	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
 		log.Panicln(err)
 	}
 }

@@ -40,7 +40,7 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
+	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
 		log.Panicln(err)
 	}
 }
@@ -49,7 +49,7 @@ func layout(g *gocui.Gui) error {
 	maxX, _ := g.Size()
 	v, err := g.SetView("help", maxX-25, 0, maxX-1, 9, 0)
 	if err != nil {
-		if !gocui.IsUnknownView(err) {
+		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		fmt.Fprintln(v, "KEYBINDINGS")
@@ -135,7 +135,7 @@ func newView(g *gocui.Gui) error {
 	name := fmt.Sprintf("v%v", idxView)
 	v, err := g.SetView(name, maxX/2-5, maxY/2-5, maxX/2+5, maxY/2+5, 0)
 	if err != nil {
-		if !gocui.IsUnknownView(err) {
+		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		v.Wrap = true

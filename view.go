@@ -6,12 +6,12 @@ package gocui
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"strings"
 	"sync"
 	"unicode/utf8"
 
-	"github.com/go-errors/errors"
 	"github.com/mattn/go-runewidth"
 )
 

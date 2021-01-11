@@ -16,7 +16,7 @@ Create a new GUI:
 	// Set GUI managers and key bindings
 	// ...
 
-	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
+	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
 		// handle error
 	}
 
@@ -38,7 +38,7 @@ their content. The same is valid for reading.
 Create and initialize a view with absolute coordinates:
 
 	if v, err := g.SetView("viewname", 2, 2, 22, 7, 0); err != nil {
-		if !gocui.IsUnknownView(err) {
+		if !errors.Is(err, gocui.ErrUnknownView) {
 			// handle error
 		}
 		fmt.Fprintln(v, "This is a new view")
