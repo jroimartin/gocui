@@ -5,7 +5,7 @@
 package gocui
 
 import (
-	"github.com/go-errors/errors"
+	"errors"
 
 	"github.com/mattn/go-runewidth"
 )

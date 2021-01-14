@@ -60,7 +60,7 @@ func getLine(g *gocui.Gui, v *gocui.View) error {
 
 	maxX, maxY := g.Size()
 	if v, err := g.SetView("msg", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2, 0); err != nil {
-		if !gocui.IsUnknownView(err) {
+		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		fmt.Fprintln(v, l)
@@ -160,7 +160,7 @@ func saveVisualMain(g *gocui.Gui, v *gocui.View) error {
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	if v, err := g.SetView("side", -1, -1, 30, maxY, 0); err != nil {
-		if !gocui.IsUnknownView(err) {
+		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		v.Highlight = true
@@ -173,7 +173,7 @@ func layout(g *gocui.Gui) error {
 		fmt.Fprint(v, "deleted\rItem 4\nItem 5")
 	}
 	if v, err := g.SetView("main", 30, -1, maxX, maxY, 0); err != nil {
-		if !gocui.IsUnknownView(err) {
+		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		b, err := ioutil.ReadFile("Mark.Twain-Tom.Sawyer.txt")
@@ -205,7 +205,7 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
+	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
 		log.Panicln(err)
 	}
 }

@@ -5,9 +5,8 @@
 package gocui
 
 import (
+	"errors"
 	"strconv"
-
-	"github.com/go-errors/errors"
 )
 
 type escapeInterpreter struct {
