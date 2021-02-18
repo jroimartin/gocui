@@ -41,7 +41,7 @@ func simpleEditor(v *View, key Key, ch rune, mod Modifier) bool {
 		v.EditWrite(' ')
 	case key == KeyBackspace || key == KeyBackspace2:
 		v.EditDelete(true)
-	case key == gocui.KeyCtrlD || key == gocui.KeyDelete:
+	case key == KeyCtrlD || key == KeyDelete:
 		v.EditDelete(false)
 	case key == KeyInsert:
 		v.Overwrite = !v.Overwrite
