@@ -235,8 +235,7 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 //   y < total lines && y > 0
 //   (x < view width || x < y's line width) && x > 0
 func (v *View) SetCursor(x, y int) error {
-	maxX, _ := v.Size()
-	if x < 0 || y < 0 || y >= len(v.lines) || (len(v.lines[y]) >= x && x >= maxX) {
+	if x < 0 || y < 0 || (y >= len(v.lines) && y != 0) || (x > 0 && (len(v.lines) == 0 || len(v.lines[y]) >= x)) {
 		return ErrInvalidPoint
 	}
 
@@ -605,7 +604,9 @@ func (v *View) Clear() {
 	v.Rewind()
 	v.tainted = true
 	v.ei.reset()
-	v.lines = nil
+	v.lines = [][]cell{}
+	v.SetCursor(0, 0)
+	v.SetOrigin(0, 0)
 	v.clearRunes()
 	v.writeMutex.Unlock()
 }
