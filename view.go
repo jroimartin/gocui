@@ -235,7 +235,7 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 //   y < total lines && y > 0
 //   (x < view width || x < y's line width) && x > 0
 func (v *View) SetCursor(x, y int) error {
-	if x < 0 || y < 0 || (y >= len(v.lines) && y != 0) || (x > 0 && (len(v.lines) == 0 || len(v.lines[y]) >= x)) {
+	if x < 0 || y < 0 || (y >= len(v.lines) && y != 0) || (x > 0 && (len(v.lines) == 0 || len(v.lines[y]) < x)) {
 		return ErrInvalidPoint
 	}
 
