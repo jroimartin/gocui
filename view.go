@@ -597,8 +597,7 @@ func (v *View) draw() error {
 	return nil
 }
 
-// Clear empties the view's internal buffer.
-// And resets reading and writing offsets.
+// Clear empties the view and resets the view offsets, cursor position, read offsets and write offsets
 func (v *View) Clear() {
 	v.writeMutex.Lock()
 	v.Rewind()
