@@ -8,6 +8,7 @@ package main
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"log"

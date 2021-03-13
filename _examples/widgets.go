@@ -5,11 +5,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
-
-	"github.com/go-errors/errors"
 
 	"github.com/awesome-gocui/gocui"
 )
