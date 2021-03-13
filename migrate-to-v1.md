@@ -83,6 +83,17 @@ In general, all the keys in GOCUI should be presented from before, but the under
 
 Mouse is handled differently in `tcell`, but translation was done to keep it in the same way as it was before. However this was harder to test due to different behaviour across the platforms, so if anything is missing or not working, please report.
 
+## Changes in gocui functions
 ### Error checking
 
-`IsQuit` and `IsUnknownView` helper functions has been removed in favour of standard checking functions `errors.Is` and `errors.As`.
+`IsQuit` and `IsUnknownView` helper functions has been removed in favour of standard checking functions `errors.Is` and `errors.As`.    
+To ease the migration, you can do search&replace like this (it might not work for all cases):
+- `IsUnknownView` - search for regex `gocui\.IsUnknownView\((.*)\)`, reaplce `errors.Is($1, gocui.ErrUnknownView)`
+- `IsQuit` - search for regex `gocui\.IsQuit\((.*)\)`, replace `errors.Is($1, gocui.ErrQuit)`
+- updated files need to be updated with `goimports` to import `errors` package
+
+### View.MoveCursor 
+
+`gocui.View.MoveCursor()` function parameters were changed. `writeMode` parameter has been removed. It has now only 2 parameters `dx` and `dy`.     
+To remove the additional parameter from your code (if used), you can do search&replace like this (it might not work for all cases):
+- search for regex `\.MoveCursor\((.*), [^\),]+\)`, replace `.MoveCursor($1)`
