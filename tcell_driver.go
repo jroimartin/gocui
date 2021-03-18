@@ -10,8 +10,8 @@ import (
 
 var screen tcell.Screen
 
-// tcellInit initializes tcell screen for use.
-func tcellInit() error {
+// TcellInit initializes tcell screen for use.
+func TcellInit() error {
 	if s, e := tcell.NewScreen(); e != nil {
 		return e
 	} else if e = s.Init(); e != nil {
@@ -20,6 +20,11 @@ func tcellInit() error {
 		screen = s
 		return nil
 	}
+}
+
+// TcellClose closes the tcell screen allowing other terminal apps to run.
+func TcellClose() {
+	screen.Fini()
 }
 
 // tcellSetCell sets the character cell at a given location to the given
