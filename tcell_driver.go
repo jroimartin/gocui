@@ -10,8 +10,8 @@ import (
 
 var screen tcell.Screen
 
-// TcellInit initializes tcell screen for use.
-func TcellInit() error {
+// tcellInit initializes tcell screen for use.
+func tcellInit() error {
 	if s, e := tcell.NewScreen(); e != nil {
 		return e
 	} else if e = s.Init(); e != nil {
@@ -22,9 +22,14 @@ func TcellInit() error {
 	}
 }
 
-// TcellClose closes the tcell screen allowing other terminal apps to run.
-func TcellClose() {
+// Suspend closes the tcell screen allowing other terminal apps to run
+func Suspend() {
 	screen.Fini()
+}
+
+// Resume re-initializes the tcell screen, intended to be used after "Suspend" has been called
+func Resume() error {
+	return tcellInit()
 }
 
 // tcellSetCell sets the character cell at a given location to the given

@@ -101,7 +101,7 @@ type Gui struct {
 
 // NewGui returns a new Gui object with a given output mode.
 func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
-	err := TcellInit()
+	err := tcellInit()
 	if err != nil {
 		return nil, err
 	}
