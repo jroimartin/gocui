@@ -232,11 +232,25 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 // SetCursor sets the cursor position of the view at the given point,
 //
 // Rules:
-//   y < total lines && y > 0
-//   (x < view width || x < y's line width) && x > 0
+//   y >= 0
+//   x >= 0
+//
+// If the x or y are outside of the buffer this function will place the cursor on the nearest buffer location
 func (v *View) SetCursor(x, y int) error {
-	if x < 0 || y < 0 || (y >= len(v.lines) && y != 0) || (x > 0 && (len(v.lines) == 0 || len(v.lines[y]) < x)) {
+	if x < 0 || y < 0 {
 		return ErrInvalidPoint
+	}
+
+	if y >= len(v.lines) && y != 0 {
+		y = len(v.lines) - 1
+	}
+
+	if x > 0 && (len(v.lines) == 0 || len(v.lines[y]) < x) {
+		if len(v.lines) == 0 {
+			x = 0
+		} else {
+			x = len(v.lines[y])
+		}
 	}
 
 	v.cx = x
