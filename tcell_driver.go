@@ -22,6 +22,16 @@ func tcellInit() error {
 	}
 }
 
+// Suspend closes the tcell screen allowing other terminal apps to run
+func Suspend() {
+	screen.Fini()
+}
+
+// Resume re-initializes the tcell screen, intended to be used after "Suspend" has been called
+func Resume() error {
+	return tcellInit()
+}
+
 // tcellSetCell sets the character cell at a given location to the given
 // content (rune) and attributes using provided OutputMode
 func tcellSetCell(x, y int, ch rune, fg, bg Attribute, omode OutputMode) {
