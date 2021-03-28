@@ -32,6 +32,18 @@ func Resume() error {
 	return tcellInit()
 }
 
+// tcellInitSimulation creates a tcell simulated screen for testing
+func tcellInitSimulation() error {
+	simScreen := tcell.NewSimulationScreen("UTF-8")
+	if e := simScreen.Init(); e != nil {
+		return e
+	} else {
+		screen = simScreen.(tcell.Screen)
+		simulationScreen = simScreen
+		return nil
+	}
+}
+
 // tcellSetCell sets the character cell at a given location to the given
 // content (rune) and attributes using provided OutputMode
 func tcellSetCell(x, y int, ch rune, fg, bg Attribute, omode OutputMode) {
