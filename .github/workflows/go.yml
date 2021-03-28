@@ -1,0 +1,36 @@
+name: Go
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-versions: ["1.13", "1.15", "1.16"]
+    name: GoLang ${{ matrix.go-versions }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-versions }}
+      - name: Formatting
+        run: |
+          if [ $(find . ! -path "./vendor/*" -name "*.go" -exec gofmt -s -d {} \;|wc -l) -gt 0 ]; then
+            find . ! -path "./vendor/*" -name "*.go" -exec gofmt -s -d {} \;
+            exit 1;
+          fi
+
+      - name: Build
+        run: |
+          cd _examples/
+          for file in *.go
+          do
+            go build $file
+          done
