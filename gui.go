@@ -109,9 +109,6 @@ type Gui struct {
 func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	// Simulator uses tcells simulated screen to allow testing
 	if mode == OutputSimulator {
-		// Reset color output to 24bit color terminal mode. 
-		mode = OutputTrue
-
 		err := tcellInitSimulation()
 		if err != nil {
 			return nil,  fmt.Errorf("Failed to initialize tcell simluted screen: %w", err)
@@ -133,7 +130,7 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	g.userEvents = make(chan userEvent, 20)
 
 	var err error
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS != "windows" && mode != OutputSimulator {
 		g.maxX, g.maxY, err = g.getTermWindowSize()
 		if err != nil {
 			return nil, err

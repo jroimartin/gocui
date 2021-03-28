@@ -6,6 +6,7 @@ package gocui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -32,8 +33,12 @@ func (g *Gui) GetTestingScreen() TestingScreen {
 	}
 }
 
-func (t *TestingScreen) SendString(input string) {
+func (t *TestingScreen) SendStringAsKeys(input string) {
 	t.injectString(input)
+}
+
+func (t *TestingScreen) SendKey(key Key) {
+	t.screen.InjectKey(tcell.Key(key), rune(key), tcell.ModNone)
 }
 
 func (s *TestingScreen) GetViewContent(viewName string) (string, error) {
@@ -42,8 +47,36 @@ func (s *TestingScreen) GetViewContent(viewName string) (string, error) {
 		return "", fmt.Errorf("Failed to retreive view: %w", err)
 	}
 
-	// Todo: Should we return the buffer here or the content of the sim screen?
-	return view.Buffer(), nil
+	x0, y0, x1, y1 := view.Dimensions()
+
+	// Walk each line in the view
+	var result strings.Builder
+	Xcurrent := x0
+	Ycurrent := y0
+	for y0 < y1 {
+		// Did we reach the end of the line?
+		if Xcurrent > x1 {
+			Xcurrent = x0
+			Ycurrent = Ycurrent + 1
+			result.WriteString("\n")
+			break
+		}
+
+		// Did we reach the bottom of the view?
+		if Ycurrent > y1 {
+			break
+		}
+
+		// Get the content (without formatting) at that position
+		content, err := s.gui.Rune(Xcurrent, Ycurrent)
+		if err != nil {
+			return "", fmt.Errorf("Failed reading rune from simulation screen: %w", err)
+		}
+		result.WriteRune(content)
+		Xcurrent = Xcurrent + 1
+	}
+
+	return result.String(), nil
 }
 
 // Used from Micro MIT Licensed: https://github.com/zyedidia/micro/blob/c0907bb58e35ee05202a78226a2f53909af228ca/cmd/micro/micro_test.go#L183
