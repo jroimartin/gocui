@@ -229,7 +229,7 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 	return nil
 }
 
-// SetCursorUnsafe sets the cursor position of the view at the given point
+// SetCursorUnrestricted sets the cursor position of the view at the given point
 // This does NOT check if the x and y location are available in the buffer
 //
 // Rules:
