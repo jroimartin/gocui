@@ -154,7 +154,6 @@ func (v *View) EditNewLine() {
 	v.ox = 0
 	v.cy = v.cy + 1
 	v.cx = 0
-	v.moveCursor(0, 1)
 }
 
 // MoveCursor mores the cursor relative from it's current possition

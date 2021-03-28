@@ -229,19 +229,42 @@ func (v *View) setRune(x, y int, ch rune, fgColor, bgColor Attribute) error {
 	return nil
 }
 
-// SetCursor sets the cursor position of the view at the given point,
+// SetCursorUnrestricted sets the cursor position of the view at the given point
+// This does NOT check if the x and y location are available in the buffer
 //
 // Rules:
-//   y < total lines && y > 0
-//   (x < view width || x < y's line width) && x > 0
-func (v *View) SetCursor(x, y int) error {
-	if x < 0 || y < 0 || (y >= len(v.lines) && y != 0) || (x > 0 && (len(v.lines) == 0 || len(v.lines[y]) < x)) {
+//   y >= 0
+//   x >= 0
+func (v *View) SetCursorUnrestricted(x, y int) error {
+	if x < 0 || y < 0 {
 		return ErrInvalidPoint
 	}
 
 	v.cx = x
 	v.cy = y
 	return nil
+}
+
+// SetCursor tries sets the cursor position of the view at the given point
+// If the x or y are outside of the buffer this function will place the cursor on the nearest buffer location
+//
+// Rules:
+//   y >= 0
+//   x >= 0
+func (v *View) SetCursor(x, y int) error {
+	if y >= len(v.lines) && y != 0 {
+		y = len(v.lines) - 1
+	}
+
+	if x > 0 && (len(v.lines) == 0 || len(v.lines[y]) < x) {
+		if len(v.lines) == 0 {
+			x = 0
+		} else {
+			x = len(v.lines[y])
+		}
+	}
+
+	return v.SetCursorUnrestricted(x, y)
 }
 
 // Cursor returns the cursor position of the view.
