@@ -1,4 +1,5 @@
 # GOCUI - Go Console User Interface
+
 [![github actions](https://github.com/awesome-gocui/gocui/actions/workflows/go.yml/badge.svg)](https://github.com/awesome-gocui/gocui/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/awesome-gocui/gocui)](https://goreportcard.com/report/github.com/awesome-gocui/gocui)
 [![GoDoc](https://godoc.org/github.com/awesome-gocui/gocui?status.svg)](https://godoc.org/github.com/awesome-gocui/gocui)
@@ -10,30 +11,30 @@ For v0 to v1 mirgration help read: [migrate-to-v1.md](migrate-to-v1.md)
 
 ## Features
 
-* Minimalist API.
-* Views (the "windows" in the GUI) implement the interface io.ReadWriter.
-* Support for overlapping views.
-* The GUI can be modified at runtime (concurrent-safe).
-* Global and view-level keybindings.
-* Mouse support.
-* Colored text.
-* Customizable editing mode.
-* Easy to build reusable widgets, complex layouts...
+- Minimalist API.
+- Views (the "windows" in the GUI) implement the interface io.ReadWriter.
+- Support for overlapping views.
+- The GUI can be modified at runtime (concurrent-safe).
+- Global and view-level keybindings.
+- Mouse support.
+- Colored text.
+- Customizable editing mode.
+- Easy to build reusable widgets, complex layouts...
 
 ## About fork
 
 This fork has many improvements over the original work from [jroimartin](https://github.com/jroimartin/gocui).
 
-* Written ontop of TCell
-* Better wide character support
-* Support for 1 Line height views
-* Support for running in docker container
-* Better cursor handling
-* Customize frame colors
-* Improved code comments and quality
-* Many small improvements
-* Change Visibility of views
-* Requires Go 1.13 or newer
+- Written ontop of TCell
+- Better wide character support
+- Support for 1 Line height views
+- Support for running in docker container
+- Better cursor handling
+- Customize frame colors
+- Improved code comments and quality
+- Many small improvements
+- Change Visibility of views
+- Requires Go 1.13 or newer
 
 For information about this org see: [awesome-gocui/about](https://github.com/awesome-gocui/about).
 
@@ -57,7 +58,8 @@ Or visit [godoc.org](https://godoc.org/github.com/awesome-gocui/gocui) to read i
 online.
 
 ## Example
-See the [_example](./_example/) folder for more examples
+
+See the [\_example](./_example/) folder for more examples
 
 ```go
 package main
@@ -119,22 +121,22 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 
 ## Projects using gocui
 
-* [komanda-cli](https://github.com/mephux/komanda-cli): IRC Client For Developers.
-* [vuls](https://github.com/future-architect/vuls): Agentless vulnerability scanner for Linux/FreeBSD.
-* [wuzz](https://github.com/asciimoo/wuzz): Interactive cli tool for HTTP inspection.
-* [httplab](https://github.com/gchaincl/httplab): Interactive web server.
-* [domainr](https://github.com/MichaelThessel/domainr): Tool that checks the availability of domains based on keywords.
-* [gotime](https://github.com/nanohard/gotime): Time tracker for projects and tasks.
-* [claws](https://github.com/thehowl/claws): Interactive command line client for testing websockets.
-* [terminews](http://github.com/antavelos/terminews): Terminal based RSS reader.
-* [diagram](https://github.com/esimov/diagram): Tool to convert ascii arts into hand drawn diagrams.
-* [pody](https://github.com/JulienBreux/pody): CLI app to manage Pods in a Kubernetes cluster.
-* [kubexp](https://github.com/alitari/kubexp): Kubernetes client.
-* [kcli](https://github.com/cswank/kcli): Tool for inspecting kafka topics/partitions/messages.
-* [fac](https://github.com/mkchoi212/fac): git merge conflict resolver
-* [jsonui](https://github.com/gulyasm/jsonui): Interactive JSON explorer for your terminal.
-* [cointop](https://github.com/miguelmota/cointop): Interactive terminal based UI application for tracking cryptocurrencies.
-* [lazygit](https://github.com/jesseduffield/lazygit): simple terminal UI for git commands.
-* [lazydocker](https://github.com/jesseduffield/lazydocker): The lazier way to manage everything docker.
+- [komanda-cli](https://github.com/mephux/komanda-cli): IRC Client For Developers.
+- [vuls](https://github.com/future-architect/vuls): Agentless vulnerability scanner for Linux/FreeBSD.
+- [wuzz](https://github.com/asciimoo/wuzz): Interactive cli tool for HTTP inspection.
+- [httplab](https://github.com/gchaincl/httplab): Interactive web server.
+- [domainr](https://github.com/MichaelThessel/domainr): Tool that checks the availability of domains based on keywords.
+- [gotime](https://github.com/nanohard/gotime): Time tracker for projects and tasks.
+- [claws](https://github.com/thehowl/claws): Interactive command line client for testing websockets.
+- [terminews](http://github.com/antavelos/terminews): Terminal based RSS reader.
+- [diagram](https://github.com/esimov/diagram): Tool to convert ascii arts into hand drawn diagrams.
+- [pody](https://github.com/JulienBreux/pody): CLI app to manage Pods in a Kubernetes cluster.
+- [kubexp](https://github.com/alitari/kubexp): Kubernetes client.
+- [kcli](https://github.com/cswank/kcli): Tool for inspecting kafka topics/partitions/messages.
+- [fac](https://github.com/mkchoi212/fac): git merge conflict resolver
+- [jsonui](https://github.com/gulyasm/jsonui): Interactive JSON explorer for your terminal.
+- [cointop](https://github.com/miguelmota/cointop): Interactive terminal based UI application for tracking cryptocurrencies.
+- [lazygit](https://github.com/jesseduffield/lazygit): simple terminal UI for git commands.
+- [lazydocker](https://github.com/jesseduffield/lazydocker): The lazier way to manage everything docker.
 
 Note: if your project is not listed here, let us know! :)
