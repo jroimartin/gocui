@@ -395,6 +395,9 @@ func (v *View) writeRune(x, y int, ch rune) error {
 // position corresponding to the point (x, y).
 // returns the amount of columns that where removed.
 func (v *View) deleteRune(x, y int) (int, error) {
+	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
+
 	v.tainted = true
 
 	x, y, err := v.realPosition(x, y)
@@ -422,6 +425,9 @@ func (v *View) deleteRune(x, y int) (int, error) {
 
 // mergeLines merges the lines "y" and "y+1" if possible.
 func (v *View) mergeLines(y int) error {
+	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
+
 	v.tainted = true
 
 	_, y, err := v.realPosition(0, y)
@@ -443,6 +449,9 @@ func (v *View) mergeLines(y int) error {
 // breakLine breaks a line of the internal buffer at the position corresponding
 // to the point (x, y).
 func (v *View) breakLine(x, y int) error {
+	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
+
 	v.tainted = true
 
 	x, y, err := v.realPosition(x, y)
