@@ -40,10 +40,10 @@ func TestTestingScreenReturnsCorrectContent(t *testing.T) {
 	// Send a key to gocui
 	testingScreen.SendKey(KeyCtrlC)
 
-	// Use gomega asserts "eventually" to handle the async drawing 
+	// Use gomega asserts "eventually" to handle the async drawing
 	// of the view and handling of the events
 	//
-	// Check the key binding was called 
+	// Check the key binding was called
 	assert.
 		Eventually(func() bool { return didCallCTRLC }).
 		Should(Equal(true), "Expect the simulator to invoke the key handler for CTRLC")

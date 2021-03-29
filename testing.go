@@ -37,13 +37,13 @@ func (g *Gui) GetTestingScreen() TestingScreen {
 
 func (t *TestingScreen) StartTestingScreen() func() {
 	go func() {
-		if err := t.gui.MainLoop(); (err != nil && !errors.Is(err, ErrQuit)) {
+		if err := t.gui.MainLoop(); err != nil && !errors.Is(err, ErrQuit) {
 			log.Panic(err)
 		}
 	}()
 
 	// Return a func that will stop the main loop
-	return func() { 
+	return func() {
 		t.gui.stop <- struct{}{}
 	}
 }

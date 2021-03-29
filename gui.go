@@ -111,12 +111,12 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	if mode == OutputSimulator {
 		err := tcellInitSimulation()
 		if err != nil {
-			return nil,  fmt.Errorf("Failed to initialize tcell simluted screen: %w", err)
+			return nil, fmt.Errorf("Failed to initialize tcell simluted screen: %w", err)
 		}
 	} else {
 		err := tcellInit()
 		if err != nil {
-			return nil,  fmt.Errorf("Failed to initialize tcell screen: %w", err)
+			return nil, fmt.Errorf("Failed to initialize tcell screen: %w", err)
 		}
 	}
 
@@ -495,10 +495,10 @@ func (g *Gui) MainLoop() error {
 			if err := ev.f(g); err != nil {
 				return err
 			}
-		case <- g.stop:
+		case <-g.stop:
 			return nil
 		}
-		
+
 		if err := g.consumeevents(); err != nil {
 			return err
 		}
