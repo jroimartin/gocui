@@ -34,7 +34,7 @@ func TestTestingScreenReturnsCorrectContent(t *testing.T) {
 
 	// Create a test screen and start gocui
 	testingScreen := g.GetTestingScreen()
-	cleanup := testingScreen.StartTestingScreen()
+	cleanup := testingScreen.StartGui()
 	defer cleanup()
 
 	// Send a key to gocui

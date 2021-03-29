@@ -15,9 +15,11 @@ import (
 
 var simulationScreen tcell.SimulationScreen
 
+// TestingScreen is used to create tests using a simulated screen
 type TestingScreen struct {
-	screen tcell.SimulationScreen
-	gui    *Gui
+	screen  tcell.SimulationScreen
+	gui     *Gui
+	started bool
 }
 
 func isSimScreen() {
@@ -26,6 +28,7 @@ func isSimScreen() {
 	}
 }
 
+// Creates an instance of TestingScreen for the current Gui
 func (g *Gui) GetTestingScreen() TestingScreen {
 	isSimScreen()
 
@@ -35,12 +38,21 @@ func (g *Gui) GetTestingScreen() TestingScreen {
 	}
 }
 
-func (t *TestingScreen) StartTestingScreen() func() {
+// StartGui starts the Gui using the test screen
+// it returns a func which stops the Gui to cleanup
+// after your test finishes:
+//
+// cleanup := testingScreen.StartGui()
+// defer cleanup()
+//
+func (t *TestingScreen) StartGui() func() {
 	go func() {
 		if err := t.gui.MainLoop(); err != nil && !errors.Is(err, ErrQuit) {
 			log.Panic(err)
 		}
 	}()
+
+	t.started = true
 
 	// Return a func that will stop the main loop
 	return func() {
@@ -48,16 +60,28 @@ func (t *TestingScreen) StartTestingScreen() func() {
 	}
 }
 
+// SendStringAsKeys sends a string of text to gocui
 func (t *TestingScreen) SendStringAsKeys(input string) {
+	if !t.started {
+		panic("TestingScreen must be started using 'StartGui' before injecting keys")
+	}
 	t.injectString(input)
 }
 
+// SendsKey sends a key to gocui
 func (t *TestingScreen) SendKey(key Key) {
+	if !t.started {
+		panic("TestingScreen must be started using 'StartGui' before injecting keys")
+	}
 	t.screen.InjectKey(tcell.Key(key), rune(key), tcell.ModNone)
 }
 
-func (s *TestingScreen) GetViewContent(viewName string) (string, error) {
-	view, err := s.gui.View(viewName)
+// GetViewContent gets the current conent of a view from the simulated screen
+func (t *TestingScreen) GetViewContent(viewName string) (string, error) {
+	if !t.started {
+		panic("TestingScreen must be started using 'StartGui' before contents can be retrieve")
+	}
+	view, err := t.gui.View(viewName)
 	if err != nil {
 		return "", fmt.Errorf("Failed to retreive view: %w", err)
 	}
@@ -88,7 +112,7 @@ func (s *TestingScreen) GetViewContent(viewName string) (string, error) {
 		}
 
 		// Get the content (without formatting) at that position
-		content, err := s.gui.Rune(Xcurrent, Ycurrent)
+		content, err := t.gui.Rune(Xcurrent, Ycurrent)
 		if err != nil {
 			return "", fmt.Errorf("Failed reading rune from simulation screen: %w", err)
 		}
