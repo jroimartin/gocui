@@ -5,7 +5,9 @@
 package gocui
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -33,6 +35,19 @@ func (g *Gui) GetTestingScreen() TestingScreen {
 	}
 }
 
+func (t *TestingScreen) StartTestingScreen() func() {
+	go func() {
+		if err := t.gui.MainLoop(); (err != nil && !errors.Is(err, ErrQuit)) {
+			log.Panic(err)
+		}
+	}()
+
+	// Return a func that will stop the main loop
+	return func() { 
+		t.gui.stop <- struct{}{}
+	}
+}
+
 func (t *TestingScreen) SendStringAsKeys(input string) {
 	t.injectString(input)
 }
@@ -49,17 +64,22 @@ func (s *TestingScreen) GetViewContent(viewName string) (string, error) {
 
 	x0, y0, x1, y1 := view.Dimensions()
 
+	// Account for the border
+	x0++
+	y0++
+	x1--
+	y1--
+
 	// Walk each line in the view
 	var result strings.Builder
 	Xcurrent := x0
 	Ycurrent := y0
-	for y0 < y1 {
+	for y0 < y1 || y0 == y1 {
 		// Did we reach the end of the line?
 		if Xcurrent > x1 {
 			Xcurrent = x0
-			Ycurrent = Ycurrent + 1
+			Ycurrent++
 			result.WriteString("\n")
-			break
 		}
 
 		// Did we reach the bottom of the view?
@@ -73,7 +93,7 @@ func (s *TestingScreen) GetViewContent(viewName string) (string, error) {
 			return "", fmt.Errorf("Failed reading rune from simulation screen: %w", err)
 		}
 		result.WriteRune(content)
-		Xcurrent = Xcurrent + 1
+		Xcurrent++
 	}
 
 	return result.String(), nil

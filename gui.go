@@ -495,7 +495,10 @@ func (g *Gui) MainLoop() error {
 			if err := ev.f(g); err != nil {
 				return err
 			}
+		case <- g.stop:
+			return nil
 		}
+		
 		if err := g.consumeevents(); err != nil {
 			return err
 		}
