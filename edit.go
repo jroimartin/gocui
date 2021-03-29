@@ -341,6 +341,9 @@ func (v *View) moveCursor(dx, dy int, writeMode bool) {
 // buffer is increased if the point is out of bounds. Overwrite mode is
 // governed by the value of View.overwrite.
 func (v *View) writeRune(x, y int, ch rune) error {
+	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
+
 	v.tainted = true
 
 	x, y, err := v.realPosition(x, y)
