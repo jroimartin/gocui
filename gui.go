@@ -684,7 +684,7 @@ func (g *Gui) flush() error {
 }
 
 func (g *Gui) clear(fg, bg Attribute) (int, int) {
-	st := getTcellStyle(fg, bg, g.outputMode)
+	st := getTcellStyle(oldStyle{fg: fg, bg: bg, outputMode: g.outputMode})
 	w, h := Screen.Size()
 	for row := 0; row < h; row++ {
 		for col := 0; col < w; col++ {
