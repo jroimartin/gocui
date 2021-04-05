@@ -7,6 +7,7 @@ package gocui
 import (
 	standardErrors "errors"
 	"fmt"
+	"log"
 	"runtime"
 	"strings"
 	"sync"
@@ -75,13 +76,38 @@ type GuiMutexes struct {
 	ViewsMutex sync.Mutex
 }
 
+type PlayMode int
+
+const (
+	NORMAL PlayMode = iota
+	RECORDING
+	REPLAYING
+)
+
+type Recording struct {
+	KeyEvents    []*TcellKeyEventWrapper
+	ResizeEvents []*TcellResizeEventWrapper
+}
+
+type replayedEvents struct {
+	keys    chan *TcellKeyEventWrapper
+	resizes chan *TcellResizeEventWrapper
+}
+
+type RecordingConfig struct {
+	Speed  int
+	Leeway int
+}
+
 // Gui represents the whole User Interface, including the views, layouts
 // and keybindings.
 type Gui struct {
-	// ReplayedEvents is a channel for passing pre-recorded input events, for the purposes of testing
-	ReplayedEvents chan GocuiEvent
-	RecordEvents   bool
-	RecordedEvents chan *GocuiEvent
+	RecordingConfig
+	Recording *Recording
+	// ReplayedEvents is for passing pre-recorded input events, for the purposes of testing
+	ReplayedEvents replayedEvents
+	PlayMode       PlayMode
+	StartTime      time.Time
 
 	tabClickBindings []*tabClickBinding
 	gEvents          chan GocuiEvent
@@ -135,22 +161,37 @@ type Gui struct {
 }
 
 // NewGui returns a new Gui object with a given output mode.
-func NewGui(mode OutputMode, supportOverlaps bool, recordEvents bool) (*Gui, error) {
-	err := tcellInit()
+func NewGui(mode OutputMode, supportOverlaps bool, playMode PlayMode, headless bool) (*Gui, error) {
+	g := &Gui{}
+
+	var err error
+	if headless {
+		err = tcellInitSimulation()
+	} else {
+		err = tcellInit()
+	}
 	if err != nil {
 		return nil, err
 	}
-
-	g := &Gui{}
 
 	g.outputMode = mode
 
 	g.stop = make(chan struct{})
 
-	g.ReplayedEvents = make(chan GocuiEvent)
 	g.gEvents = make(chan GocuiEvent, 20)
 	g.userEvents = make(chan userEvent, 20)
-	g.RecordedEvents = make(chan *GocuiEvent)
+
+	if playMode == RECORDING {
+		g.Recording = &Recording{
+			KeyEvents:    []*TcellKeyEventWrapper{},
+			ResizeEvents: []*TcellResizeEventWrapper{},
+		}
+	} else if playMode == REPLAYING {
+		g.ReplayedEvents = replayedEvents{
+			keys:    make(chan *TcellKeyEventWrapper),
+			resizes: make(chan *TcellResizeEventWrapper),
+		}
+	}
 
 	if runtime.GOOS != "windows" {
 		g.maxX, g.maxY, err = g.getTermWindowSize()
@@ -173,7 +214,7 @@ func NewGui(mode OutputMode, supportOverlaps bool, recordEvents bool) (*Gui, err
 	g.NextSearchMatchKey = 'n'
 	g.PrevSearchMatchKey = 'N'
 
-	g.RecordEvents = recordEvents
+	g.PlayMode = playMode
 
 	return g, nil
 }
@@ -535,13 +576,19 @@ func (g *Gui) SetManagerFunc(manager func(*Gui) error) {
 // MainLoop runs the main loop until an error is returned. A successful
 // finish should return ErrQuit.
 func (g *Gui) MainLoop() error {
+
+	g.StartTime = time.Now()
+	if g.PlayMode == REPLAYING {
+		go g.replayRecording()
+	}
+
 	go func() {
 		for {
 			select {
 			case <-g.stop:
 				return
 			default:
-				g.gEvents <- pollEvent()
+				g.gEvents <- g.pollEvent()
 			}
 		}
 	}()
@@ -553,10 +600,6 @@ func (g *Gui) MainLoop() error {
 	for {
 		select {
 		case ev := <-g.gEvents:
-			if err := g.handleEvent(&ev); err != nil {
-				return err
-			}
-		case ev := <-g.ReplayedEvents:
 			if err := g.handleEvent(&ev); err != nil {
 				return err
 			}
@@ -579,10 +622,6 @@ func (g *Gui) consumeevents() error {
 	for {
 		select {
 		case ev := <-g.gEvents:
-			if err := g.handleEvent(&ev); err != nil {
-				return err
-			}
-		case ev := <-g.ReplayedEvents:
 			if err := g.handleEvent(&ev); err != nil {
 				return err
 			}
@@ -1000,12 +1039,7 @@ func (g *Gui) draw(v *View) error {
 func (g *Gui) onKey(ev *GocuiEvent) error {
 	switch ev.Type {
 	case eventKey:
-		if g.currentView != nil && g.currentView.Editable && g.currentView.Editor != nil {
-			matched := g.currentView.Editor.Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
-			if matched {
-				break
-			}
-		}
+
 		_, err := g.execKeybindings(g.currentView, ev)
 		if err != nil {
 			return err
@@ -1013,7 +1047,7 @@ func (g *Gui) onKey(ev *GocuiEvent) error {
 
 	case eventMouse:
 		mx, my := ev.MouseX, ev.MouseY
-		v, err := g.ViewByPosition(mx, my)
+		v, err := g.VisibleViewByPosition(mx, my)
 		if err != nil {
 			break
 		}
@@ -1093,6 +1127,14 @@ func (g *Gui) execKeybindings(v *View, ev *GocuiEvent) (matched bool, err error)
 	if matchingParentViewKb != nil {
 		return g.execKeybinding(v.ParentView, matchingParentViewKb)
 	}
+
+	if g.currentView != nil && g.currentView.Editable && g.currentView.Editor != nil {
+		matched := g.currentView.Editor.Edit(g.currentView, Key(ev.Key), ev.Ch, Modifier(ev.Mod))
+		if matched {
+			return true, nil
+		}
+	}
+
 	if globalKb != nil {
 		return g.execKeybinding(v, globalKb)
 	}
@@ -1153,4 +1195,95 @@ func IsUnknownView(err error) bool {
 // IsQuit reports whether the contents of an error is "quit".
 func IsQuit(err error) bool {
 	return err != nil && err.Error() == ErrQuit.Error()
+}
+
+func (g *Gui) replayRecording() {
+	waitGroup := sync.WaitGroup{}
+
+	waitGroup.Add(2)
+
+	// lots of duplication here due to lack of generics. Also we don't support mouse
+	// events because it would be awkward to replicate but it would be trivial to add
+	// support
+	go func() {
+		ticker := time.NewTicker(time.Millisecond)
+		defer ticker.Stop()
+
+		// The playback could be paused at any time because integration tests run concurrently.
+		// Therefore we can't just check for a given event whether we've passed its timestamp,
+		// or else we'll have an explosion of keypresses after the test is resumed.
+		// We need to check if we've waited long enough since the last event was replayed.
+		for i, event := range g.Recording.KeyEvents {
+			var prevEventTimestamp int64 = 0
+			if i > 0 {
+				prevEventTimestamp = g.Recording.KeyEvents[i-1].Timestamp
+			}
+			timeToWait := (event.Timestamp - prevEventTimestamp) / int64(g.RecordingConfig.Speed)
+			if i == 0 {
+				timeToWait += int64(g.RecordingConfig.Leeway)
+			}
+			var timeWaited int64 = 0
+		middle:
+			for {
+				select {
+				case <-ticker.C:
+					timeWaited += 1
+					if timeWaited >= timeToWait {
+						g.ReplayedEvents.keys <- event
+						break middle
+					}
+				case <-g.stop:
+					return
+				}
+			}
+		}
+
+		waitGroup.Done()
+	}()
+
+	go func() {
+		ticker := time.NewTicker(time.Millisecond)
+		defer ticker.Stop()
+
+		// duplicating until Go gets generics
+		for i, event := range g.Recording.ResizeEvents {
+			var prevEventTimestamp int64 = 0
+			if i > 0 {
+				prevEventTimestamp = g.Recording.ResizeEvents[i-1].Timestamp
+			}
+			timeToWait := (event.Timestamp - prevEventTimestamp) / int64(g.RecordingConfig.Speed)
+			if i == 0 {
+				timeToWait += int64(g.RecordingConfig.Leeway)
+			}
+			var timeWaited int64 = 0
+		middle2:
+			for {
+				select {
+				case <-ticker.C:
+					timeWaited += 1
+					if timeWaited >= timeToWait {
+						g.ReplayedEvents.resizes <- event
+						break middle2
+					}
+				case <-g.stop:
+					return
+				}
+			}
+		}
+
+		waitGroup.Done()
+	}()
+
+	waitGroup.Wait()
+
+	// leaving some time for any handlers to execute before quitting
+	time.Sleep(time.Second * 1)
+
+	g.Update(func(*Gui) error {
+		return ErrQuit
+	})
+
+	time.Sleep(time.Second * 1)
+
+	log.Fatal("gocui should have already exited")
 }

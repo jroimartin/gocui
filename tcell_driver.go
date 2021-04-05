@@ -6,6 +6,7 @@ package gocui
 
 import (
 	"sync"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -30,6 +31,17 @@ func tcellInit() error {
 	if s, e := tcell.NewScreen(); e != nil {
 		return e
 	} else if e = s.Init(); e != nil {
+		return e
+	} else {
+		Screen = s
+		return nil
+	}
+}
+
+// tcellInitSimulation initializes tcell screen for use.
+func tcellInitSimulation() error {
+	s := tcell.NewSimulationScreen("")
+	if e := s.Init(); e != nil {
 		return e
 	} else {
 		Screen = s
@@ -144,16 +156,84 @@ var (
 	lastY        int              = 0
 )
 
+// this wrapper struct has public keys so we can easily serialize/deserialize to JSON
+type TcellKeyEventWrapper struct {
+	Timestamp int64
+	Mod       tcell.ModMask
+	Key       tcell.Key
+	Ch        rune
+}
+
+func NewTcellKeyEventWrapper(event *tcell.EventKey, timestamp int64) *TcellKeyEventWrapper {
+	return &TcellKeyEventWrapper{
+		Timestamp: timestamp,
+		Mod:       event.Modifiers(),
+		Key:       event.Key(),
+		Ch:        event.Rune(),
+	}
+}
+
+func (wrapper TcellKeyEventWrapper) toTcellEvent() tcell.Event {
+	return tcell.NewEventKey(wrapper.Key, wrapper.Ch, wrapper.Mod)
+}
+
+type TcellResizeEventWrapper struct {
+	Timestamp int64
+	Width     int
+	Height    int
+}
+
+func NewTcellResizeEventWrapper(event *tcell.EventResize, timestamp int64) *TcellResizeEventWrapper {
+	w, h := event.Size()
+
+	return &TcellResizeEventWrapper{
+		Timestamp: timestamp,
+		Width:     w,
+		Height:    h,
+	}
+}
+
+func (wrapper TcellResizeEventWrapper) toTcellEvent() tcell.Event {
+	return tcell.NewEventResize(wrapper.Width, wrapper.Height)
+}
+
+func (g *Gui) timeSinceStart() int64 {
+	return time.Since(g.StartTime).Nanoseconds() / 1e6
+}
+
 // pollEvent get tcell.Event and transform it into gocuiEvent
-func pollEvent() GocuiEvent {
-	tev := Screen.PollEvent()
+func (g *Gui) pollEvent() GocuiEvent {
+	var tev tcell.Event
+	if g.PlayMode == REPLAYING {
+		select {
+		case ev := <-g.ReplayedEvents.keys:
+			tev = (ev).toTcellEvent()
+		case ev := <-g.ReplayedEvents.resizes:
+			tev = (ev).toTcellEvent()
+		}
+	} else {
+		tev = Screen.PollEvent()
+	}
+
 	switch tev := tev.(type) {
 	case *tcell.EventInterrupt:
 		return GocuiEvent{Type: eventInterrupt}
 	case *tcell.EventResize:
+		if g.PlayMode == RECORDING {
+			g.Recording.ResizeEvents = append(
+				g.Recording.ResizeEvents, NewTcellResizeEventWrapper(tev, g.timeSinceStart()),
+			)
+		}
+
 		w, h := tev.Size()
 		return GocuiEvent{Type: eventResize, Width: w, Height: h}
 	case *tcell.EventKey:
+		if g.PlayMode == RECORDING {
+			g.Recording.KeyEvents = append(
+				g.Recording.KeyEvents, NewTcellKeyEventWrapper(tev, g.timeSinceStart()),
+			)
+		}
+
 		k := tev.Key()
 		ch := rune(0)
 		if k == tcell.KeyRune {
