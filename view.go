@@ -549,8 +549,6 @@ func (v *View) writeRunes(p []rune) {
 	for _, r := range p {
 		switch r {
 		case '\n':
-			// clear the rest of the line
-			v.lines[v.wy] = v.lines[v.wy][0:v.wx]
 			v.wy++
 			if v.wy >= len(v.lines) {
 				v.lines = append(v.lines, nil)
@@ -646,12 +644,48 @@ func (v *View) Read(p []byte) (n int, err error) {
 	return offset, io.EOF
 }
 
+// Clear empties the view's internal buffer.
+// And resets reading and writing offsets.
+func (v *View) Clear() {
+	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
+
+	v.rewind()
+	v.tainted = true
+	v.lines = nil
+	v.viewLines = nil
+	v.clearRunes()
+}
+
 // Rewind sets read and write pos to (0, 0).
 func (v *View) Rewind() {
 	v.writeMutex.Lock()
 	defer v.writeMutex.Unlock()
 
 	v.rewind()
+}
+
+// similar to Rewind but clears lines. Also similar to Clear but doesn't reset
+// viewLines
+func (v *View) Reset() {
+	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
+
+	v.rewind()
+	v.lines = nil
+}
+
+// This is for when we've done a restart for the sake of avoiding a flicker and
+// we've reached the end of the new content to display: we need to clear the remaining
+// content from the previous round. We do this by setting v.viewLines to nil so that
+// we just render the new content from v.lines directly
+func (v *View) FlushStaleCells() {
+	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
+
+	v.rewind()
+	v.tainted = true
+	v.viewLines = nil
 }
 
 func (v *View) rewind() {
@@ -733,7 +767,7 @@ func (v *View) draw() error {
 		v.ox = 0
 	}
 	if v.tainted {
-		v.viewLines = nil
+		lineIdx := 0
 		lines := v.lines
 		if v.HasLoader {
 			lines = v.loaderLines()
@@ -747,7 +781,13 @@ func (v *View) draw() error {
 			ls := lineWrap(line, wrap)
 			for j := range ls {
 				vline := viewLine{linesX: j, linesY: i, line: ls[j]}
-				v.viewLines = append(v.viewLines, vline)
+
+				if lineIdx > len(v.viewLines)-1 {
+					v.viewLines = append(v.viewLines, vline)
+				} else {
+					v.viewLines[lineIdx] = vline
+				}
+				lineIdx++
 			}
 		}
 		if !v.HasLoader {
@@ -841,37 +881,6 @@ func (v *View) realPosition(vx, vy int) (x, y int, err error) {
 	}
 
 	return x, y, nil
-}
-
-// Clear empties the view's internal buffer.
-// And resets reading and writing offsets.
-func (v *View) Clear() {
-	v.writeMutex.Lock()
-	defer v.writeMutex.Unlock()
-
-	v.rewind()
-	v.tainted = true
-	v.lines = nil
-	v.viewLines = nil
-	v.clearRunes()
-}
-
-// This is for when we've done a rewind for the sake of avoiding a flicker and
-// we've reached the end of the new content to display: we need to clear the remaining
-// content from the previous round.
-func (v *View) FlushStaleCells() {
-	v.writeMutex.Lock()
-	defer v.writeMutex.Unlock()
-
-	// need to wipe the end of the current line and all following lines
-	if len(v.lines) > 0 && v.wy < len(v.lines) {
-		// why this needs to be +1 but the 0:v.wx part doesn't, I'm not sure
-		v.lines = v.lines[0 : v.wy+1]
-
-		if len(v.lines[v.wy]) > 0 && v.wx < len(v.lines[v.wy]) {
-			v.lines[v.wy] = v.lines[v.wy][0:v.wx]
-		}
-	}
 }
 
 // clearRunes erases all the cells in the view.
