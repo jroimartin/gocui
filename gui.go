@@ -664,10 +664,6 @@ func (g *Gui) onResize() {
 	// g.screen.Sync()
 }
 
-func (g *Gui) ForceFlush() error {
-	return g.flush()
-}
-
 // flush updates the gui, re-drawing frames and buffers.
 func (g *Gui) flush() error {
 	// pretty sure we don't need this, but keeping it here in case we get weird visual artifacts
