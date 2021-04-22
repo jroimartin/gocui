@@ -111,6 +111,89 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 ```
 
+### Example with Simulated Test Screen
+
+You can write simple tests for `gocui` which let you simulate keyboard and then validate the output drawn to the screen.
+
+1. Create an instance of `gui` with `OutputSimulator` set as the mode `g, err := NewGui(OutputSimulator, true)`
+1. Call `GetTestingScreen` to get a `testingScreen` instance. 
+1. On this you can use `SendKey` to simulate input and `GetViewContent` to evaluate what is drawn.
+
+> Warning: Timing plays a part here, key bindings don't fire synchronously and drawing isn't instant. Here we used `time.After` to pause, [`gomega`'s asynchronous assertions are likely a better alternative for more complex tests](https://onsi.github.io/gomega/#making-asynchronous-assertions).
+
+Here is a simple example showing how this can be used to validate what a view shows and that a key binding is handled correctly:
+
+```golang
+func TestTestingScreenReturnsCorrectContent(t *testing.T) {
+	// Track what happened in the view, we'll assert on these
+	didCallCTRLC := false
+	expectedViewContent := "Hello world!"
+	viewName := "testView1"
+
+	// Create a view specifying the "OutputSimulator" mode
+	g, err := NewGui(OutputSimulator, true)
+	if err != nil {
+		log.Panicln(err)
+	}
+	g.SetManagerFunc(func(g *Gui) error {
+		maxX, maxY := g.Size()
+		if v, err := g.SetView(viewName, maxX/2-7, maxY/2, maxX/2+7, maxY/2+2, 0); err != nil {
+			if !errors.Is(err, ErrUnknownView) {
+				return err
+			}
+
+			if _, err := g.SetCurrentView(viewName); err != nil {
+				return err
+			}
+
+			// Have the view draw "Hello world!"
+			fmt.Fprintln(v, expectedViewContent)
+		}
+
+		return nil
+	})
+
+	// Create a key binding which sets "didCallCTRLC" when triggered
+	exampleBindingToTest := func(g *Gui, v *View) error {
+		didCallCTRLC = true
+		return nil
+	}
+	if err := g.SetKeybinding("", KeyCtrlC, ModNone, exampleBindingToTest); err != nil {
+		log.Panicln(err)
+	}
+
+	// Create a test screen and start gocui
+	testingScreen := g.GetTestingScreen()
+	cleanup := testingScreen.StartGui()
+	defer cleanup()
+
+	// Send a key to gocui
+	testingScreen.SendKey(KeyCtrlC)
+
+	// Wait for key to be processed
+	<-time.After(time.Millisecond * 50)
+
+	// Test that the keybinding fired and set "didCallCTRLC" to true
+	if !didCallCTRLC {
+		t.Error("Expect the simulator to invoke the key handler for CTRLC")
+	}
+
+	// Get the content from the testing screen
+	actualContent, err := testingScreen.GetViewContent(viewName)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Test that it contains the "Hello World!" we thought the view should draw
+	if strings.TrimSpace(actualContent) != expectedViewContent {
+		t.Error(fmt.Printf("Expected view content to be: %q got: %q", expectedViewContent, actualContent))
+	}
+}
+
+```
+
+> Note: Under the covers this is using the `tcell` [`SimulationScreen`](https://github.com/gdamore/tcell/blob/master/simulation.go). 
+
 ## Screenshots
 
 ![r2cui](https://cloud.githubusercontent.com/assets/1223476/19418932/63645052-93ce-11e6-867c-da5e97e37237.png)
