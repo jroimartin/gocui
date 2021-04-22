@@ -10,15 +10,10 @@ import (
 	"log"
 	"strings"
 	"testing"
-
-	. "github.com/onsi/gomega"
+	"time"
 )
 
 func TestTestingScreenReturnsCorrectContent(t *testing.T) {
-	// Setup gomega for async "eventually" assertions
-	// see: http://onsi.github.io/gomega/#making-asynchronous-assertions
-	assert := NewGomegaWithT(t)
-
 	// Track what happened in the view, we'll assert on these
 	didCallCTRLC := false
 	expectedViewContent := "Hello world!"
@@ -40,24 +35,21 @@ func TestTestingScreenReturnsCorrectContent(t *testing.T) {
 	// Send a key to gocui
 	testingScreen.SendKey(KeyCtrlC)
 
-	// Use gomega asserts "eventually" to handle the async drawing
-	// of the view and handling of the events
-	//
-	// Check the key binding was called
-	assert.
-		Eventually(func() bool { return didCallCTRLC }).
-		Should(Equal(true), "Expect the simulator to invoke the key handler for CTRLC")
+	// Wait for key to be processed
+	<- time.After(time.Millisecond*50)
 
-	// Check the content was drawn onto the screen
-	assert.
-		Eventually(func() string {
-			// Get the content of the "hello" view
-			actualContent, err := testingScreen.GetViewContent(viewName)
-			if err != nil {
-				t.Error(err)
-			}
-			return strings.TrimSpace(actualContent)
-		}).Should(Equal(expectedViewContent))
+	if !didCallCTRLC {
+		t.Error("Expect the simulator to invoke the key handler for CTRLC")
+	}
+
+	actualContent, err := testingScreen.GetViewContent(viewName)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if strings.TrimSpace(actualContent) != expectedViewContent {
+		t.Error(fmt.Printf("Expected view content to be: %q got: %q", expectedViewContent, actualContent))
+	}
 }
 
 func setupViews(viewName, expectedViewContent string) *Gui {
