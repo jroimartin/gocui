@@ -252,7 +252,9 @@ func (v *View) SetCursorUnrestricted(x, y int) error {
 //   y >= 0
 //   x >= 0
 func (v *View) SetCursor(x, y int) error {
-	if y >= len(v.lines) && y != 0 {
+	if len(v.lines) == 0 {
+		y = 0
+	} else if y >= len(v.lines) && y != 0 {
 		y = len(v.lines) - 1
 	}
 
