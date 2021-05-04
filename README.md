@@ -111,13 +111,13 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 ```
 
-### Example with Simulated Test Screen
+## Testing example
 
 You can write simple tests for `gocui` which let you simulate keyboard and then validate the output drawn to the screen.
 
 1. Create an instance of `gui` with `OutputSimulator` set as the mode `g, err := NewGui(OutputSimulator, true)`
-1. Call `GetTestingScreen` to get a `testingScreen` instance. 
-1. On this you can use `SendKey` to simulate input and `GetViewContent` to evaluate what is drawn.
+2. Call `GetTestingScreen` to get a `testingScreen` instance. 
+3. On this you can use `SendKey` to simulate input and `GetViewContent` to evaluate what is drawn.
 
 > Warning: Timing plays a part here, key bindings don't fire synchronously and drawing isn't instant. Here we used `time.After` to pause, [`gomega`'s asynchronous assertions are likely a better alternative for more complex tests](https://onsi.github.io/gomega/#making-asynchronous-assertions).
 
