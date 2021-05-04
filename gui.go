@@ -6,6 +6,7 @@ package gocui
 
 import (
 	"errors"
+	"fmt"
 	"runtime"
 )
 
@@ -52,6 +53,11 @@ const (
 	// write them (no clamping or truncating). `tcell` should take care
 	// of what your terminal can do.
 	OutputTrue
+
+	// OutputSimulator uses a simulated screen allowing testing with simulated
+	// input and the option to retrieve the current conent
+	// See: SendKeyToSimulatedScreen, GetContentOfSimulatedScreen
+	OutputSimulator
 )
 
 // Gui represents the whole User Interface, including the views, layouts
@@ -101,9 +107,17 @@ type Gui struct {
 
 // NewGui returns a new Gui object with a given output mode.
 func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
-	err := tcellInit()
-	if err != nil {
-		return nil, err
+	// Simulator uses tcells simulated screen to allow testing
+	if mode == OutputSimulator {
+		err := tcellInitSimulation()
+		if err != nil {
+			return nil, fmt.Errorf("Failed to initialize tcell simluted screen: %w", err)
+		}
+	} else {
+		err := tcellInit()
+		if err != nil {
+			return nil, fmt.Errorf("Failed to initialize tcell screen: %w", err)
+		}
 	}
 
 	g := &Gui{}
@@ -115,7 +129,8 @@ func NewGui(mode OutputMode, supportOverlaps bool) (*Gui, error) {
 	g.gEvents = make(chan gocuiEvent, 20)
 	g.userEvents = make(chan userEvent, 20)
 
-	if runtime.GOOS != "windows" {
+	var err error
+	if runtime.GOOS != "windows" && mode != OutputSimulator {
 		g.maxX, g.maxY, err = g.getTermWindowSize()
 		if err != nil {
 			return nil, err
@@ -480,7 +495,10 @@ func (g *Gui) MainLoop() error {
 			if err := ev.f(g); err != nil {
 				return err
 			}
+		case <-g.stop:
+			return nil
 		}
+
 		if err := g.consumeevents(); err != nil {
 			return err
 		}
