@@ -134,6 +134,9 @@ type Gui struct {
 	// frame of the current view.
 	Highlight bool
 
+	// If ShowTotal is true then show list footer
+	ShowTotal bool
+
 	// If Cursor is true then the cursor is enabled.
 	Cursor bool
 
@@ -723,7 +726,7 @@ func (g *Gui) flush() error {
 					return err
 				}
 			}
-			if v.ContainsList {
+			if v.ContainsList && g.ShowTotal {
 				if err := g.drawListFooter(v, fgColor, bgColor); err != nil {
 					return err
 				}
