@@ -135,7 +135,7 @@ type Gui struct {
 	Highlight bool
 
 	// If ShowTotal is true then show list footer
-	ShowTotal bool
+	ShowListFooter bool
 
 	// If Cursor is true then the cursor is enabled.
 	Cursor bool
