@@ -134,7 +134,7 @@ type Gui struct {
 	// frame of the current view.
 	Highlight bool
 
-	// If ShowListFooter is true then show list footer
+	// If ShowListFooter is true then show list footer (i.e. the part that says we're at item 5 out of 10)
 	ShowListFooter bool
 
 	// If Cursor is true then the cursor is enabled.
