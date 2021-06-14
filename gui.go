@@ -726,7 +726,7 @@ func (g *Gui) flush() error {
 					return err
 				}
 			}
-			if v.ContainsList && g.ShowTotal {
+			if v.ContainsList && g.ShowListFooter {
 				if err := g.drawListFooter(v, fgColor, bgColor); err != nil {
 					return err
 				}
