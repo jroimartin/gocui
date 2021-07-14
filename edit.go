@@ -10,8 +10,6 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-const maxInt = int(^uint(0) >> 1)
-
 // Editor interface must be satisfied by gocui editors.
 type Editor interface {
 	Edit(v *View, key Key, ch rune, mod Modifier)

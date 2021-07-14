@@ -40,7 +40,7 @@ const (
 )
 
 var (
-	errNotCSI        = errors.New("Not a CSI escape sequence")
+	errNotCSI        = errors.New("not a CSI escape sequence")
 	errCSIParseError = errors.New("CSI escape sequence parsing error")
 	errCSITooLong    = errors.New("CSI escape sequence is too long")
 )

@@ -83,7 +83,7 @@ func (t *TestingScreen) GetViewContent(viewName string) (string, error) {
 	}
 	view, err := t.gui.View(viewName)
 	if err != nil {
-		return "", fmt.Errorf("Failed to retreive view: %w", err)
+		return "", fmt.Errorf("failed to retreive view: %w", err)
 	}
 
 	x0, y0, x1, y1 := view.Dimensions()
@@ -114,7 +114,7 @@ func (t *TestingScreen) GetViewContent(viewName string) (string, error) {
 		// Get the content (without formatting) at that position
 		content, err := t.gui.Rune(Xcurrent, Ycurrent)
 		if err != nil {
-			return "", fmt.Errorf("Failed reading rune from simulation screen: %w", err)
+			return "", fmt.Errorf("failed reading rune from simulation screen: %w", err)
 		}
 		result.WriteRune(content)
 		Xcurrent++
