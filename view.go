@@ -385,9 +385,9 @@ func (v *View) writeCells(x, y int, cells []cell) {
 func (v *View) Write(p []byte) (n int, err error) {
 	v.tainted = true
 	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
 	v.makeWriteable(v.wx, v.wy)
 	v.writeRunes(bytes.Runes(p))
-	v.writeMutex.Unlock()
 
 	return len(p), nil
 }
@@ -625,6 +625,7 @@ func (v *View) draw() error {
 // Clear empties the view and resets the view offsets, cursor position, read offsets and write offsets
 func (v *View) Clear() {
 	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
 	v.Rewind()
 	v.tainted = true
 	v.ei.reset()
@@ -632,7 +633,6 @@ func (v *View) Clear() {
 	v.SetCursor(0, 0)
 	v.SetOrigin(0, 0)
 	v.clearRunes()
-	v.writeMutex.Unlock()
 }
 
 // linesPosOnScreen returns based on the view lines the x and y location
