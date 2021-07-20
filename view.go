@@ -572,7 +572,7 @@ func (v *View) draw() error {
 	linesToRender := v.viewLines()
 
 	if v.Autoscroll && len(linesToRender) > maxY {
-		v.oy = len(v.lines) - maxY
+		v.oy = len(linesToRender) - maxY - 1
 	}
 
 	newCache := []cellCache{}
