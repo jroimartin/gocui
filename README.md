@@ -1,6 +1,6 @@
 # GOCUI - Go Console User Interface
 
-[![GoDoc](https://godoc.org/github.com/jroimartin/gocui?status.svg)](https://godoc.org/github.com/jroimartin/gocui)
+[![Go Reference](https://pkg.go.dev/badge/github.com/jroimartin/gocui.svg)](https://pkg.go.dev/github.com/jroimartin/gocui)
 
 Minimalist Go package aimed at creating Console User Interfaces.
 
@@ -32,8 +32,8 @@ Execute:
 $ go doc github.com/jroimartin/gocui
 ```
 
-Or visit [godoc.org](https://godoc.org/github.com/jroimartin/gocui) to read it
-online.
+Or visit [pkg.go.dev](https://pkg.go.dev/github.com/jroimartin/gocui) to read
+it online.
 
 ## Example
 
