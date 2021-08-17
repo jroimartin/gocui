@@ -103,8 +103,9 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 * [pody](https://github.com/JulienBreux/pody): CLI app to manage Pods in a Kubernetes cluster.
 * [kubexp](https://github.com/alitari/kubexp): Kubernetes client.
 * [kcli](https://github.com/cswank/kcli): Tool for inspecting kafka topics/partitions/messages.
-* [fac](https://github.com/mkchoi212/fac): git merge conflict resolver
+* [fac](https://github.com/mkchoi212/fac): git merge conflict resolver.
 * [jsonui](https://github.com/gulyasm/jsonui): Interactive JSON explorer for your terminal.
 * [cointop](https://github.com/miguelmota/cointop): Interactive terminal based UI application for tracking cryptocurrencies.
+* [gitbatch](https://github.com/isacikgoz/gitbatch): Interactive git repository manager.
 
 Note: if your project is not listed here, let us know! :)
