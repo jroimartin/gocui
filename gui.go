@@ -32,14 +32,15 @@ const (
 // Gui represents the whole User Interface, including the views, layouts
 // and keybindings.
 type Gui struct {
-	tbEvents    chan termbox.Event
-	userEvents  chan userEvent
-	views       []*View
-	currentView *View
-	managers    []Manager
-	keybindings []*keybinding
-	maxX, maxY  int
-	outputMode  OutputMode
+	tbEvents      chan termbox.Event
+	userEvents    chan userEvent
+	views         []*View
+	currentView   *View
+	managers      []Manager
+	resizeHandler func(g *Gui, x, y int) error
+	keybindings   []*keybinding
+	maxX, maxY    int
+	outputMode    OutputMode
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the GUI.
@@ -346,6 +347,11 @@ func (g *Gui) SetManagerFunc(manager func(*Gui) error) {
 	g.SetManager(ManagerFunc(manager))
 }
 
+// SetResizeFunc sets a handler that will be called on resize events.
+func (g *Gui) SetResizeFunc(handler func(g *Gui, x, y int) error) {
+	g.resizeHandler = handler
+}
+
 // MainLoop runs the main loop until an error is returned. A successful
 // finish should return ErrQuit.
 func (g *Gui) MainLoop() error {
@@ -411,6 +417,8 @@ func (g *Gui) handleEvent(ev *termbox.Event) error {
 	switch ev.Type {
 	case termbox.EventKey, termbox.EventMouse:
 		return g.onKey(ev)
+	case termbox.EventResize:
+		return g.onResize(ev)
 	case termbox.EventError:
 		return ev.Err
 	default:
@@ -633,4 +641,13 @@ func (g *Gui) execKeybindings(v *View, ev *termbox.Event) (matched bool, err err
 		}
 	}
 	return matched, nil
+}
+
+// onResize manages resize events. It executes the resize handler if it's set.
+func (g *Gui) onResize(ev *termbox.Event) error {
+	if g.resizeHandler != nil {
+		maxX, maxY := g.Size()
+		return g.resizeHandler(g, maxX, maxY)
+	}
+	return nil
 }
