@@ -71,6 +71,9 @@ type View struct {
 	// If Mask is true, the View will display the mask instead of the real
 	// content
 	Mask rune
+
+	// Set the maximum number of lines to store
+	MaxLines int
 }
 
 type viewLine struct {
@@ -215,7 +218,7 @@ func (v *View) Write(p []byte) (n int, err error) {
 			}
 		default:
 			cells := v.parseInput(ch)
-			if cells == nil {
+			if cells == nil || len(cells) <= 0 {
 				continue
 			}
 
@@ -227,6 +230,13 @@ func (v *View) Write(p []byte) (n int, err error) {
 			}
 		}
 	}
+
+	// Cap the maximum number of lines in the view
+	if v.MaxLines > 0 && len(v.lines) > v.MaxLines {
+		cut := len(v.lines) - v.MaxLines
+		v.lines = v.lines[cut:]
+	}
+
 	return len(p), nil
 }
 
@@ -322,7 +332,7 @@ func (v *View) draw() error {
 	}
 
 	if v.Autoscroll && len(v.viewLines) > maxY {
-		v.oy = len(v.viewLines) - maxY
+		v.oy = len(v.viewLines) - maxY - 1
 	}
 	y := 0
 	for i, vline := range v.viewLines {
