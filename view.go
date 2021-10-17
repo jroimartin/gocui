@@ -1158,3 +1158,8 @@ func updatedCursorAndOrigin(prevOrigin int, size int, cursor int) (int, int) {
 
 	return newViewCursor, newOrigin
 }
+
+func (v *View) ClearTextArea() {
+	v.TextArea.Clear()
+	v.Clear()
+}
