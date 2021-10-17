@@ -1,6 +1,15 @@
 package gocui
 
-import "github.com/mattn/go-runewidth"
+import (
+	"strings"
+
+	"github.com/mattn/go-runewidth"
+)
+
+const (
+	WHITESPACES     = " \t"
+	WORD_SEPARATORS = "*?_-.[]~=/&;!#$%^(){}<>"
+)
 
 type TextArea struct {
 	content   []rune
@@ -140,6 +149,29 @@ func (self *TextArea) closestNewlineOnRight() int {
 func (self *TextArea) atLineStart() bool {
 	return self.cursor == 0 ||
 		(len(self.content) > self.cursor-1 && self.content[self.cursor-1] == '\n')
+}
+
+func (self *TextArea) BackSpaceWord() {
+	if self.atLineStart() {
+		self.BackSpaceChar()
+		return
+	}
+
+	right := self.cursor
+	for !self.atLineStart() && strings.ContainsRune(WHITESPACES, self.content[self.cursor-1]) {
+		self.cursor--
+	}
+	separators := false
+	for !self.atLineStart() && strings.ContainsRune(WORD_SEPARATORS, self.content[self.cursor-1]) {
+		self.cursor--
+		separators = true
+	}
+	if !separators {
+		for !self.atLineStart() && !strings.ContainsRune(WHITESPACES+WORD_SEPARATORS, self.content[self.cursor-1]) {
+			self.cursor--
+		}
+	}
+	self.content = append(self.content[:self.cursor], self.content[right:]...)
 }
 
 func (self *TextArea) GetCursorXY() (int, int) {
