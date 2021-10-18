@@ -416,6 +416,66 @@ func TestTextArea(t *testing.T) {
 			expectedContent: "",
 			expectedCursor:  0,
 		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString(`abcdefg`)
+				textarea.Clear()
+			},
+			expectedContent: "",
+			expectedCursor:  0,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString(`abc def`)
+				textarea.MoveCursorLeft()
+				textarea.BackSpaceWord()
+			},
+			expectedContent: "abc f",
+			expectedCursor:  4,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString(`abc  def   `)
+				textarea.BackSpaceWord()
+			},
+			expectedContent: "abc  ",
+			expectedCursor:  5,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString("abc def\nghi")
+				textarea.BackSpaceWord()
+			},
+			expectedContent: "abc def\n",
+			expectedCursor:  8,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString("abc def\nghi")
+				textarea.MoveCursorLeft()
+				textarea.MoveCursorLeft()
+				textarea.MoveCursorLeft()
+				textarea.BackSpaceWord()
+			},
+			expectedContent: "abc defghi",
+			expectedCursor:  7,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString(`abc(def)`)
+				textarea.BackSpaceWord()
+			},
+			expectedContent: "abc(def",
+			expectedCursor:  7,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString(`abc(def`)
+				textarea.BackSpaceWord()
+			},
+			expectedContent: "abc(",
+			expectedCursor:  4,
+		},
 	}
 
 	for _, test := range tests {
