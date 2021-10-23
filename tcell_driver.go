@@ -124,6 +124,7 @@ const (
 	eventInterrupt
 	eventError
 	eventRaw
+	eventTime
 )
 
 var (
@@ -221,6 +222,8 @@ func pollEvent() gocuiEvent {
 			Ch:     0,
 			Mod:    mouseMod,
 		}
+	case *tcell.EventTime:
+		return gocuiEvent{Type: eventTime}
 	default:
 		return gocuiEvent{Type: eventNone}
 	}

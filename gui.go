@@ -73,6 +73,8 @@ type Gui struct {
 	outputMode  OutputMode
 	stop        chan struct{}
 	blacklist   []Key
+	testCounter int // used for testing synchronization
+	testNotify  chan struct{}
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the GUI.
@@ -485,6 +487,7 @@ func (g *Gui) MainLoop() error {
 	if err := g.flush(); err != nil {
 		return err
 	}
+	g.testCounter = 0
 	for {
 		select {
 		case ev := <-g.gEvents:
@@ -504,6 +507,12 @@ func (g *Gui) MainLoop() error {
 		}
 		if err := g.flush(); err != nil {
 			return err
+		}
+		// used during testing for synchronization
+		if g.testNotify != nil && g.testCounter > 0 {
+			for ; g.testCounter > 0; g.testCounter-- {
+				g.testNotify <- struct{}{}
+			}
 		}
 	}
 }
@@ -532,6 +541,9 @@ func (g *Gui) handleEvent(ev *gocuiEvent) error {
 	switch ev.Type {
 	case eventKey, eventMouse:
 		return g.onKey(ev)
+	case eventTime:
+		g.testCounter++
+		return nil
 	case eventError:
 		return ev.Err
 	// Not sure if this should be handled. It acts weirder when it's here
