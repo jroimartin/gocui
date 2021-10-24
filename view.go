@@ -1023,23 +1023,6 @@ func indexFunc(r rune) bool {
 	return r == ' ' || r == 0
 }
 
-// SetLine changes the contents of an existing line.
-func (v *View) SetLine(y int, text string) error {
-	if y < 0 || y >= len(v.lines) {
-		err := ErrInvalidPoint
-		return err
-	}
-
-	v.tainted = true
-	line := make([]cell, 0)
-	for _, r := range text {
-		c := v.parseInput(r)
-		line = append(line, c...)
-	}
-	v.lines[y] = line
-	return nil
-}
-
 // SetHighlight toggles highlighting of separate lines, for custom lists
 // or multiple selection in views.
 func (v *View) SetHighlight(y int, on bool) error {
