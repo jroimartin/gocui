@@ -809,8 +809,9 @@ func (v *View) draw() error {
 		}
 	}
 
-	if v.Autoscroll && len(v.viewLines) > maxY {
-		v.oy = len(v.viewLines) - maxY
+	visibleViewLinesHeight := v.viewLineLengthIgnoringTrailingBlankLines()
+	if v.Autoscroll && visibleViewLinesHeight > maxY {
+		v.oy = visibleViewLinesHeight - maxY
 	}
 	y := 0
 	for i, vline := range v.viewLines {
@@ -856,6 +857,18 @@ func (v *View) draw() error {
 		y++
 	}
 	return nil
+}
+
+// if autoscroll is enabled but we only have a single row of cells shown to the
+// user, we don't want to scroll to the final line if it contains no text. So
+// this tells us the view lines height when we ignore any trailing blank lines
+func (v *View) viewLineLengthIgnoringTrailingBlankLines() int {
+	for i := len(v.viewLines) - 1; i >= 0; i-- {
+		if len(v.viewLines[i].line) > 0 {
+			return i + 1
+		}
+	}
+	return 0
 }
 
 func (v *View) isPatternMatchedRune(x, y int) (bool, bool) {
