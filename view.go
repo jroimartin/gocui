@@ -767,6 +767,8 @@ func (v *View) IsTainted() bool {
 
 // draw re-draws the view's contents.
 func (v *View) draw() error {
+	v.clearRunes()
+
 	if !v.Visible {
 		return nil
 	}
