@@ -7,7 +7,6 @@ package gocui
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"testing"
@@ -23,7 +22,7 @@ func TestTestingScreenReturnsCorrectContent(t *testing.T) {
 	// Create a view specifying the "OutputSimulator" mode
 	g, err := NewGui(OutputSimulator, true)
 	if err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 	g.SetManagerFunc(func(g *Gui) error {
 		maxX, maxY := g.Size()
@@ -49,7 +48,7 @@ func TestTestingScreenReturnsCorrectContent(t *testing.T) {
 		return nil
 	}
 	if err := g.SetKeybinding("", KeyCtrlC, ModNone, exampleBindingToTest); err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 
 	// Create a test screen and start gocui
@@ -57,6 +56,7 @@ func TestTestingScreenReturnsCorrectContent(t *testing.T) {
 	cleanup := testingScreen.StartGui()
 	defer cleanup()
 
+	// NOTE: This sequence can be replaced with `testingScreen.SendKeySync(KeyCtrlC)` (we keep it for covering the use case)
 	// Send a key to gocui
 	testingScreen.SendKey(KeyCtrlC)
 	// Wait for key to be processed
@@ -83,7 +83,7 @@ func TestTestingScreenMultipleKeys(t *testing.T) {
 	// Create a view specifying the "OutputSimulator" mode
 	g, err := NewGui(OutputSimulator, true)
 	if err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 	g.SetManagerFunc(func(g *Gui) error {
 		maxX, maxY := g.Size()
@@ -109,7 +109,7 @@ func TestTestingScreenMultipleKeys(t *testing.T) {
 		return nil
 	}
 	if err := g.SetKeybinding("", KeyCtrlC, ModNone, exampleBindingToTest); err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 
 	if err := g.SetKeybinding("", KeyF1, ModNone, func(g *Gui, v *View) error {
@@ -117,7 +117,7 @@ func TestTestingScreenMultipleKeys(t *testing.T) {
 		fmt.Fprintln(v, expectedViewContent1)
 		return nil
 	}); err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 	if err := g.SetKeybinding("", KeyF2, ModNone, func(g *Gui, v *View) error {
 		v.Clear()
@@ -125,14 +125,14 @@ func TestTestingScreenMultipleKeys(t *testing.T) {
 		fmt.Fprintln(v, expectedViewContent2)
 		return nil
 	}); err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 	if err := g.SetKeybinding("", KeyF3, ModNone, func(g *Gui, v *View) error {
 		v.Clear()
 		fmt.Fprintln(v, expectedViewContent3)
 		return nil
 	}); err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 
 	// Create a test screen and start gocui
@@ -151,23 +151,20 @@ func TestTestingScreenMultipleKeys(t *testing.T) {
 		t.Error("Expect the simulator to invoke the key handler for CTRLC")
 	}
 
-	// Send a key to gocui
-	testingScreen.SendKeySync(KeyF1)
-
-	// check view content
-	assertView(t, testingScreen, viewName, expectedViewContent1)
-
-	// Send a key to gocui
-	testingScreen.SendKeySync(KeyF2)
-
-	// check view content
-	assertView(t, testingScreen, viewName, expectedViewContent2)
-
-	// Send a key to gocui
-	testingScreen.SendKeySync(KeyF3)
-
-	// check view content
-	assertView(t, testingScreen, viewName, expectedViewContent3)
+	tests := []struct {
+		key     Key
+		content string
+	}{
+		{KeyF1, expectedViewContent1},
+		{KeyF2, expectedViewContent2},
+		{KeyF3, expectedViewContent3},
+	}
+	for _, key := range tests {
+		// Send a key to gocui
+		testingScreen.SendKeySync(key.key)
+		// check view content
+		assertView(t, testingScreen, viewName, key.content)
+	}
 }
 
 func TestTestingScreenParallelKeys(t *testing.T) {
@@ -182,7 +179,7 @@ func TestTestingScreenParallelKeys(t *testing.T) {
 	// Create a view specifying the "OutputSimulator" mode
 	g, err := NewGui(OutputSimulator, true)
 	if err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 	g.SetManagerFunc(func(g *Gui) error {
 		maxX, maxY := g.Size()
@@ -207,26 +204,26 @@ func TestTestingScreenParallelKeys(t *testing.T) {
 		didCallCTRLC = true
 		return nil
 	}); err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 
 	if err := g.SetKeybinding("", KeyF1, ModNone, func(g *Gui, v *View) error {
 		didCallF1 = true
 		return nil
 	}); err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 	if err := g.SetKeybinding("", KeyF2, ModNone, func(g *Gui, v *View) error {
 		didCallF2 = true
 		return nil
 	}); err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 	if err := g.SetKeybinding("", KeyF3, ModNone, func(g *Gui, v *View) error {
 		didCallF3 = true
 		return nil
 	}); err != nil {
-		log.Panicln(err)
+		t.Error(err)
 	}
 
 	// Create a test screen and start gocui
