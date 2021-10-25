@@ -510,7 +510,8 @@ func (g *Gui) MainLoop() error {
 		}
 		// used during testing for synchronization
 		if g.testNotify != nil && g.testCounter > 0 {
-			for ; g.testCounter > 0; g.testCounter-- {
+			for g.testCounter > 0 {
+				g.testCounter--
 				g.testNotify <- struct{}{}
 			}
 		}
