@@ -15,6 +15,7 @@ type TextArea struct {
 	content   []rune
 	cursor    int
 	overwrite bool
+	clipboard string
 }
 
 func (self *TextArea) TypeRune(r rune) {
@@ -95,12 +96,14 @@ func (self *TextArea) DeleteToStartOfLine() {
 
 		self.content = append(self.content[:self.cursor-1], self.content[self.cursor:]...)
 		self.cursor--
+		self.clipboard = "\n"
 		return
 	}
 
 	// otherwise, you delete everything up to the start of the current line, without
 	// deleting the newline character
 	newlineIndex := self.closestNewlineOnLeft()
+	self.clipboard = string(self.content[newlineIndex+1 : self.cursor])
 	self.content = append(self.content[:newlineIndex+1], self.content[self.cursor:]...)
 	self.cursor = newlineIndex + 1
 }
@@ -154,6 +157,7 @@ func (self *TextArea) atLineStart() bool {
 func (self *TextArea) BackSpaceWord() {
 	if self.atLineStart() {
 		self.BackSpaceChar()
+		self.clipboard = "\n"
 		return
 	}
 
@@ -171,7 +175,13 @@ func (self *TextArea) BackSpaceWord() {
 			self.cursor--
 		}
 	}
+
+	self.clipboard = string(self.content[self.cursor:right])
 	self.content = append(self.content[:self.cursor], self.content[right:]...)
+}
+
+func (self *TextArea) Yank() {
+	self.TypeString(self.clipboard)
 }
 
 func (self *TextArea) GetCursorXY() (int, int) {
