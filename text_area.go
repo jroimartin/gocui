@@ -108,6 +108,21 @@ func (self *TextArea) DeleteToStartOfLine() {
 	self.cursor = newlineIndex + 1
 }
 
+func (self *TextArea) DeleteToEndOfLine() {
+	if self.atEnd() {
+		return
+	}
+	if self.atLineEnd() {
+		self.content = append(self.content[:self.cursor], self.content[self.cursor+1:]...)
+		self.clipboard = "\n"
+		return
+	}
+
+	lineEndIndex := self.closestNewlineOnRight()
+	self.clipboard = string(self.content[self.cursor:lineEndIndex])
+	self.content = append(self.content[:self.cursor], self.content[lineEndIndex:]...)
+}
+
 func (self *TextArea) GoToStartOfLine() {
 	if self.atLineStart() {
 		return
@@ -152,6 +167,11 @@ func (self *TextArea) closestNewlineOnRight() int {
 func (self *TextArea) atLineStart() bool {
 	return self.cursor == 0 ||
 		(len(self.content) > self.cursor-1 && self.content[self.cursor-1] == '\n')
+}
+
+func (self *TextArea) atLineEnd() bool {
+	return self.atEnd() ||
+		(len(self.content) > self.cursor && self.content[self.cursor] == '\n')
 }
 
 func (self *TextArea) BackSpaceWord() {

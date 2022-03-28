@@ -550,6 +550,28 @@ func TestTextArea(t *testing.T) {
 		},
 		{
 			actions: func(textarea *TextArea) {
+				textarea.TypeString("abc\ndef")
+				textarea.MoveCursorLeft()
+				textarea.MoveCursorLeft()
+				textarea.MoveCursorUp()
+				textarea.DeleteToEndOfLine()
+			},
+			expectedContent:   "a\ndef",
+			expectedCursor:    1,
+			expectedClipboard: "bc",
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString("abc\ndef")
+				textarea.MoveCursorUp()
+				textarea.DeleteToEndOfLine()
+			},
+			expectedContent:   "abcdef",
+			expectedCursor:    3,
+			expectedClipboard: "\n",
+		},
+		{
+			actions: func(textarea *TextArea) {
 				textarea.TypeString(`abc def`)
 				textarea.BackSpaceWord()
 				textarea.Yank()
@@ -558,6 +580,19 @@ func TestTextArea(t *testing.T) {
 			expectedContent:   "abc defdef",
 			expectedCursor:    10,
 			expectedClipboard: "def",
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString(`abc def`)
+				textarea.MoveCursorLeft()
+				textarea.MoveCursorLeft()
+				textarea.DeleteToEndOfLine()
+				textarea.Yank()
+				textarea.Yank()
+			},
+			expectedContent:   "abc defef",
+			expectedCursor:    9,
+			expectedClipboard: "ef",
 		},
 	}
 
