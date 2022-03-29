@@ -175,6 +175,9 @@ func (self *TextArea) atLineEnd() bool {
 }
 
 func (self *TextArea) BackSpaceWord() {
+	if self.cursor == 0 {
+		return
+	}
 	if self.atLineStart() {
 		self.BackSpaceChar()
 		self.clipboard = "\n"

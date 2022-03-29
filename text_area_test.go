@@ -531,6 +531,16 @@ func TestTextArea(t *testing.T) {
 		{
 			actions: func(textarea *TextArea) {
 				textarea.TypeString(`abc`)
+				textarea.GoToStartOfLine()
+				textarea.BackSpaceWord()
+			},
+			expectedContent:   "abc",
+			expectedCursor:    0,
+			expectedClipboard: "",
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString(`abc`)
 				textarea.Yank()
 			},
 			expectedContent:   "abc",
