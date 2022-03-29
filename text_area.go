@@ -8,7 +8,7 @@ import (
 
 const (
 	WHITESPACES     = " \t"
-	WORD_SEPARATORS = "*?_-.[]~=/&;!#$%^(){}<>"
+	WORD_SEPARATORS = "*?_+-.[]~=/&;!#$%^(){}<>"
 )
 
 type TextArea struct {
@@ -96,7 +96,6 @@ func (self *TextArea) DeleteToStartOfLine() {
 
 		self.content = append(self.content[:self.cursor-1], self.content[self.cursor:]...)
 		self.cursor--
-		self.clipboard = "\n"
 		return
 	}
 
@@ -114,7 +113,6 @@ func (self *TextArea) DeleteToEndOfLine() {
 	}
 	if self.atLineEnd() {
 		self.content = append(self.content[:self.cursor], self.content[self.cursor+1:]...)
-		self.clipboard = "\n"
 		return
 	}
 
@@ -180,7 +178,6 @@ func (self *TextArea) BackSpaceWord() {
 	}
 	if self.atLineStart() {
 		self.BackSpaceChar()
-		self.clipboard = "\n"
 		return
 	}
 

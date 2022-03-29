@@ -257,7 +257,7 @@ func TestTextArea(t *testing.T) {
 			},
 			expectedContent:   "ab",
 			expectedCursor:    2,
-			expectedClipboard: "\n",
+			expectedClipboard: "",
 		},
 		{
 			actions: func(textarea *TextArea) {
@@ -508,7 +508,7 @@ func TestTextArea(t *testing.T) {
 			},
 			expectedContent:   "abc defghi",
 			expectedCursor:    7,
-			expectedClipboard: "\n",
+			expectedClipboard: "",
 		},
 		{
 			actions: func(textarea *TextArea) {
@@ -578,7 +578,7 @@ func TestTextArea(t *testing.T) {
 			},
 			expectedContent:   "abcdef",
 			expectedCursor:    3,
-			expectedClipboard: "\n",
+			expectedClipboard: "",
 		},
 		{
 			actions: func(textarea *TextArea) {
