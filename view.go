@@ -158,6 +158,9 @@ type View struct {
 
 	// something like '1 of 20' for a list view
 	Footer string
+
+	// if true, the user can scroll all the way past the last item until it appears at the top of the view
+	CanScrollPastBottom bool
 }
 
 // call this in the event of a view resize, or if you want to render new content
@@ -1286,4 +1289,65 @@ func (v *View) OverwriteLines(y int, content string) {
 
 	lines := strings.Replace(content, "\n", "\x1b[K\n", -1)
 	v.writeString(lines)
+}
+
+func (v *View) ScrollUp(amount int) {
+	newOy := v.oy - amount
+	if newOy < 0 {
+		newOy = 0
+	}
+	v.oy = newOy
+}
+
+// ensures we don't scroll past the end of the view's content
+func (v *View) ScrollDown(amount int) {
+	adjustedAmount := v.adjustDownwardScrollAmount(amount)
+	if adjustedAmount > 0 {
+		v.oy += adjustedAmount
+	}
+}
+
+func (v *View) ScrollLeft(amount int) {
+	newOx := v.ox - amount
+	if newOx < 0 {
+		newOx = 0
+	}
+	v.ox = newOx
+}
+
+// not applying any limits to this
+func (v *View) ScrollRight(amount int) {
+	v.ox += amount
+}
+
+func (v *View) adjustDownwardScrollAmount(scrollHeight int) int {
+	_, oy := v.Origin()
+	y := oy
+	if !v.CanScrollPastBottom {
+		_, sy := v.Size()
+		y += sy
+	}
+	scrollableLines := v.ViewLinesHeight() - y
+	if scrollableLines < 0 {
+		return 0
+	}
+
+	// margin is about how many lines must still appear if you scroll
+	// all the way down.
+	margin := 0
+	if v.CanScrollPastBottom {
+		// Setting to 2 because of the newline at the end of the file that we're likely showing.
+		// If we want to scroll past bottom outside the context of reading a file's contents,
+		// we should make this into a field on the view to be configured by the client.
+		// For now we're hardcoding it.
+		margin = 2
+	}
+	if scrollableLines-margin < scrollHeight {
+		scrollHeight = scrollableLines - margin
+	}
+	if oy+scrollHeight < 0 {
+		return 0
+	} else {
+		return scrollHeight
+	}
 }
