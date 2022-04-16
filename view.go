@@ -1332,16 +1332,7 @@ func (v *View) adjustDownwardScrollAmount(scrollHeight int) int {
 		return 0
 	}
 
-	// margin is about how many lines must still appear if you scroll
-	// all the way down.
-	margin := 0
-	if v.CanScrollPastBottom {
-		// Setting to 2 because of the newline at the end of the file that we're likely showing.
-		// If we want to scroll past bottom outside the context of reading a file's contents,
-		// we should make this into a field on the view to be configured by the client.
-		// For now we're hardcoding it.
-		margin = 2
-	}
+	margin := v.scrollMargin()
 	if scrollableLines-margin < scrollHeight {
 		scrollHeight = scrollableLines - margin
 	}
@@ -1349,5 +1340,19 @@ func (v *View) adjustDownwardScrollAmount(scrollHeight int) int {
 		return 0
 	} else {
 		return scrollHeight
+	}
+}
+
+// scrollMargin is about how many lines must still appear if you scroll
+// all the way down. We'll subtract this from the total amount of scrollable lines
+func (v *View) scrollMargin() int {
+	if v.CanScrollPastBottom {
+		// Setting to 2 because of the newline at the end of the file that we're likely showing.
+		// If we want to scroll past bottom outside the context of reading a file's contents,
+		// we should make this into a field on the view to be configured by the client.
+		// For now we're hardcoding it.
+		return 2
+	} else {
+		return 0
 	}
 }

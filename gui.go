@@ -783,12 +783,8 @@ func calcScrollbarRune(showScrollbar bool, scrollbarStart int, scrollbarEnd int,
 }
 
 func calcRealScrollbarStartEnd(v *View) (bool, int, int) {
-	height := v.InnerHeight() + 1
+	height := v.InnerHeight() + 1 - v.scrollMargin()
 	fullHeight := v.ViewLinesHeight()
-
-	if v.CanScrollPastBottom {
-		fullHeight += height - 2
-	}
 
 	if height < 2 || height >= fullHeight {
 		return false, 0, 0
