@@ -936,11 +936,14 @@ func (v *View) draw() error {
 		if y >= maxY {
 			break
 		}
-		x := 0
+		x := -v.ox
 		j := 0
 		var c cell
 		for {
-			if j < v.ox {
+			if x < 0 {
+				if j < len(vline.line) {
+					x += runewidth.RuneWidth(vline.line[j].chr)
+				}
 				j++
 				continue
 			}
