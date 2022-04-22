@@ -207,6 +207,78 @@ func TestTextArea(t *testing.T) {
 		},
 		{
 			actions: func(textarea *TextArea) {
+				textarea.TypeString("aaa bbb")
+				textarea.MoveLeftWord()
+			},
+			expectedContent: "aaa bbb",
+			expectedCursor:  4,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString("aaa bbb\n")
+				textarea.MoveLeftWord()
+			},
+			expectedContent: "aaa bbb\n",
+			expectedCursor:  7,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString("aaa bbb")
+				textarea.MoveLeftWord()
+				textarea.MoveLeftWord()
+			},
+			expectedContent: "aaa bbb",
+			expectedCursor:  0,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString("aaa")
+				textarea.GoToStartOfLine()
+				textarea.MoveLeftWord()
+			},
+			expectedContent: "aaa",
+			expectedCursor:  0,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString("aaa bbb")
+				textarea.MoveRightWord()
+			},
+			expectedContent: "aaa bbb",
+			expectedCursor:  7,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString("aaa\nbbb")
+				textarea.GoToStartOfLine()
+				textarea.MoveCursorLeft()
+				textarea.MoveRightWord()
+			},
+			expectedContent: "aaa\nbbb",
+			expectedCursor:  4,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString("aaa bbb")
+				textarea.GoToStartOfLine()
+				textarea.MoveRightWord()
+			},
+			expectedContent: "aaa bbb",
+			expectedCursor:  3,
+		},
+		{
+			actions: func(textarea *TextArea) {
+				textarea.TypeString("aaa bbb\n")
+				textarea.MoveCursorLeft()
+				textarea.GoToStartOfLine()
+				textarea.MoveRightWord()
+				textarea.MoveRightWord()
+			},
+			expectedContent: "aaa bbb\n",
+			expectedCursor:  7,
+		},
+		{
+			actions: func(textarea *TextArea) {
 				// overwrite mode acts same as normal mode when cursor is at the end
 				textarea.TypeRune('a')
 				textarea.TypeRune('b')
