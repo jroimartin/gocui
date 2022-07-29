@@ -90,7 +90,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 ![_examples/dynamic.go](https://cloud.githubusercontent.com/assets/1223476/5992751/76ad5cc2-aa36-11e4-8204-6a90269db827.png)
 
 ## Projects using gocui
-
+* [superpet](https://github.com/ramiawar/superpet): Command line snippet and environment variable manager.
 * [komanda-cli](https://github.com/mephux/komanda-cli): IRC Client For Developers.
 * [vuls](https://github.com/future-architect/vuls): Agentless vulnerability scanner for Linux/FreeBSD.
 * [wuzz](https://github.com/asciimoo/wuzz): Interactive cli tool for HTTP inspection.
