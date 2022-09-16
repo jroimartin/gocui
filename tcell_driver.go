@@ -86,7 +86,7 @@ func (g *Gui) tcellInitSimulation() error {
 		Screen = s
 		// setting to a larger value than the typical terminal size
 		// so that during a test we're more likely to see an item to select in a view.
-		s.SetSize(300, 300)
+		s.SetSize(100, 100)
 		s.Sync()
 		return nil
 	}
