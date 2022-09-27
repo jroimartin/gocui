@@ -601,6 +601,14 @@ func (v *View) writeCells(x, y int, cells []cell) {
 	v.lines[y] = line[:newLen]
 }
 
+// readCell gets cell at specified location (x, y)
+func (v *View) readCell(x, y int) (cell, bool) {
+	if y < 0 || y >= len(v.lines) || x < 0 || x >= len(v.lines[y]) {
+		return cell{}, false
+	}
+	return v.lines[y][x], true
+}
+
 // Write appends a byte slice into the view's internal buffer. Because
 // View implements the io.Writer interface, it can be passed as parameter
 // of functions like fmt.Fprintf, fmt.Fprintln, io.Copy, etc. Clear must
@@ -631,14 +639,26 @@ func (v *View) writeRunes(p []rune) {
 	for _, r := range p {
 		switch r {
 		case '\n':
+			if c, ok := v.readCell(v.wx+1, v.wy); !ok || c.chr == 0 {
+				v.writeCells(v.wx, v.wy, []cell{{
+					chr:     0,
+					fgColor: 0,
+					bgColor: 0,
+				}})
+			}
+			v.wx = 0
 			v.wy++
 			if v.wy >= len(v.lines) {
 				v.lines = append(v.lines, nil)
 			}
-
-			fallthrough
-			// not valid in every OS, but making runtime OS checks in cycle is bad.
 		case '\r':
+			if c, ok := v.readCell(v.wx, v.wy); !ok || c.chr == 0 {
+				v.writeCells(v.wx, v.wy, []cell{{
+					chr:     0,
+					fgColor: 0,
+					bgColor: 0,
+				}})
+			}
 			v.wx = 0
 		default:
 			moveCursor, cells := v.parseInput(r)
