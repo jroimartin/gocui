@@ -641,7 +641,7 @@ func (v *View) writeRunes(p []rune) {
 		case '\r':
 			v.wx = 0
 		default:
-			moveCursor, cells := v.parseInput(r)
+			moveCursor, cells := v.parseInput(r, v.wx, v.wy)
 			if cells == nil {
 				continue
 			}
@@ -666,7 +666,7 @@ func (v *View) writeString(s string) {
 // parseInput parses char by char the input written to the View. It returns nil
 // while processing ESC sequences. Otherwise, it returns a cell slice that
 // contains the processed data.
-func (v *View) parseInput(ch rune) (bool, []cell) {
+func (v *View) parseInput(ch rune, x int, y int) (bool, []cell) {
 	cells := []cell{}
 	moveCursor := true
 
@@ -698,8 +698,9 @@ func (v *View) parseInput(ch rune) (bool, []cell) {
 			return moveCursor, nil
 		} else if ch == '\t' {
 			// fill tab-sized space
+			const tabStop = 4
 			ch = ' '
-			repeatCount = 4
+			repeatCount = tabStop - (x % tabStop)
 		}
 		c := cell{
 			fgColor: v.ei.curFgColor,
