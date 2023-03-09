@@ -211,7 +211,8 @@ func (ei *escapeInterpreter) parseOne(ch rune) (isEscape bool, err error) {
 }
 
 // outputNormal provides 8 different colors:
-//   black, red, green, yellow, blue, magenta, cyan, white
+//
+//	black, red, green, yellow, blue, magenta, cyan, white
 func (ei *escapeInterpreter) outputNormal() error {
 	for _, param := range ei.csiParam {
 		p, err := strconv.Atoi(param)
@@ -242,10 +243,11 @@ func (ei *escapeInterpreter) outputNormal() error {
 }
 
 // output256 allows you to leverage the 256-colors terminal mode:
-//   0x01 - 0x08: the 8 colors as in OutputNormal
-//   0x09 - 0x10: Color* | AttrBold
-//   0x11 - 0xe8: 216 different colors
-//   0xe9 - 0x1ff: 24 different shades of grey
+//
+//	0x01 - 0x08: the 8 colors as in OutputNormal
+//	0x09 - 0x10: Color* | AttrBold
+//	0x11 - 0xe8: 216 different colors
+//	0xe9 - 0x1ff: 24 different shades of grey
 func (ei *escapeInterpreter) output256() error {
 	if len(ei.csiParam) < 3 {
 		return ei.outputNormal()
