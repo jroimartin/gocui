@@ -214,17 +214,17 @@ func (ei *escapeInterpreter) outputCSI() error {
 
 		skip := 1
 		switch {
-		case p == 0:
+		case p == 0: // reset style and color
 			ei.curFgColor = ColorDefault
 			ei.curBgColor = ColorDefault
-		case p >= 1 && p <= 9:
+		case p >= 1 && p <= 9: // set style
 			ei.curFgColor |= getFontEffect(p)
-		case p >= 21 && p <= 29:
+		case p >= 21 && p <= 29: // reset style
 			ei.curFgColor &= ^getFontEffect(p - 20)
-		case p >= 30 && p <= 37:
+		case p >= 30 && p <= 37: // set foreground color
 			ei.curFgColor &= AttrStyleBits
 			ei.curFgColor |= Get256Color(int32(p) - 30)
-		case p == setForegroundColor:
+		case p == setForegroundColor: // set foreground color (256-color or true color)
 			var color Attribute
 			var err error
 			color, skip, err = ei.csiColor(ei.csiParam[i:])
@@ -233,13 +233,13 @@ func (ei *escapeInterpreter) outputCSI() error {
 			}
 			ei.curFgColor &= AttrStyleBits
 			ei.curFgColor |= color
-		case p == defaultForegroundColor:
+		case p == defaultForegroundColor: // reset foreground color
 			ei.curFgColor &= AttrStyleBits
 			ei.curFgColor |= ColorDefault
-		case p >= 40 && p <= 47:
+		case p >= 40 && p <= 47: // set background color
 			ei.curBgColor &= AttrStyleBits
 			ei.curBgColor |= Get256Color(int32(p) - 40)
-		case p == setBackgroundColor:
+		case p == setBackgroundColor: // set background color (256-color or true color)
 			var color Attribute
 			var err error
 			color, skip, err = ei.csiColor(ei.csiParam[i:])
@@ -248,13 +248,13 @@ func (ei *escapeInterpreter) outputCSI() error {
 			}
 			ei.curBgColor &= AttrStyleBits
 			ei.curBgColor |= color
-		case p == defaultBackgroundColor:
+		case p == defaultBackgroundColor: // reset background color
 			ei.curBgColor &= AttrStyleBits
 			ei.curBgColor |= ColorDefault
-		case p >= 90 && p <= 97:
+		case p >= 90 && p <= 97: // set bright foreground color
 			ei.curFgColor &= AttrStyleBits
 			ei.curFgColor |= Get256Color(int32(p) - 90 + 8)
-		case p >= 100 && p <= 107:
+		case p >= 100 && p <= 107: // set bright background color
 			ei.curBgColor &= AttrStyleBits
 			ei.curBgColor |= Get256Color(int32(p) - 100 + 8)
 		default:
