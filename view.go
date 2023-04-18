@@ -277,21 +277,15 @@ func (v *View) FocusPoint(cx int, cy int) {
 	// if line is below origin + height, move origin and set cursor to max
 	// otherwise set cursor to value - origin
 	if ly > lineCount {
-		v.cx = cx
-		v.cy = cy
 		v.oy = 0
 	} else if cy < v.oy {
-		v.cx = cx
-		v.cy = 0
 		v.oy = cy
 	} else if cy > v.oy+ly {
-		v.cx = cx
-		v.cy = ly
 		v.oy = cy - ly
-	} else {
-		v.cx = cx
-		v.cy = cy - v.oy
 	}
+
+	v.cx = cx
+	v.cy = cy - v.oy
 }
 
 func (s *searcher) search(str string) {
