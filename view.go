@@ -281,10 +281,22 @@ func (v *View) FocusPoint(cx int, cy int) {
 func calculateNewOrigin(selectedLine int, oldOrigin int, lineCount int, viewHeight int) int {
 	if viewHeight > lineCount {
 		return 0
-	} else if selectedLine < oldOrigin {
-		return selectedLine
-	} else if selectedLine > oldOrigin+viewHeight {
-		return selectedLine - viewHeight
+	} else if selectedLine < oldOrigin || selectedLine > oldOrigin+viewHeight {
+		// If the selected line is outside the visible area, scroll the view so
+		// that the selected line is in the middle.
+		newOrigin := selectedLine - viewHeight/2
+
+		// However, take care not to overflow if the total line count is less
+		// than the view height.
+		maxOrigin := lineCount - viewHeight - 1
+		if newOrigin > maxOrigin {
+			newOrigin = maxOrigin
+		}
+		if newOrigin < 0 {
+			newOrigin = 0
+		}
+
+		return newOrigin
 	}
 
 	return oldOrigin
