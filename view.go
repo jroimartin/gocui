@@ -1461,3 +1461,32 @@ func (v *View) scrollMargin() int {
 		return 0
 	}
 }
+
+// Returns true if the view contains a line containing the given text with the given
+// foreground color
+func (v *View) ContainsColoredText(fgColor Attribute, text string) bool {
+	for _, line := range v.lines {
+		if containsColoredTextInLine(fgColor, text, line) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func containsColoredTextInLine(fgColor Attribute, text string, line []cell) bool {
+	currentMatch := ""
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+		if c.fgColor == fgColor {
+			currentMatch += string(c.chr)
+		} else if currentMatch != "" {
+			if strings.Contains(currentMatch, text) {
+				return true
+			}
+			currentMatch = ""
+		}
+	}
+
+	return strings.Contains(currentMatch, text)
+}

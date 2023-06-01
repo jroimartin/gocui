@@ -7,4 +7,5 @@ require (
 	github.com/go-errors/errors v1.0.2
 	github.com/mattn/go-runewidth v0.0.10
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/sys v0.8.0 // indirect
 )

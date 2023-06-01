@@ -32,3 +32,79 @@ func TestUpdatedCursorAndOrigin(t *testing.T) {
 		assert.EqualValues(t, test.expectedOrigin, origin, "Origin in wrong")
 	}
 }
+
+func TestContainsColoredText(t *testing.T) {
+	color := func(text string, color Attribute) []cell {
+		cells := make([]cell, len(text))
+		for i, chr := range text {
+			cells[i] = cell{fgColor: color, chr: chr}
+		}
+		return cells
+	}
+	red := func(text string) []cell {
+		return color(text, ColorRed)
+	}
+	green := func(text string) []cell {
+		return color(text, ColorGreen)
+	}
+
+	concat := func(lines ...[]cell) []cell {
+		var cells []cell
+		for _, line := range lines {
+			cells = append(cells, line...)
+		}
+		return cells
+	}
+
+	tests := []struct {
+		lines    [][]cell
+		color    Attribute
+		text     string
+		expected bool
+	}{
+		{
+			lines:    [][]cell{concat(red("a"))},
+			color:    ColorRed,
+			text:     "a",
+			expected: true,
+		},
+		{
+			lines:    [][]cell{concat(red("a"))},
+			color:    ColorRed,
+			text:     "b",
+			expected: false,
+		},
+		{
+			lines:    [][]cell{concat(red("a"))},
+			color:    ColorGreen,
+			text:     "b",
+			expected: false,
+		},
+		{
+			lines:    [][]cell{concat(red("hel"), green("lo"), red(" World!"))},
+			color:    ColorRed,
+			text:     "hello",
+			expected: false,
+		},
+		{
+			lines:    [][]cell{concat(red("hel"), green("lo"), red(" World!"))},
+			color:    ColorGreen,
+			text:     "lo",
+			expected: true,
+		},
+		{
+			lines: [][]cell{
+				red("hel"),
+				red("lo"),
+			},
+			color:    ColorRed,
+			text:     "hello",
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		v := &View{lines: test.lines}
+		assert.EqualValues(t, test.expected, v.ContainsColoredText(test.color, test.text))
+	}
+}
