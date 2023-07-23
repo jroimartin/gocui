@@ -107,3 +107,148 @@ func TestContainsColoredText(t *testing.T) {
 		assert.Equal(t, test.expected, v.ContainsColoredText(test.fgColorStr, test.text), "Test %d failed", i)
 	}
 }
+
+func stringToCells(s string) []cell {
+	var cells []cell
+	for _, c := range s {
+		cells = append(cells, cell{chr: c})
+	}
+	return cells
+}
+
+func cellsToString(cells []cell) string {
+	var s string
+	for _, c := range cells {
+		s += string(c.chr)
+	}
+	return s
+}
+
+func TestLineWrap(t *testing.T) {
+	testCases := []struct {
+		name     string
+		line     string
+		columns  int
+		expected []string
+	}{
+		{
+			name:    "Wrap on space",
+			line:    "Hello World",
+			columns: 5,
+			expected: []string{
+				"Hello",
+				"World",
+			},
+		},
+		{
+			name:    "Wrap on hyphen",
+			line:    "Hello-World",
+			columns: 6,
+			expected: []string{
+				"Hello-",
+				"World",
+			},
+		},
+		{
+			name:    "Wrap on hyphen 2",
+			line:    "Blah Hello-World",
+			columns: 12,
+			expected: []string{
+				"Blah Hello-",
+				"World",
+			},
+		},
+		{
+			name:    "Wrap on hyphen 3",
+			line:    "Blah Hello-World",
+			columns: 11,
+			expected: []string{
+				"Blah Hello-",
+				"World",
+			},
+		},
+		{
+			name:    "Wrap on hyphen 4",
+			line:    "Blah Hello-World",
+			columns: 10,
+			expected: []string{
+				"Blah Hello",
+				"-World",
+			},
+		},
+		{
+			name:    "Wrap on space 2",
+			line:    "Blah Hello World",
+			columns: 10,
+			expected: []string{
+				"Blah Hello",
+				"World",
+			},
+		},
+		{
+			name:    "Wrap on space with more words",
+			line:    "Longer word here",
+			columns: 10,
+			expected: []string{
+				"Longer",
+				"word here",
+			},
+		},
+		{
+			name:    "Split word that's too long",
+			line:    "ThisWordIsWayTooLong",
+			columns: 10,
+			expected: []string{
+				"ThisWordIs",
+				"WayTooLong",
+			},
+		},
+		{
+			name:    "Split word that's too long over multiple lines",
+			line:    "ThisWordIsWayTooLong",
+			columns: 5,
+			expected: []string{
+				"ThisW",
+				"ordIs",
+				"WayTo",
+				"oLong",
+			},
+		},
+		{
+			name:    "Lots of hyphens",
+			line:    "one-two-three-four-five",
+			columns: 8,
+			expected: []string{
+				"one-two-",
+				"three-",
+				"four-five",
+			},
+		},
+		{
+			name:    "English text",
+			line:    "+The sea reach of the Thames stretched before us like the bedinnind of an interminable waterway. In the offind the sea and the sky were welded todether without a joint, and in the luminous space the tanned sails of the bardes drifting blah blah",
+			columns: 81,
+			expected: []string{
+				"+The sea reach of the Thames stretched before us like the bedinnind of an",
+				"interminable waterway. In the offind the sea and the sky were welded todether",
+				"without a joint, and in the luminous space the tanned sails of the bardes",
+				"drifting blah blah",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			lineCells := stringToCells(tc.line)
+
+			result := lineWrap(lineCells, tc.columns)
+
+			resultStrings := make([]string, len(result))
+			for i, line := range result {
+				resultStrings[i] = cellsToString(line)
+			}
+
+			assert.EqualValues(t, tc.expected, resultStrings)
+		})
+	}
+}
