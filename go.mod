@@ -9,3 +9,5 @@ require (
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/sys v0.8.0 // indirect
 )
+
+replace github.com/gdamore/tcell/v2 v2.6.0 => github.com/stefanhaller/tcell/v2 v2.6.1
