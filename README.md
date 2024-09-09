@@ -20,16 +20,16 @@ Minimalist Go package aimed at creating Console User Interfaces.
 
 Execute:
 
-```
-$ go get github.com/jroimartin/gocui
+```sh
+go get github.com/jroimartin/gocui
 ```
 
 ## Documentation
 
 Execute:
 
-```
-$ go doc github.com/jroimartin/gocui
+```sh
+go doc github.com/jroimartin/gocui
 ```
 
 Or visit [pkg.go.dev](https://pkg.go.dev/github.com/jroimartin/gocui) to read
