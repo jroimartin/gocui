@@ -37,6 +37,8 @@ func simpleEditor(v *View, key Key, ch rune, mod Modifier) {
 		v.EditDelete(true)
 	case key == KeyDelete:
 		v.EditDelete(false)
+	case key == KeyCtrlY:
+		v.EditDeleteLine()
 	case key == KeyInsert:
 		v.Overwrite = !v.Overwrite
 	case key == KeyEnter:
@@ -56,6 +58,20 @@ func simpleEditor(v *View, key Key, ch rune, mod Modifier) {
 func (v *View) EditWrite(ch rune) {
 	v.writeRune(v.cx, v.cy, ch)
 	v.MoveCursor(1, 0, true)
+}
+
+// EditDelete deletes a line at the cursor position. 
+func (v *View) EditDeleteLine() error {
+	v.tainted = true
+	_, y, err := v.realPosition(0, v.oy+v.cy)
+	if err != nil {
+		return err
+	}
+	if y < 0 || y >= len(v.lines) {
+		return errors.New("invalid point")
+	}
+	v.lines = append(v.lines[:y], v.lines[y+1:]...)
+	return nil
 }
 
 // EditDelete deletes a rune at the cursor position. back determines the
