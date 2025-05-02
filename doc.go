@@ -84,7 +84,7 @@ use *Gui.Update(). For example:
 		return nil
 	})
 
-By default, gocui provides a basic edition mode. This mode can be extended
+By default, gocui provides a basic editing mode. This mode can be extended
 and customized creating a new Editor and assigning it to *View.Editor:
 
 	type Editor interface {
