@@ -234,6 +234,7 @@ func (g *Gui) SetCurrentView(name string) (*View, error) {
 			return v, nil
 		}
 	}
+	g.currentView = nil
 	return nil, ErrUnknownView
 }
 
