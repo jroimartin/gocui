@@ -377,6 +377,7 @@ func (g *Gui) MainLoop() error {
 			if err := ev.f(g); err != nil {
 				return err
 			}
+		default:
 		}
 		if err := g.consumeevents(); err != nil {
 			return err
