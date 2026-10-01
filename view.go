@@ -29,6 +29,8 @@ type View struct {
 
 	ei *escapeInterpreter // used to decode ESC sequences on Write
 
+	hasCR bool // tracks pending carriage return for overwrite vs CRLF
+
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the View.
 	BgColor, FgColor Attribute
@@ -205,15 +207,21 @@ func (v *View) Write(p []byte) (n int, err error) {
 	for _, ch := range bytes.Runes(p) {
 		switch ch {
 		case '\n':
+			v.hasCR = false
 			v.lines = append(v.lines, nil)
 		case '\r':
-			nl := len(v.lines)
-			if nl > 0 {
-				v.lines[nl-1] = nil
-			} else {
-				v.lines = make([][]cell, 1)
-			}
+			v.hasCR = true
 		default:
+			if v.hasCR {
+				nl := len(v.lines)
+				if nl > 0 {
+					v.lines[nl-1] = nil
+				} else {
+					v.lines = make([][]cell, 1)
+				}
+				v.hasCR = false
+			}
+
 			cells := v.parseInput(ch)
 			if cells == nil {
 				continue
@@ -391,6 +399,7 @@ func (v *View) realPosition(vx, vy int) (x, y int, err error) {
 func (v *View) Clear() {
 	v.tainted = true
 
+	v.hasCR = false
 	v.lines = nil
 	v.viewLines = nil
 	v.readOffset = 0
