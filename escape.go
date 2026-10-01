@@ -140,8 +140,10 @@ func (ei *escapeInterpreter) parseOne(ch rune) (isEscape bool, err error) {
 	return false, nil
 }
 
-// outputNormal provides 8 different colors:
-//   black, red, green, yellow, blue, magenta, cyan, white
+// outputNormal provides 16 different colors:
+//
+//	black, red, green, yellow, blue, magenta, cyan, white
+//	and their high-intensity (bright) equivalents
 func (ei *escapeInterpreter) outputNormal() error {
 	for _, param := range ei.csiParam {
 		p, err := strconv.Atoi(param)
@@ -152,10 +154,14 @@ func (ei *escapeInterpreter) outputNormal() error {
 		switch {
 		case p >= 30 && p <= 37:
 			ei.curFgColor = Attribute(p - 30 + 1)
+		case p >= 90 && p <= 97:
+			ei.curFgColor = Attribute(p - 90 + 9)
 		case p == 39:
 			ei.curFgColor = ColorDefault
 		case p >= 40 && p <= 47:
 			ei.curBgColor = Attribute(p - 40 + 1)
+		case p >= 100 && p <= 107:
+			ei.curBgColor = Attribute(p - 100 + 9)
 		case p == 49:
 			ei.curBgColor = ColorDefault
 		case p == 1:
@@ -174,10 +180,11 @@ func (ei *escapeInterpreter) outputNormal() error {
 }
 
 // output256 allows you to leverage the 256-colors terminal mode:
-//   0x01 - 0x08: the 8 colors as in OutputNormal
-//   0x09 - 0x10: Color* | AttrBold
-//   0x11 - 0xe8: 216 different colors
-//   0xe9 - 0x1ff: 24 different shades of grey
+//
+//	0x01 - 0x08: the 8 colors as in OutputNormal
+//	0x09 - 0x10: Color* | AttrBold
+//	0x11 - 0xe8: 216 different colors
+//	0xe9 - 0x1ff: 24 different shades of grey
 func (ei *escapeInterpreter) output256() error {
 	if len(ei.csiParam) < 3 {
 		return ei.outputNormal()
